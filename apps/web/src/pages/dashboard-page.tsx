@@ -1,3 +1,4 @@
+import { ImpactSummary } from "../features/impact/impact-summary";
 import { Link } from "react-router-dom";
 import {
   ArrowUpRight,
@@ -118,7 +119,7 @@ function Dashboard() {
             icon: Clock3,
             value: user.hours.toLocaleString("uk-UA"),
             label: "годин волонтерства",
-            note: "Твій час для міста",
+            note: "Фактичний час із підтверджених звітів",
           },
           {
             icon: Flag,
@@ -141,6 +142,7 @@ function Dashboard() {
           </Card>
         ))}
       </div>
+      <ImpactSummary userId={user.id} />
       <div className="dashboard-middle">
         <section>
           <SectionHeading

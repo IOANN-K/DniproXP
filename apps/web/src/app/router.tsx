@@ -1,3 +1,5 @@
+import { ImpactPage } from "../pages/impact-page";
+import { ImpactReceiptsPage } from "../pages/impact-receipts-page";
 import {
   createBrowserRouter,
   Link,
@@ -63,6 +65,7 @@ export const router = createBrowserRouter([
       { path: "quests", element: <QuestsPage /> },
       { path: "quests/:id", element: <QuestDetailPage /> },
       { path: "map", element: <MapPage /> },
+      { path: "impact", element: <ImpactPage /> },
       { path: "leaderboard", element: <LeaderboardPage /> },
       { path: "rewards", element: <RewardsPage /> },
 
@@ -78,6 +81,8 @@ export const router = createBrowserRouter([
         element: <ProtectedRoute roles={["VOLUNTEER"]} />,
         children: [
           { path: "dashboard", element: <DashboardPage /> },
+          { path: "impact/receipts", element: <ImpactReceiptsPage /> },
+          { path: "impact/receipts/:id", element: <ImpactReceiptsPage /> },
           { path: "my-quests", element: <MyQuestsPage /> },
           { path: "profile", element: <ProfilePage /> },
         ],

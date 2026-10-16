@@ -24,7 +24,7 @@ export interface QuestApi {
   submitReport(
     questId: string,
     userId: string,
-    report: Pick<QuestReport, "text" | "photo" | "photoName">,
+    report: Pick<QuestReport, "text" | "photo" | "photoName" | "actualHours">,
   ): Promise<void>;
   confirmDemo(questId: string, userId: string): Promise<void>;
 }

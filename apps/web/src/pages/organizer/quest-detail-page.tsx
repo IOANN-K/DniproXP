@@ -1,3 +1,4 @@
+import { CollectiveImpactForm } from "../../features/impact/collective-impact-form";
 import { Link, useParams, useSearchParams } from "react-router-dom";
 import {
   ArrowLeft,
@@ -134,6 +135,7 @@ export function OrganizerQuestDetailPage() {
           </div>
         </div>
       </Card>
+      <CollectiveImpactForm quest={q} />
       <section className="personal-section">
         <div className="section-heading">
           <div>
@@ -235,6 +237,12 @@ function Participant({
               Звіт волонтера
             </h4>
             <p>{p.report.text}</p>
+            <p>
+              <strong>Фактичний час:</strong>{" "}
+              {p.report.actualHours === undefined
+                ? "не вказано"
+                : `${p.report.actualHours} год`}
+            </p>
             <small>{formatDate(p.report.submittedAt)}</small>
             {p.reportRejectionReason && (
               <p className="error-message">

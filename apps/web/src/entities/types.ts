@@ -1,3 +1,4 @@
+import type { ActivityEvent, ImpactRecord } from "./impact/types";
 export type QuestCategory = {
   id: string;
   name: string;
@@ -92,6 +93,7 @@ export type Reward = {
 };
 
 export type QuestReport = {
+  actualHours?: number;
   text: string;
   photo: string | null;
   photoName: string | null;
@@ -115,21 +117,7 @@ export type Redemption = {
   code: string;
   date: string;
 };
-export type ActivityEvent = {
-  id: string;
-  userId: string;
-  questId?: string;
-  title: string;
-  date: string;
-  kind:
-    | "join"
-    | "start"
-    | "report"
-    | "confirm"
-    | "cancel"
-    | "reward"
-    | "profile";
-};
+export type { ActivityEvent } from "./impact/types";
 export type ProfileData = { name: string; bio: string; avatar: string | null };
 export type VolunteerStats = User & {
   bio: string;
@@ -141,7 +129,8 @@ export type VolunteerStats = User & {
   progress: number;
 };
 export type VolunteerState = {
-  version: 4;
+  version: 5;
+  impactRecords: ImpactRecord[];
   accounts: DemoAccount[];
   organizations: Organization[];
   questRecords: Quest[];
@@ -158,11 +147,7 @@ export type VolunteerState = {
 
 export type Role = "VOLUNTEER" | "ORGANIZER" | "ADMIN";
 export type QuestLifecycle =
-  | "draft"
-  | "published"
-  | "active"
-  | "completed"
-  | "cancelled";
+  "draft" | "published" | "active" | "completed" | "cancelled";
 export type DemoAccount = {
   id: string;
   email: string;

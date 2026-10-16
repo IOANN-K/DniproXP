@@ -1,3 +1,4 @@
+import { Link } from "react-router-dom";
 import { useState } from "react";
 import { useMutation } from "@tanstack/react-query";
 import { CheckCircle2, Play, X, Clock3 } from "lucide-react";
@@ -87,6 +88,12 @@ export function ParticipationActions({
               {p.awardedPoints ?? pointsForQuest(quest)} балів
             </span>
             {p.report && <ReportPreview participation={p} />}
+            <Link
+              className="text-link"
+              to={`/impact/receipts/${encodeURIComponent(`impact:completion:${p.userId}:${quest.id}`)}`}
+            >
+              Мій чек допомоги
+            </Link>
           </>
         )}
       </div>
