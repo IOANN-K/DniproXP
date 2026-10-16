@@ -5,7 +5,7 @@ services:
     restart: unless-stopped
     environment:
       POSTGRES_USER: dniproxp
-      POSTGRES_PASSWORD: dniproxp_dev
+      POSTGRES_PASSWORD: ${DB_PASSWORD:?Set DB_PASSWORD in an ignored environment file}
       POSTGRES_DB: dniproxp
     ports:
       - "127.0.0.1:5434:5432"

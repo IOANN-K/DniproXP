@@ -1,3 +1,31 @@
+import {
+  importLegacyImpact,
+  validateImpactRecord,
+  aggregateImpact,
+} from "../entities/impact/domain";
+import {
+  verifyParticipation,
+  verifyCollectiveImpact,
+} from "../entities/impact/verification";
+import type { CollectiveImpactInput } from "../entities/impact/types";
+import { initializeIdentity, reconcileIdentity } from "./identity-integration";
+import { applyIdentityCommand } from "./identity-commands";
+import type { IdentityCommand } from "../entities/identity-types";
+import { applyParticipation } from "../entities/quest/apply-participation";
+import {
+  initializeExploration,
+  reconcileExploration,
+  validateExploration,
+} from "./exploration-integration";
+import {
+  explorationOf,
+  selectMissionProgress,
+  selectChallengeProgress,
+  activitiesOf,
+} from "./exploration-selectors";
+import { challengeRewardAvailable } from "../entities/challenge/progress";
+import type { QuestChain } from "../entities/mission/types";
+import type { CityChallenge } from "../entities/challenge/types";
 import type {
   Participation,
   ProfileData,
@@ -7,7 +35,6 @@ import type {
   VolunteerState,
   VolunteerStats,
   Transaction,
-  DemoAccount,
   RegistrationInput,
   QuestFormValues,
   QuestLifecycle,
@@ -21,9 +48,9 @@ import { organizations as baseOrganizations } from "./data";
 import {
   questDraftSchema,
   questPublishSchema,
-} from "../features/organizer/quest-schema";
+} from "../entities/quest/form-schema";
 import { verifiedLocations } from "./locations";
-const KEY = "dniproxp:platform:v4";
+const KEY = "dniproxp:platform:v5";
 const self = "demo-user";
 const listeners = new Set<() => void>();
 const initialTime = new Date(DEMO_NOW).getTime();
@@ -112,7 +139,8 @@ function seed(): VolunteerState {
         }))
     : [];
   return {
-    version: 4,
+    version: 5,
+    impactRecords: [],
     accounts: [
       ...users.map((u) => ({
         id: u.id,
@@ -205,6 +233,10 @@ function seed(): VolunteerState {
       .filter((t) => t.userId === self)
       .map((t) => ({
         id: `a-${t.id}`,
+        sourceEventId: t.id,
+        type: "confirm",
+        occurredAt: t.date,
+        metadata: {},
         userId: self,
         questId: t.questId,
         title: t.description,
@@ -217,7 +249,16 @@ function isState(value: unknown): value is VolunteerState {
   if (!value || typeof value !== "object") return false;
   const s = value as VolunteerState;
   return (
-    s.version === 4 &&
+    s.version === 5 &&
+    Array.isArray(s.impactRecords) &&
+    s.impactRecords.every((r) => {
+      try {
+        validateImpactRecord(r);
+        return true;
+      } catch {
+        return false;
+      }
+    }) &&
     Number.isFinite(s.revision) &&
     Number.isFinite(s.clock) &&
     Number.isFinite(s.nextId) &&
@@ -263,10 +304,48 @@ function isState(value: unknown): value is VolunteerState {
     Array.isArray(s.activity)
   );
 }
+function normalizeActivity(s: VolunteerState) {
+  s.activity = s.activity.map((e) => ({
+    ...e,
+    sourceEventId: e.sourceEventId || e.id,
+    type: e.type || e.kind,
+    occurredAt: e.occurredAt || e.date,
+    metadata: e.metadata || {},
+    organizationId:
+      e.organizationId ||
+      s.questRecords.find((q) => q.id === e.questId)?.organizationId,
+    participationId:
+      e.participationId ||
+      s.participations.find(
+        (p) => p.questId === e.questId && p.userId === e.userId,
+      )?.id,
+  }));
+}
 function hydrate(): VolunteerState {
   const saved = readStorage<unknown>(KEY, null);
   if (isState(saved)) return saved;
   if (saved !== null) writeStorage(`${KEY}:backup`, saved);
+  const v4 = readStorage<unknown>("dniproxp:platform:v4", null);
+  if (
+    v4 &&
+    typeof v4 === "object" &&
+    (v4 as { version?: number }).version === 4
+  ) {
+    try {
+      const migrated = {
+        ...v4,
+        version: 5,
+        impactRecords: [],
+      } as unknown as VolunteerState;
+      if (isState(migrated)) {
+        migrated.impactRecords = importLegacyImpact(migrated);
+        return migrated;
+      }
+    } catch {
+      /* Keep the original snapshot untouched for recovery. */
+    }
+  }
+  if (v4 !== null) writeStorage("dniproxp:platform:v4:backup", v4);
   const base = seed();
   const legacy = readStorage<unknown>(
     "dniproxp:volunteer:v3",
@@ -328,17 +407,35 @@ function hydrate(): VolunteerState {
             }
           : {}),
       });
+  base.impactRecords = importLegacyImpact(base);
   return base;
 }
-let state: VolunteerState = hydrate();
+// Publish the same JSON representation that storage can restore. Optional object
+// fields with undefined values are absent, while explicit null/false/0 survive.
+function canonicalSnapshot(snapshot: VolunteerState): VolunteerState {
+  const restored: unknown = JSON.parse(JSON.stringify(snapshot));
+  if (!isState(restored))
+    throw new Error("Не вдалося підготувати стан до збереження.");
+  return restored;
+}
+function initializeSnapshot(snapshot: VolunteerState): VolunteerState {
+  normalizeActivity(snapshot);
+  initializeExploration(snapshot);
+  initializeIdentity(snapshot);
+  return canonicalSnapshot(snapshot);
+}
+let state: VolunteerState = initializeSnapshot(hydrate());
 writeStorage(KEY, state);
 function commit(change: (draft: VolunteerState, now: string) => void) {
   const next = structuredClone(state);
   next.clock = Math.max(initialTime, next.clock) + 60_000;
   const now = new Date(next.clock).toISOString();
   change(next, now);
+  normalizeActivity(next);
+  reconcileExploration(next);
+  reconcileIdentity(next);
   next.revision += 1;
-  state = next;
+  state = canonicalSnapshot(next);
   writeStorage(KEY, state);
   listeners.forEach((listener) => listener());
 }
@@ -366,60 +463,6 @@ function administrator() {
 }
 function approvedOrganization(id: string, s = state) {
   return s.organizations.find((o) => o.id === id)?.moderation === "approved";
-}
-function occupied(q: Quest, s = state) {
-  return (
-    q.participants +
-    s.participations.filter(
-      (p) =>
-        p.questId === q.id &&
-        p.status !== "cancelled" &&
-        p.applicationStatus !== "rejected",
-    ).length
-  );
-}
-function award(
-  s: VolunteerState,
-  questId: string,
-  userId: string,
-  now: string,
-) {
-  const p = entry(s, questId, userId);
-  const id = `completion:${userId}:${questId}`;
-  if (p.status === "completed" && s.transactions.some((t) => t.id === id))
-    return;
-  const q = s.questRecords.find((q) => q.id === questId)!;
-  if (
-    p.status !== "pending" ||
-    !p.report ||
-    p.applicationStatus !== "approved" ||
-    q.lifecycle === "cancelled"
-  )
-    throw new Error("Потрібен звіт схваленого учасника доступного квесту.");
-  if (s.transactions.some((t) => t.id === id))
-    throw new Error("Винагороду вже нараховано.");
-  p.status = "completed";
-  p.confirmedAt = now;
-  p.updatedAt = now;
-  p.awardedXp = q.xp;
-  p.awardedPoints = pointsForQuest(q);
-  s.transactions.push({
-    id,
-    userId,
-    questId,
-    xp: q.xp,
-    points: pointsForQuest(q),
-    date: now,
-    description: `Організатор підтвердив: ${q.title}`,
-  });
-  event(
-    s,
-    userId,
-    questId,
-    `Участь підтверджено: +${q.xp} XP та +${pointsForQuest(q)} бонусних балів`,
-    "confirm",
-    now,
-  );
 }
 export function pointsForQuest(q: Quest) {
   return q.rewardPoints ?? rewardPointsFor(q.xp);
@@ -483,6 +526,8 @@ function questFromForm(
       .map((s) => s.trim())
       .filter(Boolean),
     instructions: v.instructions,
+    allowTeamParticipation: !!v.allowTeamParticipation,
+    teamParticipantLimit: v.teamParticipantLimit || 8,
     participants: 0,
     status: "available",
     lifecycle,
@@ -511,6 +556,15 @@ function event(
 ) {
   draft.activity.unshift({
     id: `activity-${draft.revision + 1}`,
+    sourceEventId: `activity-${draft.revision + 1}`,
+    type: kind,
+    occurredAt: date,
+    metadata: {},
+    organizationId: draft.questRecords.find((q) => q.id === questId)
+      ?.organizationId,
+    participationId: draft.participations.find(
+      (p) => p.questId === questId && p.userId === userId,
+    )?.id,
     userId,
     questId,
     title,
@@ -520,6 +574,182 @@ function event(
 }
 export const repository = {
   getSnapshot: () => state,
+  mutateIdentity(command: IdentityCommand) {
+    const signed = account();
+    actor(signed.id);
+    let result: string | void = undefined;
+    commit((s, now) => {
+      const previous = s.identity?.events[0]?.id;
+      result = applyIdentityCommand(s, signed.id, command, now);
+      const latest = s.identity?.events[0];
+      if (latest && latest.id !== previous)
+        event(s, signed.id, undefined, latest.title, "team", now);
+      if (command.type === "PASSPORT_PRIVACY")
+        event(
+          s,
+          signed.id,
+          undefined,
+          "Видимість паспорта оновлено",
+          "profile",
+          now,
+        );
+    });
+    return result;
+  },
+  joinMission(chainId: string, userId: string) {
+    actor(userId);
+    commit((s, now) => {
+      const epic = explorationOf(s);
+      const m = epic.missions.find((m) => m.id === chainId);
+      if (!m) throw new Error("Місію не знайдено.");
+      const p = selectMissionProgress(s, chainId, userId)!;
+      if (p.status === "LOCKED" || p.status === "COMPLETED")
+        throw new Error(p.reasons[0] || "Місію вже завершено.");
+      if (
+        epic.missionEnrollments.some(
+          (e) => e.chainId === chainId && e.userId === userId,
+        )
+      )
+        return;
+      epic.missionEnrollments.push({
+        id: `mission-enrollment:${chainId}:${userId}`,
+        chainId,
+        userId,
+        joinedAt: now,
+      });
+      event(
+        s,
+        userId,
+        undefined,
+        `До твоїх історій додано місію «${m.title}»`,
+        "mission",
+        now,
+      );
+    });
+  },
+  claimMissionReward(chainId: string, userId: string) {
+    actor(userId);
+    commit((s, now) => {
+      const id = `mission:${chainId}:${userId}`;
+      if (s.transactions.some((t) => t.id === id)) return;
+      const m = explorationOf(s).missions.find((m) => m.id === chainId);
+      if (
+        !m ||
+        selectMissionProgress(s, chainId, userId)?.status !== "COMPLETED"
+      )
+        throw new Error(
+          "Спочатку підтвердь усі обов’язкові етапи місії та виконай передумови.",
+        );
+      s.transactions.push({
+        id,
+        userId,
+        kind: "MISSION_REWARD",
+        sourceId: chainId,
+        xp: m.rewards.xp,
+        points: m.rewards.rewardPoints,
+        date: now,
+        description: `Фінал місії: ${m.title}`,
+      });
+      event(
+        s,
+        userId,
+        undefined,
+        `Отримано нагороду місії: +${m.rewards.xp} XP та +${m.rewards.rewardPoints} балів`,
+        "mission",
+        now,
+      );
+    });
+  },
+  joinChallenge(challengeId: string, userId: string) {
+    actor(userId);
+    commit((s, now) => {
+      const epic = explorationOf(s);
+      const c = epic.challenges.find((c) => c.id === challengeId);
+      const result = selectChallengeProgress(s, challengeId);
+      if (!c || result?.status !== "ACTIVE")
+        throw new Error("Долучитися можна лише до активного виклику.");
+      if (
+        epic.challengeParticipants.some(
+          (p) => p.challengeId === challengeId && p.userId === userId,
+        ) ||
+        c.participantIds.includes(userId)
+      )
+        return;
+      epic.challengeParticipants.push({ challengeId, userId, joinedAt: now });
+      event(
+        s,
+        userId,
+        undefined,
+        `Ти долучився до виклику «${c.title}»`,
+        "challenge",
+        now,
+      );
+    });
+  },
+  claimChallengeReward(challengeId: string, userId: string) {
+    actor(userId);
+    commit((s, now) => {
+      const id = `challenge:${challengeId}:${userId}`;
+      if (s.transactions.some((t) => t.id === id)) return;
+      const c = explorationOf(s).challenges.find((c) => c.id === challengeId);
+      const result = selectChallengeProgress(s, challengeId);
+      if (
+        !c ||
+        !result ||
+        !challengeRewardAvailable(
+          c,
+          userId,
+          result,
+          activitiesOf(s),
+          s.transactions,
+        )
+      )
+        throw new Error(
+          "Потрібні завершені спільні цілі й твій підтверджений внесок у період виклику.",
+        );
+      s.transactions.push({
+        id,
+        userId,
+        kind: "CHALLENGE_REWARD",
+        sourceId: challengeId,
+        xp: c.rewards.xp,
+        points: c.rewards.rewardPoints,
+        date: now,
+        description: `Спільна перемога: ${c.title}`,
+      });
+      event(
+        s,
+        userId,
+        undefined,
+        `Отримано нагороду міського виклику: +${c.rewards.xp} XP та +${c.rewards.rewardPoints} балів`,
+        "challenge",
+        now,
+      );
+    });
+  },
+  saveMission(definition: QuestChain) {
+    administrator();
+    commit((s) => {
+      const epic = explorationOf(s);
+      epic.missions = [
+        ...epic.missions.filter((m) => m.id !== definition.id),
+        structuredClone(definition),
+      ];
+      validateExploration(s, epic);
+    });
+  },
+  saveChallenge(definition: CityChallenge) {
+    administrator();
+    commit((s) => {
+      const epic = explorationOf(s);
+      epic.challenges = [
+        ...epic.challenges.filter((c) => c.id !== definition.id),
+        structuredClone(definition),
+      ];
+      validateExploration(s, epic);
+    });
+  },
+
   subscribe(listener: () => void) {
     listeners.add(listener);
     return () => {
@@ -529,43 +759,15 @@ export const repository = {
   join(questId: string, userId: string) {
     actor(userId);
     commit((s, now) => {
-      const q = s.questRecords.find((q) => q.id === questId);
-      if (
-        !q ||
-        !["published", "active"].includes(q.lifecycle || "") ||
-        q.moderation !== "approved" ||
-        !approvedOrganization(q.organizationId, s)
-      )
-        throw new Error("Запис на цей квест недоступний.");
       const old = s.participations.find(
         (p) => p.questId === questId && p.userId === userId,
       );
-      if (
+      const alreadyJoined =
         old &&
         old.status !== "cancelled" &&
-        old.applicationStatus !== "rejected"
-      )
-        return;
-      if (old?.applicationStatus === "rejected")
-        throw new Error(
-          "Організатор відхилив заявку. Повторне подання на цей квест недоступне.",
-        );
-      if (occupied(q, s) >= q.capacity) throw new Error("Усі місця зайняті.");
-      if (old) {
-        old.status = "planned";
-        old.applicationStatus = "pending";
-        old.report = undefined;
-        old.updatedAt = now;
-      } else
-        s.participations.push({
-          id: `p-${userId}-${questId}`,
-          questId,
-          userId,
-          status: "planned",
-          applicationStatus: "pending",
-          createdAt: now,
-          updatedAt: now,
-        });
+        old.applicationStatus !== "rejected";
+      applyParticipation(s, questId, userId, now);
+      if (alreadyJoined) return;
       event(
         s,
         userId,
@@ -609,7 +811,7 @@ export const repository = {
   submitReport(
     questId: string,
     userId: string,
-    report: Pick<QuestReport, "text" | "photo" | "photoName">,
+    report: Pick<QuestReport, "text" | "photo" | "photoName" | "actualHours">,
   ) {
     actor(userId);
     commit((s, now) => {
@@ -623,6 +825,15 @@ export const repository = {
         throw new Error("Звіт доступний лише для активної схваленої участі.");
       if (report.text.trim().length < 30 || report.text.length > 2000)
         throw new Error("Опис має містити 30–2000 символів.");
+      if (
+        report.actualHours !== undefined &&
+        (!Number.isFinite(report.actualHours) ||
+          report.actualHours <= 0 ||
+          report.actualHours > 24)
+      )
+        throw new Error(
+          "Фактичні години мають бути в межах від 0 до 24 (не включаючи 0).",
+        );
       if (report.photo && !report.photo.startsWith("/images/"))
         throw new Error("Обери демонстраційне фото.");
       if (p.report) p.reportHistory = [...(p.reportHistory || []), p.report];
@@ -635,7 +846,15 @@ export const repository = {
   },
   confirmDemo(questId: string, userId: string) {
     owner(questId);
-    commit((s, now) => award(s, questId, userId, now));
+    const verifier = account();
+    commit((s, now) => verifyParticipation(s, questId, userId, verifier, now));
+  },
+  publishCollectiveImpact(questId: string, input: CollectiveImpactInput) {
+    owner(questId);
+    const verifier = account();
+    commit((s, now) =>
+      verifyCollectiveImpact(s, questId, verifier, input, now),
+    );
   },
   reviewApplication(
     questId: string,
@@ -880,6 +1099,42 @@ export const repository = {
     });
     return id;
   },
+  resetDemoData(confirmation: string) {
+    const signed = account();
+    if (signed.id !== "demo-admin" || signed.role !== "ADMIN")
+      throw new Error(
+        "Скидання доступне лише демонстраційному адміністратору.",
+      );
+    if (confirmation !== "СКИНУТИ")
+      throw new Error("Введи СКИНУТИ для підтвердження.");
+    const fresh = seed();
+    fresh.impactRecords = importLegacyImpact(fresh);
+    fresh.revision = state.revision + 1;
+    const next = initializeSnapshot(fresh);
+    // A destructive reset MUST NOT silently lose the previous snapshot if storage fails.
+    try {
+      localStorage.setItem(
+        `${KEY}:before-reset:${state.revision}`,
+        JSON.stringify(state),
+      );
+      localStorage.setItem(KEY, JSON.stringify(next));
+    } catch {
+      throw new Error(
+        "Не вдалося зберегти резервну копію. Скидання не виконано.",
+      );
+    }
+    state = next;
+    authSession.set(null);
+    try {
+      localStorage.removeItem("dniproxp:seen-xp:v1");
+      for (const key of Object.keys(sessionStorage))
+        if (key.startsWith("dniproxp:quest-wizard:v1:"))
+          sessionStorage.removeItem(key);
+    } catch {
+      /* Reset snapshot is already safely persisted. */
+    }
+    listeners.forEach((listener) => listener());
+  },
   newDemoRun() {
     const signed = account();
     let id = "";
@@ -970,6 +1225,8 @@ export const repository = {
         points: -r.cost,
         date: now,
         description: `Обмін: ${r.name}`,
+        kind: "REWARD_REDEMPTION",
+        sourceId: id,
       });
       event(s, userId, undefined, `Отримано: ${r.name}`, "reward", now);
     });
@@ -1001,9 +1258,7 @@ export function getVolunteer(
   const tx = snapshot.transactions.filter((t) => t.userId === userId);
   const xp = tx.reduce((n, t) => n + t.xp, 0);
   const level = levelFor(xp);
-  const done = snapshot.participations.filter(
-    (p) => p.userId === userId && p.status === "completed",
-  );
+  const impact = aggregateImpact(snapshot.impactRecords, { userId });
   return {
     ...base,
     name: profile.name,
@@ -1017,12 +1272,9 @@ export function getVolunteer(
       .toUpperCase(),
     xp,
     level: level.level,
-    questsCompleted: done.length,
+    questsCompleted: impact.activities,
     points: tx.reduce((n, t) => n + t.points, 0),
-    hours: done.reduce((n, p) => {
-      const q = snapshot.questRecords.find((q) => q.id === p.questId);
-      return n + parseFloat((q?.duration || "0").replace(",", "."));
-    }, 0),
+    hours: impact.totals.volunteer_hours,
     nextLevelXp: level.nextXp,
     levelStartXp: level.xp,
     progress: level.progress,
@@ -1054,6 +1306,8 @@ export const questStatusLabels: Record<QuestLifecycle, string> = {
 };
 export function questToForm(q: Quest): QuestFormValues {
   return {
+    allowTeamParticipation: !!q.allowTeamParticipation,
+    teamParticipantLimit: q.teamParticipantLimit || 8,
     title: q.title,
     description: q.description,
     fullDescription: q.fullDescription || q.description,

@@ -1,3 +1,4 @@
+import { participationLabels } from "../../entities/quest/participation-status";
 import { useMutation } from "@tanstack/react-query";
 import { Link } from "react-router-dom";
 import { Users, Zap, ShieldCheck } from "lucide-react";
@@ -9,10 +10,7 @@ import { DemoDialog } from "../session/demo-dialog";
 import { Button } from "../../shared/ui/button";
 import { Card, Badge } from "../../shared/ui/primitives";
 import { useVolunteerState } from "../../shared/lib/use-volunteer";
-import {
-  ParticipationActions,
-  participationLabels,
-} from "./participation-actions";
+import { ParticipationActions } from "./participation-actions";
 import { pointsForQuest } from "../../mocks/repository";
 import { DemoSwitcher } from "../auth/demo-switcher";
 export function ParticipationPanel({ quest }: { quest: Quest }) {

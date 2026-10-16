@@ -1,3 +1,7 @@
+import type { ActivityEvent, ImpactRecord } from "./impact/types";
+export type { ActivityEvent, ActivityKind } from "./impact/types";
+import type { IdentityState } from "./identity-types";
+import type { ExplorationState } from "./exploration-types";
 export type QuestCategory = {
   id: string;
   name: string;
@@ -27,6 +31,8 @@ export type User = {
   avatar?: string;
 };
 export type Quest = {
+  allowTeamParticipation?: boolean;
+  teamParticipantLimit?: number;
   id: string;
   title: string;
   description: string;
@@ -58,6 +64,7 @@ export type Quest = {
   locationLabel?: string;
 };
 export type Participation = {
+  teamParticipationId?: string;
   id: string;
   questId: string;
   userId: string;
@@ -92,12 +99,19 @@ export type Reward = {
 };
 
 export type QuestReport = {
+  actualHours?: number;
   text: string;
   photo: string | null;
   photoName: string | null;
   submittedAt: string;
 };
 export type Transaction = {
+  kind?:
+    | "QUEST_COMPLETION"
+    | "REWARD_REDEMPTION"
+    | "MISSION_REWARD"
+    | "CHALLENGE_REWARD";
+  sourceId?: string;
   id: string;
   userId: string;
   questId?: string;
@@ -115,21 +129,6 @@ export type Redemption = {
   code: string;
   date: string;
 };
-export type ActivityEvent = {
-  id: string;
-  userId: string;
-  questId?: string;
-  title: string;
-  date: string;
-  kind:
-    | "join"
-    | "start"
-    | "report"
-    | "confirm"
-    | "cancel"
-    | "reward"
-    | "profile";
-};
 export type ProfileData = { name: string; bio: string; avatar: string | null };
 export type VolunteerStats = User & {
   bio: string;
@@ -141,7 +140,12 @@ export type VolunteerStats = User & {
   progress: number;
 };
 export type VolunteerState = {
-  version: 4;
+  version: 5;
+  identity?: IdentityState;
+  impactRecords: ImpactRecord[];
+  identityRejectedSnapshot?: unknown;
+  exploration?: ExplorationState;
+  explorationRejectedSnapshot?: unknown;
   accounts: DemoAccount[];
   organizations: Organization[];
   questRecords: Quest[];
@@ -158,11 +162,7 @@ export type VolunteerState = {
 
 export type Role = "VOLUNTEER" | "ORGANIZER" | "ADMIN";
 export type QuestLifecycle =
-  | "draft"
-  | "published"
-  | "active"
-  | "completed"
-  | "cancelled";
+  "draft" | "published" | "active" | "completed" | "cancelled";
 export type DemoAccount = {
   id: string;
   email: string;
@@ -178,6 +178,8 @@ export type RegistrationInput = {
   organizationName?: string;
 };
 export type QuestFormValues = {
+  allowTeamParticipation?: boolean;
+  teamParticipantLimit?: number;
   title: string;
   description: string;
   fullDescription: string;

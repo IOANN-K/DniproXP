@@ -18,7 +18,7 @@ Urban Friendly на React 19, Tailwind 4, Manrope, Radix UI, React Router, TanSt
 
 `app` містить providers, routes і layouts; `pages` — екрани; `features` — auth, session, organizer, participation, profile, rewards, gamification; `entities` — моделі й доменні компоненти; `shared` — UI, storage, utilities; `mocks` — дані, repository та адаптери.
 
-Єдине джерело даних — `mocks/repository.ts`, схема `4`, ключ `dniproxp:platform:v4`. Воно містить облікові записи, організації, квести, участі, версії звітів, нарахування, сертифікати й активність. Схема `3` мігрує без заміни попередніх XP, заявок, профілів і винагород. Під час відновлення некоректний snapshot копіюється в ключ із суфіксом `:backup`.
+Єдине джерело даних — `mocks/repository.ts`, схема `5`, ключ `dniproxp:platform:v5`. Воно містить облікові записи, організації, квести, участі, версії звітів, нарахування, сертифікати й активність. Схеми `4` та `3` мігрують без заміни попередніх XP, заявок, профілів і винагород. Під час відновлення некоректний snapshot копіюється в ключ із суфіксом `:backup`.
 
 Підписка `useVolunteerState` оновлює сторінки одразу після атомарної зміни. TanStack Query інвалідує асинхронні запити. Zustand містить тільки відображення поточної сесії; дані облікових записів та прогресу беруться з репозиторію. Сесія зберігає principal у `dniproxp:auth:v2`; показані нарахування — у `dniproxp:seen-xp:v1`.
 
@@ -53,6 +53,45 @@ Leaflet + OSM використовує лише координати з `mocks/l
 - [Очікувані API-контракти](docs/frontend-api-contracts.md).
 - [Наскрізний демонстраційний сценарій](docs/demo-walkthrough.md).
 
-Додано `react-hook-form`, `zod`, `@hookform/resolvers`. Встановлення виконано без зміни кореневого lockfile відповідно до меж роботи в `apps/web`.
+City Impact (DX-001–DX-007): [модель, інваріанти, міграція, перевірки й демосценарій](docs/city-impact.md).
 
+- `/impact`: публічна мапа лише підтверджених результатів, фільтри та спільні підсумки.
+- `/impact/receipts`, `/impact/receipts/:id`: власні чеки, PNG і поширення.
+- `pnpm --filter web test`: доменні та repository-тести Vitest.
+- `pnpm --filter web test:e2e`: браузерні сценарії Playwright.
+- `pnpm --filter web build`: TypeScript і production-збірка.
+
+Для City Impact додано Vitest і Playwright як devDependencies; кореневий `pnpm-lock.yaml` синхронізовано з фактичними frontend-залежностями. Backend і PostgreSQL не змінювалися. Стан перевірок і відомі обмеження — у документації City Impact та PR.
+
+## EPIC 04 · AI & Product Integration
+
+- [Реалізація DX-024–DX-028, перевірки та обмеження](docs/product-integration.md).
+- [Контракти генератора й backend handoff для NestJS](docs/backend-integration-handoff.md).
+- [Desktop/mobile screenshots](docs/screenshots/product-integration/README.md).
+- `/organizer/quests/generate`: локальний rule-based майстер, редагування та preview, збереження лише чернетки.
+- `/demo`: вісім кроків, повторний прохід зі збереженням історії та окремий захищений reset із резервною копією.
+
+Зовнішній AI та серверні domain endpoints не підключені. Робота в `Sergiy`; командні EPIC02/03 із `main` не об’єднані, сумісність має бути перевірена під час інтеграції.
 Тести, lint, build, typecheck, dev та будь-які перевірки не запускалися. Backend, PostgreSQL і кореневі файли не змінювалися. Git commit не створювався.
+
+## EPIC 02 — Missions & City Challenges
+
+Додано `/missions`, `/missions/:slug`, `/challenges`, `/challenges/:slug`. Каталоги, timeline місій, цілі викликів, фактичні графіки, історія внесків, рейтинг особистих годин і фінальні бонуси інтегровані в наявні сторінки. У Header розділи згруповані в «Досліджувати»; мобільне меню має прямі посилання.
+
+Доменні модулі `entities/mission`, `entities/challenge`, `entities/verified-activity` відокремлені від React та API-адаптерів. Є 9 місій, 36 зв’язків із наявними квестами та 7 викликів. Використано наявні фото й організації без створення дублікатів квестів/користувачів. Окремі Submission, Impact Domain та Teams не створювалися.
+
+Підтверджені участі й базовий журнал нарахувань — єдине джерело прогресу. `exploration` (`schemaVersion: 1`) доповнює поточний snapshot схеми 4 у тому самому ключі; попередні дані зберігаються. Contributions перебудовуються після кожного commit. Одноразові бонуси місій і викликів мають окремі transaction kind/sourceId та не нараховують базовий XP повторно. Нові відзнаки видно на dashboard і профілі; Reward Points використовуються в чинному каталозі винагород.
+
+У цьому EPIC залежності не додавалися, встановлення та перевірки не запускалися; lockfile не потребує змін через EPIC 02. [Архітектура, інваріанти, перелік файлів і ручні сценарії](docs/epic-02-missions-challenges.md).
+
+## EPIC 03 — Volunteer Identity & Teams
+
+Додано `/passport`, `/passport/:userId`, `/passport/credentials/:id`, `/skills`, `/teams`, `/teams/create`, `/teams/:slug`, `/teams/:slug/members`, `/teams/:slug/quests`, `/teams/:slug/settings`, `/demo/identity`.
+
+Паспорт і 16 компетенцій восьми напрямів розраховуються з чинних verified activities. Публічна проєкція видаляє приховані поля до передавання компонентам. Є стабільний ID, QR, Clipboard, друк/PDF і видимість. Команди мають ролі, запрошення, керування учасниками, передачу власності та командні заявки у звичайній participation-системі. Статистика/відзнаки/рейтинги й внесок у міські виклики залежать від підтверджень; другого джерела XP немає.
+
+12 seed-команд використовують наявних волонтерів і попередню історію. `identity.schemaVersion: 1` зберігається у чинному snapshot схеми 4; окремого localStorage для команд/паспортів/навичок немає. DemoSwitcher дозволяє вибрати іншого волонтера для спільного сценарію.
+
+Додано **`qrcode.react: ^4.2.0` тільки в package.json**. Встановлення та оновлення lockfile не виконані. Перед запуском потрібно встановити залежність і оновити lockfile у дозволений користувачем спосіб. Перевірки не запускалися.
+
+[Архітектура, повний перелік файлів, обмеження та ручні кроки](docs/epic-03-identity-teams.md).

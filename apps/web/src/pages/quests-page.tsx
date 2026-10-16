@@ -1,3 +1,4 @@
+import { ExplorationEntryCards } from "../features/exploration/sections";
 import { useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
@@ -33,9 +34,10 @@ export function QuestsPage() {
   const difficulty = params.get("difficulty") || "";
   const date = params.get("date") || "";
   const xp = Number(params.get("xp")) || 0;
+  const team = params.get("team") === "1";
   const sort = params.get("sort") || "date";
   const limit = Math.max(9, Number(params.get("limit")) || 9);
-  const active = ["district", "difficulty", "date", "xp"].filter((k) =>
+  const active = ["district", "difficulty", "date", "xp", "team"].filter((k) =>
     params.get(k),
   ).length;
   const filtered = data
@@ -45,6 +47,7 @@ export function QuestsPage() {
         (!district || q.district === district) &&
         (!difficulty || q.difficulty === difficulty) &&
         q.xp >= xp &&
+        (!team || q.allowTeamParticipation) &&
         (!search ||
           `${q.title} ${q.description}`
             .toLocaleLowerCase("uk")
@@ -169,6 +172,14 @@ export function QuestsPage() {
               <option value="300">Від 300 XP</option>
             </select>
           </label>
+          <label className="team-allow-toggle">
+            <input
+              type="checkbox"
+              checked={team}
+              onChange={(e) => set("team", e.target.checked ? "1" : "")}
+            />
+            Можна долучитися командою
+          </label>
           <Button variant="ghost" onClick={() => setParams({})}>
             Скинути все <X size={16} />
           </Button>
@@ -233,6 +244,9 @@ export function QuestsPage() {
           )}
         </>
       )}
+      <section className="personal-section">
+        <ExplorationEntryCards />
+      </section>
       <p className="demo-caption">
         Усі квести, адреси зустрічей і організатори — частина демонстраційного
         сценарію.

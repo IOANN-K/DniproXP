@@ -1,3 +1,5 @@
+import { IdentitySummary } from "../features/teams/integration";
+import { PersonalExploration } from "../features/exploration/sections";
 import { Link, useParams } from "react-router-dom";
 import {
   CalendarDays,
@@ -52,6 +54,20 @@ function ProfileContent({ userId }: { userId: string }) {
         </Button>
       </div>
     );
+  const visibility = state.identity?.passports[userId]?.visibility;
+  if (!own && visibility && !visibility.publicProfile)
+    return (
+      <div className="container empty-state">
+        <h1>Профіль приватний</h1>
+        <p>Волонтер обмежив публічний доступ до свого профілю та паспорта.</p>
+        <Button asChild>
+          <Link to="/teams">До спільноти</Link>
+        </Button>
+      </div>
+    );
+  const showHistory = own || visibility?.showActivityHistory !== false;
+  const showAchievements = own || visibility?.showAchievements !== false;
+  const showHours = own || visibility?.showVerifiedHours !== false;
   const completed = state.participations
     .filter((p) => p.userId === user.id && p.status === "completed")
     .sort((a, b) =>
@@ -116,13 +132,15 @@ function ProfileContent({ userId }: { userId: string }) {
             value: ranked.findIndex((u) => u.id === userId) + 1,
             label: "місце в рейтингу",
           },
-        ].map((s) => (
-          <Card className="personal-stat" key={s.label}>
-            <s.icon size={21} />
-            <strong>{s.value.toLocaleString("uk-UA")}</strong>
-            <h3>{s.label}</h3>
-          </Card>
-        ))}
+        ]
+          .filter((s) => s.icon !== Clock3 || showHours)
+          .map((s) => (
+            <Card className="personal-stat" key={s.label}>
+              <s.icon size={21} />
+              <strong>{s.value.toLocaleString("uk-UA")}</strong>
+              <h3>{s.label}</h3>
+            </Card>
+          ))}
       </div>
       <section className="personal-section">
         <SectionHeading title="Прогрес добрих справ" />
@@ -134,92 +152,100 @@ function ProfileContent({ userId }: { userId: string }) {
           <XPProgress xp={user.xp} />
         </Card>
       </section>
-      <section className="personal-section">
-        <SectionHeading title="Досягнення" />
-        <AchievementGrid completed={user.questsCompleted} />
-      </section>
-      <div className="profile-columns">
-        <section>
-          <SectionHeading title="Завершені квести" />
-          <div className="profile-completed">
-            {completed.map((p) => {
-              const q = state.questRecords.find((q) => q.id === p.questId)!;
-              return (
-                <Card key={p.id}>
-                  <Photo src={q.image} alt={q.imageAlt} loading="lazy" />
-                  <div>
-                    <h3>
-                      <Link to={`/quests/${q.id}`}>{q.title}</Link>
-                    </h3>
-                    <time dateTime={p.confirmedAt || p.createdAt}>
-                      {formatDate(p.confirmedAt || p.createdAt)}
-                    </time>
-                    <Badge>
-                      +
-                      {state.transactions.find(
-                        (t) => t.userId === user.id && t.questId === q.id,
-                      )?.xp || q.xp}{" "}
-                      XP
-                    </Badge>
-                  </div>
-                  <Link
-                    to={`/quests/${q.id}`}
-                    className="button button-ghost button-icon"
-                    aria-label={`Відкрити квест: ${q.title}`}
-                  >
-                    <ArrowUpRight size={18} />
-                  </Link>
+      {showAchievements && (
+        <section className="personal-section">
+          <SectionHeading title="Досягнення" />
+          <AchievementGrid completed={user.questsCompleted} />
+        </section>
+      )}
+      <IdentitySummary userId={user.id} own={own} />
+      {showAchievements && showHistory && (
+        <PersonalExploration userId={user.id} publicProfile={!own} />
+      )}
+      {showHistory && (
+        <div className="profile-columns">
+          <section>
+            <SectionHeading title="Завершені квести" />
+            <div className="profile-completed">
+              {completed.map((p) => {
+                const q = state.questRecords.find((q) => q.id === p.questId)!;
+                return (
+                  <Card key={p.id}>
+                    <Photo src={q.image} alt={q.imageAlt} loading="lazy" />
+                    <div>
+                      <h3>
+                        <Link to={`/quests/${q.id}`}>{q.title}</Link>
+                      </h3>
+                      <time dateTime={p.confirmedAt || p.createdAt}>
+                        {formatDate(p.confirmedAt || p.createdAt)}
+                      </time>
+                      <Badge>
+                        +
+                        {state.transactions.find(
+                          (t) => t.userId === user.id && t.questId === q.id,
+                        )?.xp || q.xp}{" "}
+                        XP
+                      </Badge>
+                    </div>
+                    <Link
+                      to={`/quests/${q.id}`}
+                      className="button button-ghost button-icon"
+                      aria-label={`Відкрити квест: ${q.title}`}
+                    >
+                      <ArrowUpRight size={18} />
+                    </Link>
+                  </Card>
+                );
+              })}
+              {!completed.length && (
+                <Card className="inline-empty">
+                  <p>Перша підтверджена добра справа ще попереду.</p>
                 </Card>
-              );
-            })}
-            {!completed.length && (
-              <Card className="inline-empty">
-                <p>Перша підтверджена добра справа ще попереду.</p>
-              </Card>
-            )}
-          </div>
-        </section>
-        <section>
-          <SectionHeading title="Напрями, що відгукуються" />
-          <Card className="profile-categories">
-            {activities.map((c) => (
-              <div key={c.id}>
-                <span className={`category-icon ${c.color}`}>
-                  <CategoryIcon category={c} size={20} />
-                </span>
-                <div>
-                  <strong>{c.name}</strong>
-                  <div className="progress-track">
-                    <span
-                      style={{
-                        width: `${(c.count / Math.max(1, completed.length)) * 100}%`,
-                      }}
-                    />
+              )}
+            </div>
+          </section>
+          <section>
+            <SectionHeading title="Напрями, що відгукуються" />
+            <Card className="profile-categories">
+              {activities.map((c) => (
+                <div key={c.id}>
+                  <span className={`category-icon ${c.color}`}>
+                    <CategoryIcon category={c} size={20} />
+                  </span>
+                  <div>
+                    <strong>{c.name}</strong>
+                    <div className="progress-track">
+                      <span
+                        style={{
+                          width: `${(c.count / Math.max(1, completed.length)) * 100}%`,
+                        }}
+                      />
+                    </div>
                   </div>
+                  <span>{c.count}</span>
                 </div>
-                <span>{c.count}</span>
-              </div>
-            ))}
-            {!activities.length && (
-              <p className="muted">
-                Напрями з’являться після першого завершеного квесту.
-              </p>
+              ))}
+              {!activities.length && (
+                <p className="muted">
+                  Напрями з’являться після першого завершеного квесту.
+                </p>
+              )}
+            </Card>
+            {own && (
+              <>
+                <SectionHeading title="Твоя історія нарахувань" />
+                <Card className="history-card">
+                  <XPTransactionHistory
+                    transactions={state.transactions.filter(
+                      (t) => t.userId === user.id,
+                    )}
+                  />
+                </Card>
+              </>
             )}
-          </Card>
-          {own && (
-            <>
-              <SectionHeading title="Твоя історія нарахувань" />
-              <Card className="history-card">
-                <XPTransactionHistory
-                  transactions={state.transactions.filter(
-                    (t) => t.userId === user.id,
-                  )}
-                />
-              </Card>
-            </>
-          )}
-        </section>
-      </div>
+          </section>
+        </div>
+      )}
     </div>
   );
 }

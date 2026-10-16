@@ -198,6 +198,16 @@ export function XPTransactionHistory({
               </span>
               <div>
                 <strong>{t.description}</strong>
+                {t.kind === "MISSION_REWARD" && (
+                  <small className="transaction-source">
+                    Фінальний бонус місії
+                  </small>
+                )}
+                {t.kind === "CHALLENGE_REWARD" && (
+                  <small className="transaction-source">
+                    Фінальний бонус міського виклику
+                  </small>
+                )}
                 <time dateTime={t.date}>{formatDate(t.date)}</time>
               </div>
               <div className="transaction-values">

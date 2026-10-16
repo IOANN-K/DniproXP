@@ -1,6 +1,6 @@
 import { useRef } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
-import { useForm } from "react-hook-form";
+import { useForm, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation } from "@tanstack/react-query";
 import { ArrowLeft, Save, Send, Image, MapPin } from "lucide-react";
@@ -17,6 +17,8 @@ import { verifiedLocations } from "../../mocks/locations";
 import { Card, Input, Photo, Badge } from "../../shared/ui/primitives";
 import { Button } from "../../shared/ui/button";
 const empty: QuestFormValues = {
+  allowTeamParticipation: false,
+  teamParticipantLimit: 8,
   title: "",
   description: "",
   fullDescription: "",
@@ -75,15 +77,16 @@ function QuestForm({ initial, id }: { initial: QuestFormValues; id?: string }) {
     handleSubmit,
     setError,
     setValue,
-    watch,
+    control,
     formState: { errors, isDirty },
   } = useForm<QuestFormValues>({
     resolver: zodResolver(questDraftSchema),
     defaultValues: initial,
     shouldFocusError: true,
   });
-  const image = watch("image");
-  const location = watch("locationId");
+  const allowTeam = useWatch({ control, name: "allowTeamParticipation" });
+  const image = useWatch({ control, name: "image" });
+  const location = useWatch({ control, name: "locationId" });
   const mutation = useMutation({
     mutationFn: async ({
       values,
@@ -155,7 +158,14 @@ function QuestForm({ initial, id }: { initial: QuestFormValues; id?: string }) {
         <div>
           <p className="eyebrow">ЗБЕРИ ЛЮДЕЙ НАВКОЛО ДОБРОЇ СПРАВИ</p>
           <h2>{id ? "Редагувати квест" : "Нова міська ініціатива"}</h2>
-          <p>Спочатку збережи чернетку або заповни всі дані для публікації.</p>
+          <p>
+            Спочатку збережи чернетку або заповни всі дані для публікації.{" "}
+            {!id && (
+              <Link className="text-link" to="/organizer/quests/generate">
+                Потрібна допомога з ідеєю? Відкрити майстер
+              </Link>
+            )}
+          </p>
         </div>
         <Badge>{isDirty ? "Є незбережені зміни" : "Чернетка"}</Badge>
       </div>
@@ -274,6 +284,26 @@ function QuestForm({ initial, id }: { initial: QuestFormValues; id?: string }) {
           </Card>
           <Card className="editor-section">
             <h3>Умови та результат</h3>
+            <label className="team-allow-toggle">
+              <input type="checkbox" {...register("allowTeamParticipation")} />
+              Дозволити командні заявки
+            </label>
+            {allowTeam && (
+              <>
+                <label htmlFor="field-teamParticipantLimit">
+                  Максимум учасників однієї команди
+                </label>
+                <Input
+                  id="field-teamParticipantLimit"
+                  type="number"
+                  min={1}
+                  max={50}
+                  {...register("teamParticipantLimit", { valueAsNumber: true })}
+                />
+                {error("teamParticipantLimit")}
+              </>
+            )}
+
             <label htmlFor="field-requirements">
               Вимоги до учасників — по одній у рядку
             </label>

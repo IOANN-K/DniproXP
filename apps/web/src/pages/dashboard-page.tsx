@@ -1,3 +1,6 @@
+import { ImpactSummary } from "../features/impact/impact-summary";
+import { IdentitySummary } from "../features/teams/integration";
+import { PersonalExploration } from "../features/exploration/sections";
 import { Link } from "react-router-dom";
 import {
   ArrowUpRight,
@@ -24,7 +27,7 @@ import {
 import { getQuestSnapshot, publicQuests } from "../mocks/repository";
 import { QuestCard } from "../entities/quest/quest-card";
 import { formatDate } from "../shared/lib/utils";
-import { participationLabels } from "../features/participation/participation-actions";
+import { participationLabels } from "../entities/quest/participation-status";
 export function DashboardPage() {
   return (
     <VolunteerShell>
@@ -118,7 +121,7 @@ function Dashboard() {
             icon: Clock3,
             value: user.hours.toLocaleString("uk-UA"),
             label: "годин волонтерства",
-            note: "Твій час для міста",
+            note: "Фактичний час із підтверджених звітів",
           },
           {
             icon: Flag,
@@ -141,6 +144,9 @@ function Dashboard() {
           </Card>
         ))}
       </div>
+      <ImpactSummary userId={user.id} />
+      <IdentitySummary userId={user.id} own />
+      <PersonalExploration userId={user.id} />
       <div className="dashboard-middle">
         <section>
           <SectionHeading

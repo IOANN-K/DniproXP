@@ -1,3 +1,4 @@
+import { isApiMode } from "../../shared/api/config";
 import { useState } from "react";
 import { useMutation } from "@tanstack/react-query";
 import { Link, useNavigate } from "react-router-dom";
@@ -9,18 +10,29 @@ import {
   Check,
 } from "lucide-react";
 import type { Role } from "../../entities/types";
-import { authAdapter, roleHome } from "./auth-adapter";
+import { authAdapter, roleHome, DEMO_CODE } from "./auth-adapter";
+import { useVolunteerState } from "../../shared/lib/use-volunteer";
 import { organizations } from "../../mocks/data";
 import { useSession } from "../session/store";
 import { Dialog, DialogTrigger, DialogContent } from "../../shared/ui/dialog";
 import { Button } from "../../shared/ui/button";
-export function DemoSwitcher() {
+export function DemoSwitcher() { return isApiMode ? null : <DemoDemoSwitcher />; }
+function DemoDemoSwitcher() {
   const [open, setOpen] = useState(false);
   const [organization, setOrganization] = useState("green");
+  const state = useVolunteerState();
+  const [volunteer, setVolunteer] = useState("demo-user");
   const navigate = useNavigate();
   const user = useSession((s) => s.user);
   const mutation = useMutation({
-    mutationFn: (role: Role) => authAdapter.switchDemo(role, organization),
+    mutationFn: (role: Role) => {
+      const account = state.accounts.find(
+        (a) => a.id === volunteer && a.role === "VOLUNTEER",
+      );
+      return role === "VOLUNTEER" && account
+        ? authAdapter.login(account.email, DEMO_CODE)
+        : authAdapter.switchDemo(role, organization);
+    },
     onSuccess: (u) => {
       setOpen(false);
       navigate(roleHome(u.role));
@@ -30,7 +42,7 @@ export function DemoSwitcher() {
     {
       role: "VOLUNTEER" as const,
       title: "Волонтер",
-      name: "Олександра Коваль",
+      name: state.profiles[volunteer]?.name || "Волонтер",
       icon: UserRound,
       text: "Квести, звіти, досвід та винагороди",
     },
@@ -61,6 +73,21 @@ export function DemoSwitcher() {
         title="Подивись на місто з іншої ролі"
         description="Локальні демонстраційні облікові записи. Це не авторизація для реального сервісу; дані всіх ролей спільні в цьому браузері."
       >
+        <label className="demo-organization-select">
+          Волонтер для демонстрації
+          <select
+            value={volunteer}
+            onChange={(e) => setVolunteer(e.target.value)}
+          >
+            {state.accounts
+              .filter((a) => a.role === "VOLUNTEER")
+              .map((a) => (
+                <option key={a.id} value={a.id}>
+                  {state.profiles[a.id]?.name}
+                </option>
+              ))}
+          </select>
+        </label>
         <label className="demo-organization-select">
           Команда для ролі організатора
           <select

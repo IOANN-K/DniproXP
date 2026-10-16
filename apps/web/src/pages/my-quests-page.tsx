@@ -1,3 +1,4 @@
+import { participationLabels } from "../entities/quest/participation-status";
 import { Link, useSearchParams } from "react-router-dom";
 import {
   Flag,
@@ -13,10 +14,7 @@ import { useVolunteer, useVolunteerState } from "../shared/lib/use-volunteer";
 import { Card, Badge, Photo } from "../shared/ui/primitives";
 import { Button } from "../shared/ui/button";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "../shared/ui/tabs";
-import {
-  ParticipationActions,
-  participationLabels,
-} from "../features/participation/participation-actions";
+import { ParticipationActions } from "../features/participation/participation-actions";
 import { formatDate } from "../shared/lib/utils";
 const tabs: [Participation["status"], string][] = [
   ["planned", "Заплановані"],
