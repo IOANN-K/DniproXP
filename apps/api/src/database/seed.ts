@@ -1,3 +1,5 @@
+import { seedAiRewards } from './ai-rewards-seed.js';
+import { seedVolunteerIdentity } from './identity-seed.js';
 import { seedVerifiedProgress } from './progress-seed.js';
 import 'reflect-metadata';
 import { z } from 'zod';
@@ -271,6 +273,8 @@ async function seed(): Promise<void> {
       }
       await seedQuestEngine(manager, dataSource, ids, organizationIds);
       await seedVerifiedProgress(manager, dataSource, ids, organizationIds);
+      await seedVolunteerIdentity(manager, dataSource, ids, organizationIds);
+      await seedAiRewards(manager, dataSource, ids);
     });
     console.log(
       'Demo seed completed. Existing profiles, memberships, preferences and passwords were preserved.',

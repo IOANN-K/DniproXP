@@ -23,6 +23,7 @@ import {
 @Index('applications_user_date', { synchronize: false })
 export class QuestApplication {
   @PrimaryGeneratedColumn('uuid') id: string;
+  @Column({ type: 'uuid', name: 'team_application_id', nullable: true }) teamApplicationId: string | null;
   @Column({ type: 'uuid', name: 'quest_id' }) questId: string;
   @ManyToOne(() => Quest, { onDelete: 'RESTRICT', nullable: false })
   @JoinColumn({ name: 'quest_id' })
@@ -50,6 +51,7 @@ export class QuestApplication {
 @Index('participations_user_date', { synchronize: false })
 export class Participation {
   @PrimaryGeneratedColumn('uuid') id: string;
+  @Column({ type: 'uuid', name: 'team_application_id', nullable: true }) teamApplicationId: string | null;
   @Column({ type: 'uuid', name: 'application_id' }) applicationId: string;
   @ManyToOne(() => QuestApplication, { onDelete: 'RESTRICT', nullable: false })
   @JoinColumn({ name: 'application_id' })

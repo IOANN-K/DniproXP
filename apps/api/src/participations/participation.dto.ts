@@ -90,6 +90,7 @@ export class CancelParticipationDto {
   reason?: string;
 }
 export class ApplicationDto {
+  @ApiProperty({ type: String,nullable: true,format: 'uuid' }) teamApplicationId: string | null;
   @ApiProperty({ format: 'uuid' }) id: string;
   @ApiProperty({ format: 'uuid' }) questId: string;
   @ApiProperty({ format: 'uuid' }) userId: string;
@@ -125,6 +126,7 @@ export class ReportDto {
   @ApiProperty({ type: String, nullable: true }) reviewReason: string | null;
 }
 export class ParticipationDto {
+  @ApiProperty({ type: String,nullable: true,format: 'uuid' }) teamApplicationId: string | null;
   @ApiProperty({ format: 'uuid' }) id: string;
   @ApiProperty({ format: 'uuid' }) applicationId: string;
   @ApiProperty({ format: 'uuid' }) userId: string;

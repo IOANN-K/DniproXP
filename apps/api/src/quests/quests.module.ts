@@ -17,6 +17,6 @@ import {
     AdminQuestsController,
   ],
   providers: [QuestsService, QuestQueries, QuestPolicy, OptionalJwtGuard],
-  exports: [QuestPolicy, QuestQueries],
+  exports: [QuestPolicy, QuestQueries, QuestsService],
 })
 export class QuestsModule {}

@@ -1,3 +1,4 @@
+import { integrationRoutes } from "./api-routes";
 import { QuestWizardPage } from "../pages/organizer/quest-wizard-page";
 import { ImpactPage } from "../pages/impact-page";
 import { ImpactReceiptsPage } from "../pages/impact-receipts-page";
@@ -32,7 +33,7 @@ import { QuestFormPage } from "../pages/organizer/quest-form-page";
 import { OrganizerQuestDetailPage } from "../pages/organizer/quest-detail-page";
 import { OrganizationPage } from "../pages/organization-page";
 import { AdminPage } from "../pages/admin-page";
-export const router = createBrowserRouter([
+export const router = createBrowserRouter(integrationRoutes([
   {
     element: <PublicLayout />,
     errorElement: <RouteError />,
@@ -102,4 +103,4 @@ export const router = createBrowserRouter([
       { path: "*", element: <NotFound /> },
     ],
   },
-]);
+]));

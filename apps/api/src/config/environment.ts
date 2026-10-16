@@ -36,8 +36,30 @@ const schema = z
     COOKIE_SAME_SITE: z.enum(['strict', 'lax', 'none']).default('lax'),
     SWAGGER_ENABLED: z.enum(['true', 'false']).default('false'),
     TRUST_PROXY_HOPS: integer(0, 0, 5),
+    AI_PROVIDER: z.preprocess(blankToUndefined, z.enum(['openai-compatible']).optional()),
+    AI_API_KEY: z.preprocess(blankToUndefined, z.string().min(1).max(4096).regex(/^[^\r\n]+$/).optional()),
+    AI_MODEL: z.preprocess(blankToUndefined, z.string().min(1).max(120).optional()),
+    AI_BASE_URL: z.preprocess(blankToUndefined, z.url().optional()),
+    AI_TIMEOUT_MS: integer(15000, 1000, 60000),
+    AI_USER_DAILY_LIMIT: integer(10, 1, 1000),
+    AI_ORG_DAILY_LIMIT: integer(50, 1, 10000),
+    AI_GLOBAL_DAILY_LIMIT: integer(200, 1, 100000),
+    AI_CONCURRENCY_LIMIT: integer(3, 1, 50),
+    AI_MAX_SUGGESTIONS: integer(3, 1, 3),
+    AI_OUTPUT_RETRIES: integer(0, 0, 1),
+    AI_RETENTION_DAYS: integer(30, 1, 365),
   })
   .superRefine((env, ctx) => {
+    if (env.AI_BASE_URL) {
+      try {
+        const url = new URL(env.AI_BASE_URL);
+        if (url.username || url.password || url.search || url.hash ||
+            (url.protocol !== 'https:' && !(env.NODE_ENV !== 'production' && url.protocol === 'http:' && ['localhost','127.0.0.1','[::1]'].includes(url.hostname))))
+          ctx.addIssue({ code: 'custom', path: ['AI_BASE_URL'], message: 'Use a trusted HTTPS base URL without credentials/query; local HTTP is development only' });
+      } catch {
+        ctx.addIssue({ code: 'custom', path: ['AI_BASE_URL'], message: 'Use a trusted HTTPS base URL without credentials/query; local HTTP is development only' });
+      }
+    }
     if (!env.DATABASE_URL && (!env.DB_USER || !env.DB_PASSWORD || !env.DB_NAME))
       ctx.addIssue({
         code: 'custom',

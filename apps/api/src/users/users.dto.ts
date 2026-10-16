@@ -106,6 +106,7 @@ export class UserDto {
   @ApiProperty({ type: DerivedStatisticsDto }) statistics: DerivedStatisticsDto;
 }
 export class PublicUserProfileDto {
+  @ApiPropertyOptional() passportUrl?: string;
   @ApiProperty() restricted: boolean;
   @ApiPropertyOptional({ format: 'uuid' }) id?: string;
   @ApiPropertyOptional() displayName?: string;

@@ -117,6 +117,7 @@ export class UsersService {
       restricted: false,
       id: user.id,
       joinDate: user.createdAt.toISOString(),
+      passportUrl: `/v1/users/${user.id}/passport`,
       statistics: { available: false },
       ...(prefs.showDisplayName
         ? {

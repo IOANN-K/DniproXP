@@ -68,6 +68,7 @@ export class ParticipationQueries {
     });
     return {
       id: p.id,
+      teamApplicationId: p.teamApplicationId ?? null,
       applicationId: p.applicationId,
       questId: p.questId,
       userId: p.userId,

@@ -189,3 +189,5 @@ pnpm --dir apps/api exec node dist/src/main.js
 ```
 
 Потрібні PostgreSQL integration/concurrency сценарії: fresh migration та BE-02 backfill; known/unknown hours; trigger rollback; repeated/concurrent approval; private receipt/cross-user access; Kyiv DST/period boundaries; distinct shared result при багатьох волонтерах/challenges; measurement retry/correction race; DAG та frozen rules; active/expired/archived lifecycle; повторний/concurrent claim і дві currency проводки; current progress після downward correction; приховані профілі в leaderboard; user/organization suspension; seed двічі без нових awards; refusal destructive down. Наявні starter tests самі по собі не покривають ці доменні гарантії.
+
+Оновлення BE-04: [Volunteer Identity & Teams](be-04-volunteer-identity-teams.md) додає explicit team application/verified attribution, Skills, Achievements та Passport. Collective measurements залишаються quest-scoped і не стають адитивним командним майном. Existing ProgressRewardClaim badges проєктуються в achievement unlocks без повторної ledger виплати.

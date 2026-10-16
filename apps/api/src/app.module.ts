@@ -1,3 +1,10 @@
+import { AiQuestModule } from './ai-quests/ai-quest.module.js';
+import { RewardsCatalogModule } from './rewards/rewards-catalog.module.js';
+import { TeamsModule } from './teams/teams.module.js';
+import { TeamApplicationsModule } from './team-applications/team-applications.module.js';
+import { SkillsModule } from './skills/skills.module.js';
+import { AchievementsModule } from './achievements/achievements.module.js';
+import { VolunteerPassportModule } from './passport/passport.module.js';
 import { ImpactModule } from './impact/impact.module.js';
 import { MissionsModule } from './missions/missions.module.js';
 import { ChallengesModule } from './challenges/challenges.module.js';
@@ -28,6 +35,13 @@ import { LedgerModule } from './ledger/ledger.module.js';
     ImpactModule,
     MissionsModule,
     ChallengesModule,
+    TeamsModule,
+    TeamApplicationsModule,
+    SkillsModule,
+    AchievementsModule,
+    VolunteerPassportModule,
+    AiQuestModule,
+    RewardsCatalogModule,
   ],
   controllers: [AppController, HealthController],
   providers: [AppService],

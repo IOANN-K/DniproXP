@@ -34,7 +34,7 @@ async function bootstrap(): Promise<void> {
     origin: settings.origins,
     credentials: true,
     methods: ['GET', 'POST', 'PATCH', 'DELETE', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization', 'X-DniproXP-CSRF'],
+    allowedHeaders: ['Content-Type', 'Authorization', 'X-DniproXP-CSRF', 'Idempotency-Key'],
     exposedHeaders: ['X-Request-Id', 'Retry-After'],
     maxAge: 600,
   });
@@ -54,7 +54,7 @@ async function bootstrap(): Promise<void> {
     const options = new DocumentBuilder()
       .setTitle('DniproXP API')
       .setDescription(
-        'BE-01–03: Identity, organization scope, quest verification, immutable ledger, City Impact, Missions and City Challenges. Personal receipts and leaderboards respect privacy preferences. Auth cookie mutations require an allowlisted Origin and X-DniproXP-CSRF: 1. ADMIN has no organization-scope bypass.',
+        'BE-01–05.1: Identity, organization scope, quest verification, immutable ledger, City Impact, Missions, City Challenges, Teams, Skills, Achievements, Volunteer Passport, AI quest generation and reward redemption. Personal receipts and leaderboards respect privacy preferences. Auth cookie mutations require an allowlisted Origin and X-DniproXP-CSRF: 1. ADMIN has no quest organization-scope bypass; reward administration is an explicit platform capability.',
       )
       .setVersion('1.0')
       .addBearerAuth()

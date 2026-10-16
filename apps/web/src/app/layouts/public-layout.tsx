@@ -19,7 +19,7 @@ import {
 } from "../../shared/ui/sheet";
 import { LevelUpDialog } from "../../features/gamification/level-up-dialog";
 import { VolunteerAvatar } from "../../entities/gamification/components";
-import { useVolunteer } from "../../shared/lib/use-volunteer";
+import { useHeaderIdentity as useVolunteer } from "../../shared/api/header-identity";
 import { DemoSwitcher } from "../../features/auth/demo-switcher";
 import { roleHome } from "../../features/auth/auth-adapter";
 import { PlatformToast } from "../../shared/ui/platform-toast";

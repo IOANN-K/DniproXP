@@ -1,3 +1,11 @@
+import { AiGenerationSession,AiQuestSuggestion } from '../ai-quests/ai.entity.js';
+import { RewardCatalogItem,RewardRedemption,RewardRedemptionHistory } from '../rewards/reward.entity.js';
+import { AiRewards1792454400000 } from './migrations/1792454400000-ai-rewards.js';
+import { Team,TeamMembership,TeamInvitation,TeamJoinRequest } from '../teams/team.entity.js';
+import { TeamQuestApplication,TeamQuestApplicationMember,TeamActivityAttribution } from '../team-applications/team-application.entity.js';
+import { SkillDefinition,UserSkillEvidence } from '../skills/skill.entity.js';
+import { AchievementDefinition,AchievementUnlock } from '../achievements/achievement.entity.js';
+import { VolunteerIdentity1792368000000 } from './migrations/1792368000000-volunteer-identity.js';
 import { ImpactEvent, ImpactReceipt, CollectiveMeasurement } from '../impact/impact.entity.js';
 import { MissionDefinition, ChallengeDefinition, MissionEnrollment, MissionCompletion, ProgressRewardClaim, ChallengeParticipant, ChallengeMilestoneCompletion } from '../progress/definition.entity.js';
 import { VerifiedProgress1792281600000 } from './migrations/1792281600000-verified-progress.js';
@@ -44,6 +52,7 @@ export function databaseOptions(env: Environment): DataSourceOptions {
           }
         : false,
     entities: [
+      AiGenerationSession,AiQuestSuggestion,RewardCatalogItem,RewardRedemption,RewardRedemptionHistory,
       User,
       UserPreferences,
       Organization,
@@ -58,9 +67,10 @@ export function databaseOptions(env: Environment): DataSourceOptions {
       RewardLedger,
       VerifiedActivity,
       ImpactEvent, ImpactReceipt, CollectiveMeasurement,
+      Team,TeamMembership,TeamInvitation,TeamJoinRequest,TeamQuestApplication,TeamQuestApplicationMember,TeamActivityAttribution,SkillDefinition,UserSkillEvidence,AchievementDefinition,AchievementUnlock,
       MissionDefinition, ChallengeDefinition, MissionEnrollment, MissionCompletion, ProgressRewardClaim, ChallengeParticipant, ChallengeMilestoneCompletion,
     ],
-    migrations: [Foundation1792108800000, QuestEngine1792195200000, VerifiedProgress1792281600000],
+    migrations: [Foundation1792108800000, QuestEngine1792195200000, VerifiedProgress1792281600000, VolunteerIdentity1792368000000, AiRewards1792454400000],
     migrationsTableName: 'api_migrations',
     migrationsRun: false,
     synchronize: false,

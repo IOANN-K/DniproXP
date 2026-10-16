@@ -1,5 +1,9 @@
 import { Injectable } from '@nestjs/common';
 import { DataSource } from 'typeorm';
+import type { EntityManager } from 'typeorm';
+import { TeamAccess } from '../teams/team-access.service.js';
+import { TeamMembership } from '../teams/team.entity.js';
+import { TeamQuestApplication, TeamQuestApplicationMember } from '../team-applications/team-application.entity.js';
 import { Role } from '../database/entities/domain.js';
 import { Transactions } from '../database/database.module.js';
 import { AuditService } from '../audit/audit.service.js';
@@ -42,9 +46,13 @@ export class ParticipationsService {
     private readonly policy: QuestPolicy,
     private readonly queries: ParticipationQueries,
     private readonly audit: AuditService,
+    private readonly teams: TeamAccess,
   ) {}
-  async apply(userId: string, questId: string): Promise<ApplicationDto> {
-    return this.transactions.run(async (manager) => {
+  apply(userId: string, questId: string): Promise<ApplicationDto> {
+    return this.transactions.run(manager => this.applyWithin(manager,userId,questId));
+  }
+  async applyWithin(manager: EntityManager,userId: string,questId: string,teamApplicationId: string | null = null,actorId = userId): Promise<ApplicationDto> {
+    if (!manager.queryRunner?.isTransactionActive) throw new Error('Applications require a transaction');
       const { quest, organization } = await this.policy.lock(manager, questId);
       await this.policy.activeUser(manager, userId);
       this.policy.available(quest, organization);
@@ -52,6 +60,7 @@ export class ParticipationsService {
         where: { userId, questId },
         lock: { mode: 'pessimistic_write' },
       });
+      if (teamApplicationId && old && old.status !== ApplicationStatus.WITHDRAWN) conflict('Волонтер уже має заявку на цей квест.','DUPLICATE_APPLICATION');
       if (
         old &&
         [ApplicationStatus.PENDING, ApplicationStatus.APPROVED].includes(
@@ -72,6 +81,7 @@ export class ParticipationsService {
       const application =
         old ?? manager.create(QuestApplication, { userId, questId });
       if (old) applicationTransition(old.status, ApplicationStatus.PENDING);
+      application.teamApplicationId = teamApplicationId;
       application.status = ApplicationStatus.PENDING;
       application.submittedAt = new Date();
       application.reviewedAt = null;
@@ -80,27 +90,25 @@ export class ParticipationsService {
       await manager.save(application);
       await this.audit.record(
         manager,
-        userId,
+        actorId,
         'APPLICATION_SUBMITTED',
         'quest_application',
         application.id,
-        { questId },
+        { questId,userId },
       );
       return applicationView(
         application,
         await this.queries.questSnapshot(manager, questId),
       );
-    });
   }
-  async review(
-    actorId: string,
-    id: string,
-    approve: boolean,
-    reason: string | null,
-  ): Promise<ApplicationDto> {
-    const ref = await this.source.manager.findOneBy(QuestApplication, { id });
+  review(actorId: string,id: string,approve: boolean,reason: string | null): Promise<ApplicationDto> {
+    return this.transactions.run(manager => this.reviewWithin(manager,actorId,id,approve,reason));
+  }
+  async reviewWithin(manager: EntityManager,actorId: string,id: string,approve: boolean,reason: string | null): Promise<ApplicationDto> {
+    if (!manager.queryRunner?.isTransactionActive) throw new Error('Review requires a transaction');
+    const ref = await manager.findOneBy(QuestApplication, { id });
     if (!ref) throw new DomainError(404, 'NOT_FOUND', 'Заявку не знайдено.');
-    return this.transactions.run(async (manager) => {
+    
       const { quest, organization } = await this.policy.lock(
         manager,
         ref.questId,
@@ -138,6 +146,12 @@ export class ParticipationsService {
         conflict('Вкажи причину відхилення.', 'REASON_REQUIRED');
       if (approve) {
         await this.policy.activeUser(manager, app.userId);
+        if (app.teamApplicationId) {
+          const group = await manager.findOneByOrFail(TeamQuestApplication,{ id: app.teamApplicationId });
+          await this.teams.lock(manager,group.teamId);
+          const selection = await manager.findOneBy(TeamQuestApplicationMember,{ teamApplicationId: group.id,userId: app.userId });
+          if (!selection || !(await manager.existsBy(TeamMembership,{ id: selection.membershipId,status: 'ACTIVE' }))) conflict('Членство вибраного учасника вже завершено.','TEAM_MEMBERSHIP_ENDED');
+        }
         if ((await occupied(manager, quest.id)) > quest.capacity)
           conflict('Місткість квесту вичерпано.', 'CAPACITY_EXCEEDED');
         const old = await manager.findOne(Participation, {
@@ -159,6 +173,7 @@ export class ParticipationsService {
             ? ParticipationStatus.ACTIVE
             : ParticipationStatus.PLANNED;
         if (old) participationTransition(old.status, nextStatus);
+        p.teamApplicationId = app.teamApplicationId ?? null;
         p.status = nextStatus;
         await manager.save(p);
         if (
@@ -187,13 +202,16 @@ export class ParticipationsService {
         app,
         await this.queries.questSnapshot(manager, quest.id),
       );
-    });
   }
-  async withdraw(userId: string, id: string): Promise<ApplicationDto> {
-    const ref = await this.source.manager.findOneBy(QuestApplication, { id });
+  withdraw(userId: string,id: string): Promise<ApplicationDto> {
+    return this.transactions.run(manager => this.withdrawWithin(manager,userId,id));
+  }
+  async withdrawWithin(manager: EntityManager,userId: string,id: string,actorId = userId): Promise<ApplicationDto> {
+    if (!manager.queryRunner?.isTransactionActive) throw new Error('Withdrawal requires a transaction');
+    const ref = await manager.findOneBy(QuestApplication, { id });
     if (!ref || ref.userId !== userId)
       throw new DomainError(404, 'NOT_FOUND', 'Заявку не знайдено.');
-    return this.transactions.run(async (manager) => {
+    
       const { quest } = await this.policy.lock(manager, ref.questId);
       const app = await manager.findOne(QuestApplication, {
         where: { id, userId },
@@ -225,14 +243,14 @@ export class ParticipationsService {
       app.status = ApplicationStatus.WITHDRAWN;
       app.reason = 'Волонтер відкликав заявку.';
       await manager.save(app);
-      if (p) {
+      if (p && p.status !== ParticipationStatus.CANCELLED) {
         participationTransition(p.status, ParticipationStatus.CANCELLED);
         p.status = ParticipationStatus.CANCELLED;
         await manager.save(p);
       }
       await this.audit.record(
         manager,
-        userId,
+        actorId,
         'APPLICATION_WITHDRAWN',
         'quest_application',
         id,
@@ -242,7 +260,6 @@ export class ParticipationsService {
         app,
         await this.queries.questSnapshot(manager, quest.id),
       );
-    });
   }
   async start(userId: string, id: string): Promise<ParticipationDto> {
     const ref = await this.source.manager.findOneBy(Participation, {
@@ -359,23 +376,23 @@ export class ParticipationsService {
       return this.queries.participationView(manager, p);
     });
   }
-  async submitReport(
-    userId: string,
-    id: string,
-    input: CreateReportDto,
-  ): Promise<ReportDto> {
+  submitReport(userId: string,id: string,input: CreateReportDto): Promise<ReportDto> {
+    return this.transactions.run(manager => this.submitReportWithin(manager,userId,id,input));
+  }
+  async submitReportWithin(manager: EntityManager,userId: string,id: string,input: CreateReportDto): Promise<ReportDto> {
+    if (!manager.queryRunner?.isTransactionActive) throw new Error('Reports require a transaction');
     if (input.evidenceReferences?.length)
       throw new DomainError(
         422,
         'EVIDENCE_NOT_SUPPORTED',
         'Завантаження доказів буде доступне після підключення захищеного media storage.',
       );
-    const ref = await this.source.manager.findOneBy(Participation, {
+    const ref = await manager.findOneBy(Participation, {
       id,
       userId,
     });
     if (!ref) throw new DomainError(404, 'NOT_FOUND', 'Участь не знайдено.');
-    return this.transactions.run(async (manager) => {
+    
       const { quest, organization } = await this.policy.lock(
         manager,
         ref.questId,
@@ -434,6 +451,5 @@ export class ParticipationsService {
         { participationId: id },
       );
       return reportView(report);
-    });
   }
 }

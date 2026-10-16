@@ -15,6 +15,7 @@ export function applicationView(
 ): ApplicationDto {
   return {
     id: row.id,
+    teamApplicationId: row.teamApplicationId ?? null,
     questId: row.questId,
     userId: row.userId,
     status: row.status,

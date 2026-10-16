@@ -1,3 +1,4 @@
+import { isApiMode } from "../shared/api/config";
 import { useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useMutation } from "@tanstack/react-query";
@@ -12,8 +13,8 @@ import { Button } from "../shared/ui/button";
 import { Input, Card, Badge } from "../shared/ui/primitives";
 import { DemoSwitcher } from "../features/auth/demo-switcher";
 export function AuthPage({ register = false }: { register?: boolean }) {
-  const [email, setEmail] = useState(register ? "" : "volunteer@dniproxp.demo");
-  const [code, setCode] = useState(DEMO_CODE);
+  const [email, setEmail] = useState(register || isApiMode ? "" : "volunteer@dniproxp.demo");
+  const [code, setCode] = useState(isApiMode ? "" : DEMO_CODE);
   const [name, setName] = useState("");
   const [org, setOrg] = useState("");
   const [role, setRole] = useState<RegistrationInput["role"]>("VOLUNTEER");
@@ -62,10 +63,9 @@ export function AuthPage({ register = false }: { register?: boolean }) {
         <div className="auth-demo-note">
           <ShieldCheck size={25} />
           <div>
-            <strong>Це демонстраційна авторизація</strong>
+            <strong>{isApiMode ? "Захищена серверна сесія" : "Це демонстраційна авторизація"}</strong>
             <p>
-              Усі облікові записи локальні. Використовуй вигадану пошту та
-              спільний демокод, а не справжній пароль.
+              {isApiMode ? "Увійди за поштою та паролем. Доступ до організацій і ролей визначає сервер." : "Усі облікові записи локальні. Використовуй вигадану пошту та спільний демокод, а не справжній пароль."}
             </p>
           </div>
         </div>
@@ -76,9 +76,7 @@ export function AuthPage({ register = false }: { register?: boolean }) {
           {register ? "Долучитися до спільноти" : "Раді бачити тебе знову"}
         </h2>
         <p>
-          {register
-            ? "Створи локальний демонстраційний профіль."
-            : "Увійди в готовий або створений тобою демообліковий запис."}
+          {isApiMode ? (register ? "Створи обліковий запис волонтера." : "Увійди у свій обліковий запис DniproXP.") : register ? "Створи локальний демонстраційний профіль." : "Увійди в готовий або створений тобою демообліковий запис."}
         </p>
         <form
           onSubmit={(e) => {
@@ -96,8 +94,9 @@ export function AuthPage({ register = false }: { register?: boolean }) {
                 onChange={(e) => setName(e.target.value)}
                 required
                 minLength={2}
-                maxLength={60}
+                maxLength={isApiMode ? 80 : 60}
               />
+              {!isApiMode && <>
               <label htmlFor="auth-role">Твоя роль</label>
               <select
                 id="auth-role"
@@ -126,27 +125,31 @@ export function AuthPage({ register = false }: { register?: boolean }) {
                   </p>
                 </>
               )}
+              </>}
             </>
           )}
-          <label htmlFor="auth-email">Електронна пошта для демопрофілю</label>
+          <label htmlFor="auth-email">{isApiMode ? "Електронна пошта" : "Електронна пошта для демопрофілю"}</label>
           <Input
             id="auth-email"
             type="email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             required
-            maxLength={100}
-            autoComplete="off"
+            maxLength={isApiMode ? 254 : 100}
+            autoComplete={isApiMode ? "username" : "off"}
           />
-          <label htmlFor="auth-code">Демонстраційний код</label>
+          <label htmlFor="auth-code">{isApiMode ? "Пароль" : "Демонстраційний код"}</label>
           <Input
             id="auth-code"
+            type={isApiMode ? "password" : "text"}
+            minLength={isApiMode ? 12 : undefined}
+            maxLength={isApiMode ? 128 : undefined}
             value={code}
             onChange={(e) => setCode(e.target.value)}
             required
-            autoComplete="off"
+            autoComplete={isApiMode ? (register ? "new-password" : "current-password") : "off"}
           />
-          <span className="field-hint">Спільний код: {DEMO_CODE}</span>
+          {!isApiMode && <span className="field-hint">Спільний код: {DEMO_CODE}</span>}
           {mutation.isError && (
             <p className="error-message" role="alert">
               {mutation.error.message}
@@ -156,13 +159,13 @@ export function AuthPage({ register = false }: { register?: boolean }) {
             {mutation.isPending
               ? "Зберігаємо…"
               : register
-                ? "Створити демопрофіль"
+                ? (isApiMode ? "Створити профіль" : "Створити демопрофіль")
                 : "Увійти"}
             <ArrowRight size={17} />
           </Button>
         </form>
         <p className="auth-switch">
-          {register ? "Уже маєш демопрофіль?" : "Ще не долучався?"}{" "}
+          {register ? (isApiMode ? "Уже маєш профіль?" : "Уже маєш демопрофіль?") : "Ще не долучався?"}{" "}
           <Link to={register ? "/login" : "/register"}>
             {register ? "Увійти" : "Зареєструватися"}
           </Link>

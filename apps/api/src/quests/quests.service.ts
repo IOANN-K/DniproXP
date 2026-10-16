@@ -1,3 +1,4 @@
+import type { EntityManager } from 'typeorm';
 import { Injectable } from '@nestjs/common';
 import { OrganizationAccess } from '../organizations/organization-access.service.js';
 import { OrganizationMembership } from '../database/entities/organization.entity.js';
@@ -41,56 +42,58 @@ export class QuestsService {
     actorId: string,
     input: CreateQuestDto,
   ): Promise<ManagedQuestDto> {
-    return this.transactions.run(async (manager) => {
-      const org = await this.access.requireCapability(
-        manager,
-        input.organizationId,
-        actorId,
-        'manage',
-      );
-      const quest = manager.create(Quest, {
-        organizationId: org.id,
-        title: input.title,
-        categoryId: input.categoryId,
-        difficulty: input.difficulty,
-        capacity: input.capacity,
-        xp: input.xp,
-        rewardPoints: input.rewardPoints,
-        description: '',
-        fullDescription: '',
-        district: '',
-        address: '',
-        startAt: null,
-        endAt: null,
-        latitude: null,
-        longitude: null,
-        coordinateSource: null,
-        locationLabel: null,
-        requirements: [],
-        bring: [],
-        instructions: '',
-        image: null,
-        imageAlt: input.title,
-        lifecycle: QuestLifecycle.DRAFT,
-        archivedFrom: null,
-        moderation: QuestModeration.PENDING,
-        moderationReason: null,
-        reviewSubmittedAt: null,
-        publishedAt: null,
-        allowTeamParticipation: false,
-        teamParticipantLimit: null,
-      });
-      applyQuestInput(quest, input);
-      await manager.save(quest);
-      await this.audit.record(
-        manager,
-        actorId,
-        'QUEST_CREATED',
-        'quest',
-        quest.id,
-      );
-      return managedQuest(quest, 0, org.moderationStatus === 'approved');
+    return this.transactions.run(manager => this.createWithin(manager,actorId,input));
+  }
+  async createWithin(manager: EntityManager,actorId: string,input: CreateQuestDto): Promise<ManagedQuestDto> {
+    if (!manager.queryRunner?.isTransactionActive) throw new Error('Quest creation requires a transaction');
+    const org = await this.access.requireCapability(
+      manager,
+      input.organizationId,
+      actorId,
+      'manage',
+    );
+    const quest = manager.create(Quest, {
+      organizationId: org.id,
+      title: input.title,
+      categoryId: input.categoryId,
+      difficulty: input.difficulty,
+      capacity: input.capacity,
+      xp: input.xp,
+      rewardPoints: input.rewardPoints,
+      description: '',
+      fullDescription: '',
+      district: '',
+      address: '',
+      startAt: null,
+      endAt: null,
+      latitude: null,
+      longitude: null,
+      coordinateSource: null,
+      locationLabel: null,
+      requirements: [],
+      bring: [],
+      instructions: '',
+      image: null,
+      imageAlt: input.title,
+      lifecycle: QuestLifecycle.DRAFT,
+      archivedFrom: null,
+      moderation: QuestModeration.PENDING,
+      moderationReason: null,
+      reviewSubmittedAt: null,
+      publishedAt: null,
+      allowTeamParticipation: false,
+      teamParticipantLimit: null,
     });
+    applyQuestInput(quest, input);
+    await manager.save(quest);
+    await this.audit.record(
+      manager,
+      actorId,
+      'QUEST_CREATED',
+      'quest',
+      quest.id,
+    );
+    return managedQuest(quest, 0, org.moderationStatus === 'approved');
   }
   async update(
     actorId: string,
