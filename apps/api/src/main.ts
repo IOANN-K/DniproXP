@@ -28,7 +28,7 @@ async function bootstrap(): Promise<void> {
     res.setHeader('Cache-Control', 'no-store');
     next();
   });
-  app.useBodyParser('json', { limit: '16kb' });
+  app.useBodyParser('json', { limit: '128kb' });
   app.setGlobalPrefix('v1');
   app.enableCors({
     origin: settings.origins,

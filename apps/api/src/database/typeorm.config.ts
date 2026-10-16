@@ -9,6 +9,14 @@ import {
 import { AuthSession, RefreshToken } from './entities/session.entity.js';
 import { AuditLog } from './entities/audit.entity.js';
 import { Foundation1792108800000 } from './migrations/1792108800000-foundation.js';
+import { Quest } from '../quests/quest.entity.js';
+import {
+  QuestApplication,
+  Participation,
+  ParticipationReport,
+} from '../participations/participation.entity.js';
+import { RewardLedger, VerifiedActivity } from '../ledger/ledger.entity.js';
+import { QuestEngine1792195200000 } from './migrations/1792195200000-quest-engine.js';
 export function databaseOptions(env: Environment): DataSourceOptions {
   return {
     type: 'postgres',
@@ -40,8 +48,14 @@ export function databaseOptions(env: Environment): DataSourceOptions {
       AuthSession,
       RefreshToken,
       AuditLog,
+      Quest,
+      QuestApplication,
+      Participation,
+      ParticipationReport,
+      RewardLedger,
+      VerifiedActivity,
     ],
-    migrations: [Foundation1792108800000],
+    migrations: [Foundation1792108800000, QuestEngine1792195200000],
     migrationsTableName: 'api_migrations',
     migrationsRun: false,
     synchronize: false,

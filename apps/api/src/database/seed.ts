@@ -17,6 +17,8 @@ import {
 import { PasswordService } from '../auth/password.service.js';
 import { AuditService } from '../audit/audit.service.js';
 
+import { seedQuestEngine } from './quest-seed.js';
+
 const credential = z.object({
   email: z.string().trim().toLowerCase().pipe(z.email().max(254)),
   password: z.string().min(16).max(128),
@@ -187,6 +189,7 @@ async function seed(): Promise<void> {
           status: ModerationStatus.SUSPENDED,
         },
       ];
+      const organizationIds = new Map<string, string>();
       for (const definition of organizations) {
         const ownerId = ids.get(definition.owner);
         if (!ownerId) throw new Error('Missing seed organization owner');
@@ -263,7 +266,9 @@ async function seed(): Promise<void> {
           throw new Error(
             'Existing seed organization has no owner; refusing implicit repair.',
           );
+        organizationIds.set(definition.slug, org.id);
       }
+      await seedQuestEngine(manager, dataSource, ids, organizationIds);
     });
     console.log(
       'Demo seed completed. Existing profiles, memberships, preferences and passwords were preserved.',

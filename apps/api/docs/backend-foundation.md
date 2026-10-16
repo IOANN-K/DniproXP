@@ -1,5 +1,7 @@
 # DniproXP · Backend foundation BE-01
 
+> Продовження: [BE-02 Quest Engine](be-02-quest-engine.md). Нижче збережено межі першого етапу; нові quest/ledger endpoints та поточний body limit описані у BE-02.
+
 ## Межі реалізації та фактичний аудит
 
 Реалізовано NestJS API `/v1`: identity, авторизацію, користувачів, privacy settings, організації, staff scope, модерацію, аудит, health, OpenAPI, міграцію та явний dev seed. Frontend adapters і localStorage залишаються демонстраційними. Цей етап не підключає React до API і не імпортує demo snapshots.
