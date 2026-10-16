@@ -1,3 +1,4 @@
+import { useSession } from "../features/session/store";
 import { useState } from "react";
 import { useSearchParams, Link } from "react-router-dom";
 import {
@@ -24,7 +25,9 @@ import { DemoDialog } from "../features/session/demo-dialog";
 import { formatDate } from "../shared/lib/utils";
 const rewardCategories = ["Напої та їжа", "Екотовари", "Враження", "Мерч"];
 export function RewardsPage() {
-  const user = useVolunteer();
+  const current = useVolunteer();
+  const role = useSession((s) => s.user?.role);
+  const user = role === "VOLUNTEER" ? current : null;
   const state = useVolunteerState();
   const [params, setParams] = useSearchParams();
   const tab = ["catalog", "history", "achievements"].includes(

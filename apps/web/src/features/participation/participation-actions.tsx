@@ -1,50 +1,51 @@
 import { useState } from "react";
 import { useMutation } from "@tanstack/react-query";
-import { CheckCircle2, Play, ShieldCheck, X } from "lucide-react";
+import { CheckCircle2, Play, X, Clock3 } from "lucide-react";
 import type { Participation, Quest } from "../../entities/types";
 import { questApi } from "../../mocks/api";
+import { pointsForQuest } from "../../mocks/repository";
 import { Dialog, DialogContent } from "../../shared/ui/dialog";
 import { Button } from "../../shared/ui/button";
 import { ReportDialog, ReportPreview } from "./report-dialog";
-import { rewardPointsFor } from "../../entities/gamification/levels";
 export { participationLabels } from "../../entities/quest/participation-status";
 export function ParticipationActions({
   quest,
-  participation,
+  participation: p,
 }: {
   quest: Quest;
   participation: Participation;
 }) {
-  const [action, setAction] = useState<"cancel" | "start" | "confirm" | null>(
-    null,
-  );
+  const [action, setAction] = useState<"cancel" | "start" | null>(null);
   const mutation = useMutation({
-    mutationFn: async () => {
-      if (action === "cancel")
-        await questApi.cancel(quest.id, participation.userId);
-      else if (action === "start")
-        await questApi.startDemo(quest.id, participation.userId);
-      else if (action === "confirm")
-        await questApi.confirmDemo(quest.id, participation.userId);
-    },
+    mutationFn: () =>
+      action === "cancel"
+        ? questApi.cancel(quest.id, p.userId)
+        : questApi.startDemo(quest.id, p.userId),
     onSuccess: () => setAction(null),
   });
   return (
     <>
       <div className="participation-actions">
-        {participation.status === "planned" && (
+        {p.status === "planned" && (
           <>
-            <Button
-              size="sm"
-              variant="outline"
-              onClick={() => {
-                mutation.reset();
-                setAction("start");
-              }}
-            >
-              <Play size={15} />
-              Демо: почати квест
-            </Button>
+            {p.applicationStatus === "pending" ? (
+              <p className="application-wait">
+                <Clock3 size={17} />
+                Заявка чекає на рішення організатора
+              </p>
+            ) : (
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() => {
+                  mutation.reset();
+                  setAction("start");
+                }}
+              >
+                <Play size={15} />
+                Демо: почати схвалену участь
+              </Button>
+            )}
             <Button
               size="sm"
               variant="ghost"
@@ -58,34 +59,34 @@ export function ParticipationActions({
             </Button>
           </>
         )}
-        {participation.status === "active" && (
-          <ReportDialog quest={quest} participation={participation} />
-        )}{" "}
-        {participation.status === "pending" && (
+        {p.status === "active" && (
           <>
-            <ReportPreview participation={participation} />
-            <Button
-              size="sm"
-              variant="outline"
-              onClick={() => {
-                mutation.reset();
-                setAction("confirm");
-              }}
-            >
-              <ShieldCheck size={16} />
-              Демо: перевірити звіт
-            </Button>
+            {p.reportRejectionReason && (
+              <div className="error-message" role="status">
+                <strong>Звіт потребує доопрацювання</strong>
+                <p>{p.reportRejectionReason}</p>
+              </div>
+            )}
+            <ReportDialog quest={quest} participation={p} />
+            {p.report && <ReportPreview participation={p} />}
           </>
         )}
-        {participation.status === "completed" && (
+        {p.status === "pending" && (
+          <>
+            <ReportPreview participation={p} />
+            <p className="application-wait">
+              <Clock3 size={17} />
+              Організатор перевірить твій звіт
+            </p>
+          </>
+        )}
+        {p.status === "completed" && (
           <>
             <span className="completed-award">
-              <CheckCircle2 size={17} />+{quest.xp} XP · +
-              {rewardPointsFor(quest.xp)} балів
+              <CheckCircle2 size={17} />+{p.awardedXp ?? quest.xp} XP · +
+              {p.awardedPoints ?? pointsForQuest(quest)} балів
             </span>
-            {participation.report && (
-              <ReportPreview participation={participation} />
-            )}
+            {p.report && <ReportPreview participation={p} />}
           </>
         )}
       </div>
@@ -99,33 +100,14 @@ export function ParticipationActions({
           title={
             action === "cancel"
               ? "Скасувати участь?"
-              : action === "start"
-                ? "Змоделювати початок квесту?"
-                : "Демонстраційна перевірка звіту"
+              : "Розпочати схвалену демоучасть?"
           }
           description={
             action === "cancel"
-              ? "Місце звільниться для іншого волонтера. Згодом можна записатися знову, якщо будуть місця."
-              : action === "start"
-                ? "Демосистема переведе участь в активний стан незалежно від календарної дати. XP за це не нараховується."
-                : "Ти зараз моделюєш окрему дію організатора. Система перевірить наявність звіту й відсутність попереднього нарахування."
+              ? "Місце звільниться. Поки квест доступний, можна буде подати нову заявку."
+              : "Організатор уже схвалив участь. Ця дія моделює початок роботи незалежно від дати, без нарахування XP."
           }
         >
-          {action === "confirm" && (
-            <>
-              <div className="confirmation-summary">
-                <ShieldCheck size={28} />
-                <div>
-                  <strong>Звіт подано. Готовий до перевірки.</strong>
-                  <p>
-                    Після підтвердження: +{quest.xp} XP та +
-                    {rewardPointsFor(quest.xp)} бонусних балів.
-                  </p>
-                </div>
-              </div>
-              <p className="report-text">{participation.report?.text}</p>
-            </>
-          )}
           {mutation.isError && (
             <p role="alert" className="error-message">
               {mutation.error.message}
@@ -139,9 +121,7 @@ export function ParticipationActions({
               ? "Зберігаємо…"
               : action === "cancel"
                 ? "Так, скасувати"
-                : action === "start"
-                  ? "Розпочати демоучасть"
-                  : "Підтвердити від імені демосистеми"}
+                : "Розпочати участь"}
           </Button>
         </DialogContent>
       </Dialog>

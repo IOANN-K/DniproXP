@@ -1,3 +1,4 @@
+import { useSession } from "../session/store";
 import { useState } from "react";
 import { useMutation } from "@tanstack/react-query";
 import { Link } from "react-router-dom";
@@ -16,7 +17,9 @@ import { DemoDialog } from "../session/demo-dialog";
 export function RewardDialog({ reward }: { reward: Reward }) {
   const [open, setOpen] = useState(false);
   const [confirm, setConfirm] = useState(false);
-  const user = useVolunteer();
+  const current = useVolunteer();
+  const role = useSession((s) => s.user?.role);
+  const user = role === "VOLUNTEER" ? current : null;
   const state = useVolunteerState();
   const existing = state.redemptions.find(
     (r) => r.rewardId === reward.id && r.userId === user?.id,

@@ -10,7 +10,6 @@ import {
 import type { Participation } from "../entities/types";
 import { VolunteerShell } from "../features/session/volunteer-shell";
 import { useVolunteer, useVolunteerState } from "../shared/lib/use-volunteer";
-import { allQuests } from "../mocks/history";
 import { Card, Badge, Photo } from "../shared/ui/primitives";
 import { Button } from "../shared/ui/button";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "../shared/ui/tabs";
@@ -50,9 +49,9 @@ function MyQuests() {
       <div className="participation-explainer">
         <ShieldCheck size={22} />
         <p>
-          XP і бонусні бали з’являються тільки після перевірки звіту. Кнопки
-          «Демо» моделюють дію системи чи організатора; звичайне подання звіту
-          не нараховує винагороду.
+          XP і бонусні бали з’являються тільки після перевірки звіту
+          організатором. Подання заявки чи звіту не нараховує винагороду. Для
+          презентації перемикай ролі у верхній панелі.
         </p>
       </div>
       <Tabs value={tab} onValueChange={(value) => setParams({ tab: value })}>
@@ -75,7 +74,7 @@ function MyQuests() {
                   ),
                 )
                 .map((p) => {
-                  const q = allQuests.find((q) => q.id === p.questId)!;
+                  const q = state.questRecords.find((q) => q.id === p.questId)!;
                   return (
                     <Card className="my-quest-card" key={p.id}>
                       <Link className="my-quest-photo" to={`/quests/${q.id}`}>
@@ -84,7 +83,11 @@ function MyQuests() {
                       <div className="my-quest-body">
                         <div className="my-quest-card-top">
                           <Badge className={`status-${p.status}`}>
-                            {participationLabels[p.status]}
+                            {p.applicationStatus === "rejected"
+                              ? "Заявку відхилено"
+                              : p.applicationStatus === "pending"
+                                ? "Заявка на розгляді"
+                                : participationLabels[p.status]}
                           </Badge>
                           <span className="quest-xp-label">
                             <Zap size={14} />
@@ -104,10 +107,13 @@ function MyQuests() {
                             {q.district} район
                           </span>
                         </div>
+                        {p.applicationReason && (
+                          <p className="error-message">{p.applicationReason}</p>
+                        )}
                         {p.status === "pending" && (
                           <p className="field-hint">
-                            Звіт надіслано. Для демонстрації відкрий перевірку
-                            та підтверди його від імені системи.
+                            Звіт надіслано. Організатор перевірить його у
+                            кабінеті відповідної команди.
                           </p>
                         )}
                         {p.status === "active" && (
@@ -119,8 +125,7 @@ function MyQuests() {
                         {p.status === "cancelled" ? (
                           <Button asChild size="sm" variant="outline">
                             <Link to={`/quests/${q.id}`}>
-                              Переглянути й записатися знову{" "}
-                              <ArrowUpRight size={15} />
+                              Переглянути квест <ArrowUpRight size={15} />
                             </Link>
                           </Button>
                         ) : (

@@ -1,8 +1,7 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import { Medal, Trophy, ArrowUpRight, Zap, TrendingUp } from "lucide-react";
-import { users } from "../mocks/data";
-import { getVolunteer } from "../mocks/repository";
+import { volunteerAccounts, getVolunteer } from "../mocks/repository";
 import { useVolunteerState } from "../shared/lib/use-volunteer";
 import { useSession } from "../features/session/store";
 import { Tabs, TabsList, TabsTrigger } from "../shared/ui/tabs";
@@ -21,7 +20,7 @@ export function LeaderboardPage() {
     period === "all"
       ? 0
       : state.clock - (period === "week" ? 7 : 30) * 86400000;
-  const ranked = users
+  const ranked = volunteerAccounts(state)
     .map((u) => {
       const user = getVolunteer(u.id, state)!;
       const tx = state.transactions.filter(

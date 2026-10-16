@@ -15,10 +15,12 @@ import {
   SheetTrigger,
   SheetClose,
 } from "../../shared/ui/sheet";
-import { DemoDialog } from "../../features/session/demo-dialog";
 import { LevelUpDialog } from "../../features/gamification/level-up-dialog";
 import { VolunteerAvatar } from "../../entities/gamification/components";
 import { useVolunteer } from "../../shared/lib/use-volunteer";
+import { DemoSwitcher } from "../../features/auth/demo-switcher";
+import { roleHome } from "../../features/auth/auth-adapter";
+import { PlatformToast } from "../../shared/ui/platform-toast";
 import { useSession } from "../../features/session/store";
 const links = [
   ["/", "Головна"],
@@ -42,6 +44,7 @@ export function Logo() {
 }
 export function PublicLayout() {
   const user = useVolunteer();
+  const session = useSession((s) => s.user);
   const logout = useSession((s) => s.logout);
   const [open, setOpen] = useState(false);
   const location = useLocation();
@@ -73,11 +76,12 @@ export function PublicLayout() {
             ))}
           </nav>
           <div className="header-actions">
+            <DemoSwitcher />
             {user ? (
               <>
                 <Link
                   className="profile-link"
-                  to="/dashboard"
+                  to={session ? roleHome(session.role) : "/dashboard"}
                   aria-label="Мій простір"
                 >
                   <VolunteerAvatar user={user} />
@@ -94,16 +98,14 @@ export function PublicLayout() {
               </>
             ) : (
               <>
-                <DemoDialog>
-                  <Button variant="ghost" className="login-button">
-                    Увійти
-                  </Button>
-                </DemoDialog>
-                <DemoDialog>
-                  <Button size="sm">
+                <Button asChild variant="ghost" className="login-button">
+                  <Link to="/login">Увійти</Link>
+                </Button>
+                <Button asChild size="sm" className="header-register">
+                  <Link to="/register">
                     Долучитися <ArrowUpRight size={16} />
-                  </Button>
-                </DemoDialog>
+                  </Link>
+                </Button>
               </>
             )}
             <Sheet open={open} onOpenChange={setOpen}>
@@ -130,28 +132,58 @@ export function PublicLayout() {
                       </NavLink>
                     </SheetClose>
                   ))}
-                  {user && (
+                  {!session && (
                     <>
                       <SheetClose asChild>
-                        <Link to="/dashboard">
-                          Мій простір
-                          <ArrowUpRight size={18} />
+                        <Link to="/login">
+                          Увійти <ArrowUpRight size={18} />
                         </Link>
                       </SheetClose>
                       <SheetClose asChild>
-                        <Link to="/my-quests">
-                          Мої квести
-                          <ArrowUpRight size={18} />
+                        <Link to="/register">
+                          Зареєструватися <ArrowUpRight size={18} />
                         </Link>
                       </SheetClose>
                     </>
                   )}
                   <SheetClose asChild>
-                    <Link to="/profile">
-                      Мій профіль
-                      <ArrowUpRight size={18} />
+                    <Link to="/organizations">
+                      Організації <ArrowUpRight size={18} />
                     </Link>
                   </SheetClose>
+                  <SheetClose asChild>
+                    <Link to="/demo">
+                      Демосценарій <ArrowUpRight size={18} />
+                    </Link>
+                  </SheetClose>
+                  {user && (
+                    <>
+                      <SheetClose asChild>
+                        <Link
+                          to={session ? roleHome(session.role) : "/dashboard"}
+                        >
+                          Мій простір
+                          <ArrowUpRight size={18} />
+                        </Link>
+                      </SheetClose>
+                      {session?.role === "VOLUNTEER" && (
+                        <SheetClose asChild>
+                          <Link to="/my-quests">
+                            Мої квести
+                            <ArrowUpRight size={18} />
+                          </Link>
+                        </SheetClose>
+                      )}
+                    </>
+                  )}
+                  {session?.role === "VOLUNTEER" && (
+                    <SheetClose asChild>
+                      <Link to="/profile">
+                        Мій профіль
+                        <ArrowUpRight size={18} />
+                      </Link>
+                    </SheetClose>
+                  )}
                 </nav>
               </SheetContent>
             </Sheet>
@@ -162,6 +194,7 @@ export function PublicLayout() {
         <Outlet />
       </main>
       <LevelUpDialog />
+      <PlatformToast />
       <footer className="footer">
         <div className="container">
           <div className="footer-main">
@@ -186,6 +219,8 @@ export function PublicLayout() {
               <h3>Долучайся</h3>
               <Link to="/rewards">Нагороди та XP</Link>
               <Link to="/organizers">Організаторам</Link>
+              <Link to="/organizations">Організації</Link>
+              <Link to="/demo">Спробувати демосценарій</Link>
               <Link to="/#how-it-works">Як це працює</Link>
             </div>
             <div className="footer-note">

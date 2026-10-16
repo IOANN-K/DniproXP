@@ -1,3 +1,4 @@
+import { authSession } from "./auth-session";
 import type {
   Participation,
   Quest,
@@ -5,8 +6,13 @@ import type {
   ProfileData,
   VolunteerStats,
 } from "../entities/types";
-import { quests } from "./data";
-import { repository, getVolunteer, getQuestSnapshot } from "./repository";
+
+import {
+  repository,
+  getVolunteer,
+  getQuestSnapshot,
+  publicQuests,
+} from "./repository";
 const wait = () => new Promise<void>((resolve) => setTimeout(resolve, 350));
 export interface QuestApi {
   list(): Promise<Quest[]>;
@@ -25,15 +31,43 @@ export interface QuestApi {
 export const questApi: QuestApi = {
   async list() {
     await wait();
-    return quests.map((q) => getQuestSnapshot(q.id)!);
+    return publicQuests().map((q) => getQuestSnapshot(q.id)!);
   },
   async get(id) {
     await wait();
-    return getQuestSnapshot(id);
+    const q = getQuestSnapshot(id);
+    if (!q || q.lifecycle === "draft") return null;
+    const user = authSession.get();
+    const account = repository
+      .getSnapshot()
+      .accounts.find((a) => a.id === user);
+    const visible =
+      publicQuests().some((item) => item.id === id) ||
+      id.startsWith("history-") ||
+      account?.role === "ADMIN" ||
+      (account?.role === "ORGANIZER" &&
+        account.organizationId === q.organizationId) ||
+      repository
+        .getSnapshot()
+        .participations.some((p) => p.questId === id && p.userId === user);
+    return visible ? q : null;
   },
   async participations() {
     await wait();
-    return structuredClone(repository.getSnapshot().participations);
+    const s = repository.getSnapshot();
+    const a = s.accounts.find((a) => a.id === authSession.get());
+    return structuredClone(
+      s.participations.filter(
+        (p) =>
+          a?.role === "ADMIN" ||
+          (a?.role === "VOLUNTEER" && p.userId === a.id) ||
+          (a?.role === "ORGANIZER" &&
+            s.questRecords.some(
+              (q) =>
+                q.id === p.questId && q.organizationId === a.organizationId,
+            )),
+      ),
+    );
   },
   async join(q, u) {
     await wait();
@@ -74,7 +108,7 @@ export const profileApi: ProfileApi = {
 export const rewardsApi: RewardsApi = {
   async balance() {
     await wait();
-    return getVolunteer("demo-user")!.points;
+    return getVolunteer(authSession.get() || "")?.points || 0;
   },
   async redeemed() {
     await wait();

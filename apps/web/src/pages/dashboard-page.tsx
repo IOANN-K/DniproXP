@@ -21,8 +21,7 @@ import {
   AchievementGrid,
   XPTransactionHistory,
 } from "../entities/gamification/components";
-import { allQuests } from "../mocks/history";
-import { quests } from "../mocks/data";
+import { getQuestSnapshot, publicQuests } from "../mocks/repository";
 import { QuestCard } from "../entities/quest/quest-card";
 import { formatDate } from "../shared/lib/utils";
 import { participationLabels } from "../features/participation/participation-actions";
@@ -42,12 +41,13 @@ function Dashboard() {
   );
   const planned = mine
     .filter((p) => p.status === "planned")
-    .map((p) => allQuests.find((q) => q.id === p.questId)!)
+    .map((p) => state.questRecords.find((q) => q.id === p.questId)!)
     .sort((a, b) => a.date.localeCompare(b.date));
   const completedCategories = mine
     .filter((p) => p.status === "completed")
-    .map((p) => allQuests.find((q) => q.id === p.questId)?.categoryId);
-  const recommended = quests
+    .map((p) => state.questRecords.find((q) => q.id === p.questId)?.categoryId);
+  const recommended = publicQuests(state)
+    .map((q) => getQuestSnapshot(q.id, state)!)
     .filter(
       (q) =>
         q.status === "available" &&
@@ -154,7 +154,7 @@ function Dashboard() {
           <div className="compact-quest-list">
             {active.length ? (
               active.map((p) => {
-                const q = allQuests.find((q) => q.id === p.questId)!;
+                const q = state.questRecords.find((q) => q.id === p.questId)!;
                 return (
                   <Card key={p.id} className="active-quest-row">
                     <span className="active-quest-icon">

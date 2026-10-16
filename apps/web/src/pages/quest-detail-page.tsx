@@ -11,8 +11,10 @@ import {
   ListChecks,
   ArrowUpRight,
 } from "lucide-react";
+import { useSession } from "../features/session/store";
+import { useVolunteerState } from "../shared/lib/use-volunteer";
 import { questApi } from "../mocks/api";
-import { categories, organizations } from "../mocks/data";
+import { categories } from "../mocks/data";
 import { Badge, Card, Photo, Skeleton } from "../shared/ui/primitives";
 import { Button } from "../shared/ui/button";
 import { formatDate } from "../shared/lib/utils";
@@ -20,13 +22,18 @@ import { QuestCard } from "../entities/quest/quest-card";
 import { ParticipationPanel } from "../features/participation/participation-panel";
 import { SectionHeading } from "../shared/ui/section-heading";
 export function QuestDetailPage() {
+  const state = useVolunteerState();
+  const identity = useSession((s) => s.user?.id);
   const { id = "" } = useParams();
   const {
     data: quest,
     isPending,
     isError,
     refetch,
-  } = useQuery({ queryKey: ["quest", id], queryFn: () => questApi.get(id) });
+  } = useQuery({
+    queryKey: ["quest", id, identity],
+    queryFn: () => questApi.get(id),
+  });
   const { data: all = [] } = useQuery({
     queryKey: ["quests"],
     queryFn: () => questApi.list(),
@@ -57,7 +64,7 @@ export function QuestDetailPage() {
       </div>
     );
   const category = categories.find((c) => c.id === quest.categoryId)!;
-  const org = organizations.find((o) => o.id === quest.organizationId)!;
+  const org = state.organizations.find((o) => o.id === quest.organizationId)!;
   return (
     <div className="container page-section">
       <Link to="/quests" className="back-link">
@@ -102,7 +109,9 @@ export function QuestDetailPage() {
           </div>
           <section className="detail-section">
             <h2>Про цей квест</h2>
-            <p>{quest.description}</p>
+            <p className="report-text">
+              {quest.fullDescription || quest.description}
+            </p>
             <p>
               Зустрінемося на локації, познайомимося з командою й розподілимо
               завдання. Координатор пояснить процес і допоможе на кожному кроці.
@@ -145,6 +154,9 @@ export function QuestDetailPage() {
           </div>
           <section className="detail-section">
             <h2>Як долучитися</h2>
+            {quest.instructions && (
+              <p className="report-text">{quest.instructions}</p>
+            )}
             <ol className="participation-steps">
               <li>
                 <span>1</span>
@@ -179,9 +191,10 @@ export function QuestDetailPage() {
               <p>
                 На реальній платформі координатор перевірятиме присутність та
                 виконану роботу й підтверджуватиме XP. У демоверсії подай звіт у
-                «Моїх квестах», а потім окремо змоделюй перевірку організатором.
-                Лише після цієї перевірки нараховуються XP та бонусні бали.
-                Повторне підтвердження не подвоює винагороду.
+                «Моїх квестах», а потім перемкнися в кабінет відповідної
+                організації та підтвердь виконання. Лише після цієї перевірки
+                нараховуються XP та бонусні бали. Повторне підтвердження не
+                подвоює винагороду.
               </p>
             </div>
           </Card>
@@ -191,8 +204,8 @@ export function QuestDetailPage() {
               <small>ОРГАНІЗАТОР</small>
               <h3>{org.name}</h3>
               <p>{org.description}</p>
-              <Link to="/organizers" className="text-link">
-                Про організаторів <ArrowUpRight size={16} />
+              <Link to={`/organizations/${org.id}`} className="text-link">
+                Про організацію <ArrowUpRight size={16} />
               </Link>
             </div>
           </section>

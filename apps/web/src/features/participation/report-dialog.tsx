@@ -14,8 +14,8 @@ export function ReportDialog({
   participation: Participation;
 }) {
   const [open, setOpen] = useState(false);
-  const [text, setText] = useState("");
-  const [photo, setPhoto] = useState(false);
+  const [text, setText] = useState(participation.report?.text || "");
+  const [photo, setPhoto] = useState(!!participation.report?.photo);
   const mutation = useMutation({
     mutationFn: () =>
       questApi.submitReport(quest.id, participation.userId, {

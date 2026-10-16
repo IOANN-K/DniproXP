@@ -371,7 +371,7 @@ export function HomePage() {
         <p className="eyebrow">ТАК МОЖЕ ВИГЛЯДАТИ НАША СПІЛЬНОТА ПАРТНЕРІВ</p>
         <div className="partner-list">
           {organizations.map((o) => (
-            <Link to="/organizers" key={o.id}>
+            <Link to={`/organizations/${o.id}`} key={o.id}>
               <span className="partner-symbol">{o.initials}</span>
               {o.name}
             </Link>

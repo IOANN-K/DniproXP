@@ -13,7 +13,8 @@ import {
   ParticipationActions,
   participationLabels,
 } from "./participation-actions";
-import { rewardPointsFor } from "../../entities/gamification/levels";
+import { pointsForQuest } from "../../mocks/repository";
+import { DemoSwitcher } from "../auth/demo-switcher";
 export function ParticipationPanel({ quest }: { quest: Quest }) {
   const user = useSession((s) => s.user);
   const state = useVolunteerState();
@@ -39,7 +40,7 @@ export function ParticipationPanel({ quest }: { quest: Quest }) {
         <span>XP</span>
       </div>
       <Badge className="points-tag">
-        +{rewardPointsFor(quest.xp)} бонусних балів
+        +{pointsForQuest(quest)} бонусних балів
       </Badge>
       <p className="muted">
         Після підтвердження виконання. Запис на квест не приносить XP.
@@ -58,31 +59,50 @@ export function ParticipationPanel({ quest }: { quest: Quest }) {
       {joined ? (
         <>
           <p className="availability">
-            <Badge>{participationLabels[p.status]}</Badge>
+            <Badge>
+              {p.applicationStatus === "pending"
+                ? "Заявка на розгляді"
+                : participationLabels[p.status]}
+            </Badge>
           </p>
           <ParticipationActions quest={quest} participation={p} />
           <Button asChild variant="ghost">
             <Link to="/my-quests">До моїх квестів</Link>
           </Button>
         </>
-      ) : quest.status === "completed" || full ? (
+      ) : quest.status === "completed" ||
+        quest.lifecycle === "cancelled" ||
+        p?.applicationStatus === "rejected" ||
+        full ? (
         <Button disabled>
-          {quest.status === "completed"
-            ? "Квест завершено"
-            : "Усі місця зайняті"}
+          {quest.lifecycle === "cancelled"
+            ? "Квест скасовано"
+            : p?.applicationStatus === "rejected"
+              ? "Заявку відхилено"
+              : quest.status === "completed"
+                ? "Квест завершено"
+                : "Усі місця зайняті"}
         </Button>
+      ) : user?.role !== "VOLUNTEER" && user ? (
+        <>
+          <p className="field-hint">Участь доступна в ролі волонтера.</p>
+          <DemoSwitcher />
+        </>
       ) : user ? (
         <Button disabled={mutation.isPending} onClick={() => mutation.mutate()}>
           {mutation.isPending
             ? "Записуємо…"
             : p?.status === "cancelled"
               ? "Записатися знову"
-              : "Долучитися"}
+              : "Подати заявку"}
         </Button>
       ) : (
         <DemoDialog>
           <Button>Долучитися</Button>
         </DemoDialog>
+      )}
+      {p?.applicationStatus === "rejected" && (
+        <p className="error-message">Заявку відхилено: {p.applicationReason}</p>
       )}
       {mutation.isError && (
         <p className="error-message" role="alert">

@@ -16,6 +16,16 @@ import { MyQuestsPage } from "../pages/my-quests-page";
 import { OrganizersPage } from "../pages/community-pages";
 import { MapPage } from "../pages/map-page";
 import { Button } from "../shared/ui/button";
+import { ProtectedRoute } from "../features/auth/protected-route";
+import { DemoScenarioPage } from "../pages/demo-scenario-page";
+import { AuthPage } from "../pages/auth-page";
+import { OrganizerLayout } from "./layouts/organizer-layout";
+import { OrganizerDashboardPage } from "../pages/organizer/dashboard-page";
+import { OrganizerQuestsPage } from "../pages/organizer/quests-page";
+import { QuestFormPage } from "../pages/organizer/quest-form-page";
+import { OrganizerQuestDetailPage } from "../pages/organizer/quest-detail-page";
+import { OrganizationPage } from "../pages/organization-page";
+import { AdminPage } from "../pages/admin-page";
 function NotFound() {
   return (
     <div className="container empty-state">
@@ -55,11 +65,43 @@ export const router = createBrowserRouter([
       { path: "map", element: <MapPage /> },
       { path: "leaderboard", element: <LeaderboardPage /> },
       { path: "rewards", element: <RewardsPage /> },
-      { path: "profile", element: <ProfilePage /> },
+
       { path: "profile/:id", element: <ProfilePage /> },
-      { path: "dashboard", element: <DashboardPage /> },
-      { path: "my-quests", element: <MyQuestsPage /> },
+
       { path: "organizers", element: <OrganizersPage /> },
+      { path: "organizations", element: <OrganizationPage /> },
+      { path: "organizations/:id", element: <OrganizationPage /> },
+      { path: "login", element: <AuthPage /> },
+      { path: "register", element: <AuthPage register /> },
+      { path: "demo", element: <DemoScenarioPage /> },
+      {
+        element: <ProtectedRoute roles={["VOLUNTEER"]} />,
+        children: [
+          { path: "dashboard", element: <DashboardPage /> },
+          { path: "my-quests", element: <MyQuestsPage /> },
+          { path: "profile", element: <ProfilePage /> },
+        ],
+      },
+      {
+        element: <ProtectedRoute roles={["ORGANIZER"]} />,
+        children: [
+          {
+            path: "organizer",
+            element: <OrganizerLayout />,
+            children: [
+              { index: true, element: <OrganizerDashboardPage /> },
+              { path: "quests", element: <OrganizerQuestsPage /> },
+              { path: "quests/new", element: <QuestFormPage /> },
+              { path: "quests/:id/edit", element: <QuestFormPage /> },
+              { path: "quests/:id", element: <OrganizerQuestDetailPage /> },
+            ],
+          },
+        ],
+      },
+      {
+        element: <ProtectedRoute roles={["ADMIN"]} />,
+        children: [{ path: "admin", element: <AdminPage /> }],
+      },
       { path: "*", element: <NotFound /> },
     ],
   },

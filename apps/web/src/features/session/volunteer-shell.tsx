@@ -8,6 +8,8 @@ import {
 } from "lucide-react";
 import type { ReactNode } from "react";
 import { useSession } from "./store";
+import { Link } from "react-router-dom";
+import { roleHome } from "../auth/auth-adapter";
 import { DemoDialog } from "./demo-dialog";
 import { Button } from "../../shared/ui/button";
 export function VolunteerShell({ children }: { children: ReactNode }) {
@@ -27,6 +29,19 @@ export function VolunteerShell({ children }: { children: ReactNode }) {
             Увійти в демопрофіль <ArrowRight size={17} />
           </Button>
         </DemoDialog>
+      </div>
+    );
+  if (user.role !== "VOLUNTEER")
+    return (
+      <div className="container empty-state">
+        <h1>Це простір волонтера</h1>
+        <p>
+          Обери роль волонтера через перемикач деморежиму або повернися до свого
+          кабінету.
+        </p>
+        <Button asChild>
+          <Link to={roleHome(user.role)}>До мого кабінету</Link>
+        </Button>
       </div>
     );
   return (
@@ -50,8 +65,8 @@ export function VolunteerShell({ children }: { children: ReactNode }) {
         </NavLink>
       </nav>
       <p className="scenario-note">
-        Демосценарій · 16 жовтня 2026 · Початок та підтвердження квестів можна
-        змоделювати вручну.
+        Демосценарій · 16 жовтня 2026 · Заявки та звіти розглядає організатор.
+        Ролі можна перемикати у верхній панелі.
       </p>
       {children}
     </div>

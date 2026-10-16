@@ -10,6 +10,11 @@ export type Organization = {
   name: string;
   description: string;
   initials: string;
+  focus?: string;
+  email?: string;
+  website?: string;
+  moderation?: "pending" | "approved" | "suspended";
+  moderationReason?: string;
 };
 export type User = {
   id: string;
@@ -40,6 +45,14 @@ export type Quest = {
   status: "available" | "completed";
   requirements: string[];
   bring: string[];
+  lifecycle?: QuestLifecycle;
+  moderation?: "pending" | "approved" | "rejected";
+  moderationReason?: string;
+  fullDescription?: string;
+  instructions?: string;
+  rewardPoints?: number;
+  createdAt?: string;
+  updatedAt?: string;
   coordinates: [number, number] | null;
   coordinateSource?: string;
   locationLabel?: string;
@@ -49,6 +62,12 @@ export type Participation = {
   questId: string;
   userId: string;
   status: "planned" | "active" | "pending" | "completed" | "cancelled";
+  applicationStatus?: "pending" | "approved" | "rejected";
+  applicationReason?: string;
+  reportRejectionReason?: string;
+  reportHistory?: QuestReport[];
+  awardedXp?: number;
+  awardedPoints?: number;
   report?: QuestReport;
   confirmedAt?: string;
   updatedAt?: string;
@@ -122,7 +141,12 @@ export type VolunteerStats = User & {
   progress: number;
 };
 export type VolunteerState = {
-  version: 3;
+  version: 4;
+  accounts: DemoAccount[];
+  organizations: Organization[];
+  questRecords: Quest[];
+  nextId: number;
+  demoQuestId?: string;
   revision: number;
   profiles: Record<string, ProfileData>;
   participations: Participation[];
@@ -130,4 +154,46 @@ export type VolunteerState = {
   redemptions: Redemption[];
   activity: ActivityEvent[];
   clock: number;
+};
+
+export type Role = "VOLUNTEER" | "ORGANIZER" | "ADMIN";
+export type QuestLifecycle =
+  | "draft"
+  | "published"
+  | "active"
+  | "completed"
+  | "cancelled";
+export type DemoAccount = {
+  id: string;
+  email: string;
+  role: Role;
+  organizationId?: string;
+};
+export type SessionUser = User & DemoAccount;
+export type RegistrationInput = {
+  name: string;
+  email: string;
+  code: string;
+  role: "VOLUNTEER" | "ORGANIZER";
+  organizationName?: string;
+};
+export type QuestFormValues = {
+  title: string;
+  description: string;
+  fullDescription: string;
+  categoryId: string;
+  district: string;
+  address: string;
+  date: string;
+  time: string;
+  capacity: number;
+  difficulty: Quest["difficulty"];
+  xp: number;
+  rewardPoints: number;
+  image: string;
+  requirements: string;
+  bring: string;
+  instructions: string;
+  durationHours: number;
+  locationId: string;
 };

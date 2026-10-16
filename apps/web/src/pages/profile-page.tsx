@@ -11,7 +11,6 @@ import { useSession } from "../features/session/store";
 import { VolunteerShell } from "../features/session/volunteer-shell";
 import { useVolunteer, useVolunteerState } from "../shared/lib/use-volunteer";
 import { getVolunteer } from "../mocks/repository";
-import { allQuests } from "../mocks/history";
 import { categories } from "../mocks/data";
 import {
   LevelBadge,
@@ -64,12 +63,15 @@ function ProfileContent({ userId }: { userId: string }) {
     .map((c) => ({
       ...c,
       count: completed.filter(
-        (p) => allQuests.find((q) => q.id === p.questId)?.categoryId === c.id,
+        (p) =>
+          state.questRecords.find((q) => q.id === p.questId)?.categoryId ===
+          c.id,
       ).length,
     }))
     .filter((c) => c.count > 0);
-  const ranked = Object.keys(state.profiles)
-    .map((id) => getVolunteer(id, state)!)
+  const ranked = state.accounts
+    .filter((a) => a.role === "VOLUNTEER")
+    .map((a) => getVolunteer(a.id, state)!)
     .sort((a, b) => b.xp - a.xp || a.id.localeCompare(b.id));
   return (
     <div className={publicPage ? "container page-section" : ""}>
@@ -141,7 +143,7 @@ function ProfileContent({ userId }: { userId: string }) {
           <SectionHeading title="Завершені квести" />
           <div className="profile-completed">
             {completed.map((p) => {
-              const q = allQuests.find((q) => q.id === p.questId)!;
+              const q = state.questRecords.find((q) => q.id === p.questId)!;
               return (
                 <Card key={p.id}>
                   <Photo src={q.image} alt={q.imageAlt} loading="lazy" />

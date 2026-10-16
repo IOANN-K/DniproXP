@@ -2,29 +2,45 @@ import { useEffect, useRef, useState } from "react";
 import { Sparkles, Trophy, Zap } from "lucide-react";
 import { Dialog, DialogContent } from "../../shared/ui/dialog";
 import { Button } from "../../shared/ui/button";
-import { useVolunteer } from "../../shared/lib/use-volunteer";
+import {
+  useVolunteer,
+  useVolunteerState,
+} from "../../shared/lib/use-volunteer";
+import { useSession } from "../session/store";
+import { readStorage, writeStorage } from "../../shared/lib/storage";
+import { DEMO_NOW } from "../../mocks/data";
 import { levelFor } from "../../entities/gamification/levels";
 export function LevelUpDialog() {
   const user = useVolunteer();
-  const previous = useRef<{ id: string; xp: number; level: number } | null>(
-    null,
+  const state = useVolunteerState();
+  const role = useSession((s) => s.user?.role);
+  const acknowledged = useRef(
+    readStorage<Record<string, number>>("dniproxp:seen-xp:v1", {}),
   );
   const [level, setLevel] = useState<number | null>(null);
   const [award, setAward] = useState(0);
   useEffect(() => {
-    if (!user) {
-      previous.current = null;
+    if (!user || role !== "VOLUNTEER") {
       setLevel(null);
       setAward(0);
       return;
     }
-    const before = previous.current;
-    if (before?.id === user.id && user.xp > before.xp) {
-      setAward(user.xp - before.xp);
-      if (user.level > before.level) setLevel(user.level);
+    const baseline = state.transactions
+      .filter(
+        (t) =>
+          t.userId === user.id && Date.parse(t.date) <= Date.parse(DEMO_NOW),
+      )
+      .reduce((n, t) => n + t.xp, 0);
+    const last = Number.isFinite(acknowledged.current[user.id])
+      ? acknowledged.current[user.id]
+      : baseline;
+    if (user.xp > last) {
+      setAward(user.xp - last);
+      if (levelFor(user.xp).level > levelFor(last).level) setLevel(user.level);
     }
-    previous.current = { id: user.id, xp: user.xp, level: user.level };
-  }, [user?.id, user?.xp, user?.level]);
+    acknowledged.current[user.id] = user.xp;
+    writeStorage("dniproxp:seen-xp:v1", acknowledged.current);
+  }, [user?.id, user?.xp, user?.level, role, state.transactions]);
   useEffect(() => {
     if (!award) return;
     const timer = setTimeout(() => setAward(0), 5000);
@@ -39,7 +55,7 @@ export function LevelUpDialog() {
           </span>
           <div>
             <strong>+{award} XP</strong>
-            <p>Твій внесок підтверджено демосистемою</p>
+            <p>Організатор підтвердив твою добру справу</p>
           </div>
           <Sparkles size={22} />
         </div>

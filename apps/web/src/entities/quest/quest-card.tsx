@@ -7,7 +7,7 @@ import { participationLabels } from "./participation-status";
 import { Link } from "react-router-dom";
 import { ArrowUpRight, CalendarDays, MapPin, Users, Zap } from "lucide-react";
 import type { Quest } from "../types";
-import { categories, organizations } from "../../mocks/data";
+import { categories } from "../../mocks/data";
 import { Badge, Card, Photo, Skeleton } from "../../shared/ui/primitives";
 import { formatDate } from "../../shared/lib/utils";
 export function QuestCard({ quest: suppliedQuest }: { quest: Quest }) {
@@ -21,7 +21,7 @@ export function QuestCard({ quest: suppliedQuest }: { quest: Quest }) {
       p.status !== "cancelled",
   );
   const category = categories.find((c) => c.id === quest.categoryId)!;
-  const org = organizations.find((o) => o.id === quest.organizationId)!;
+  const org = state.organizations.find((o) => o.id === quest.organizationId)!;
   return (
     <Card className="quest-card">
       <Link to={`/quests/${quest.id}`} className="quest-card-link">
@@ -63,7 +63,9 @@ export function QuestCard({ quest: suppliedQuest }: { quest: Quest }) {
           </div>
           {participation && (
             <Badge className={`status-${participation.status}`}>
-              {participationLabels[participation.status]}
+              {participation.applicationStatus === "pending"
+                ? "Заявка на розгляді"
+                : participationLabels[participation.status]}
             </Badge>
           )}
           {quest.status === "completed" && !participation ? (

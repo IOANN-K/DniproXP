@@ -7,12 +7,23 @@ import type {
   VolunteerState,
   VolunteerStats,
   Transaction,
+  DemoAccount,
+  RegistrationInput,
+  QuestFormValues,
+  QuestLifecycle,
 } from "../entities/types";
 import { quests, users, rewards, DEMO_NOW } from "./data";
 import { allQuests, historicalQuests } from "./history";
 import { levelFor, rewardPointsFor } from "../entities/gamification/levels";
 import { readStorage, writeStorage } from "../shared/lib/storage";
-const KEY = "dniproxp:volunteer:v3";
+import { authSession } from "./auth-session";
+import { organizations as baseOrganizations } from "./data";
+import {
+  questDraftSchema,
+  questPublishSchema,
+} from "../features/organizer/quest-schema";
+import { verifiedLocations } from "./locations";
+const KEY = "dniproxp:platform:v4";
 const self = "demo-user";
 const listeners = new Set<() => void>();
 const initialTime = new Date(DEMO_NOW).getTime();
@@ -101,11 +112,81 @@ function seed(): VolunteerState {
         }))
     : [];
   return {
-    version: 3,
+    version: 4,
+    accounts: [
+      ...users.map((u) => ({
+        id: u.id,
+        email:
+          u.id === "demo-user"
+            ? "volunteer@dniproxp.demo"
+            : `${u.id}@dniproxp.demo`,
+        role: "VOLUNTEER" as const,
+      })),
+      ...baseOrganizations.map((o) => ({
+        id: o.id === "green" ? "demo-organizer" : `organizer-${o.id}`,
+        email:
+          o.id === "green"
+            ? "organizer@dniproxp.demo"
+            : `organizer-${o.id}@dniproxp.demo`,
+        role: "ORGANIZER" as const,
+        organizationId: o.id,
+      })),
+      { id: "demo-admin", email: "admin@dniproxp.demo", role: "ADMIN" },
+    ],
+    organizations: baseOrganizations.map((o) => ({
+      ...o,
+      focus:
+        o.id === "green"
+          ? "Екологія та міські простори"
+          : "Міське волонтерство",
+      email: `${o.id}@example.invalid`,
+      moderation: "approved",
+    })),
+    questRecords: [
+      ...allQuests.map((q) => ({
+        ...q,
+        lifecycle:
+          q.status === "completed"
+            ? ("completed" as const)
+            : ("published" as const),
+        moderation: "approved" as const,
+        fullDescription: q.description,
+        rewardPoints: rewardPointsFor(q.xp),
+        instructions:
+          "Пройди інструктаж, виконай погоджені завдання та подай звіт про свою участь.",
+      })),
+      {
+        ...quests[3],
+        id: "demo-city-team",
+        title: "Разом озеленюємо парк: демонстраційний квест",
+        description:
+          "Об’єднуємо волонтерів, щоб підготувати зелену ділянку парку та пройти повний шлях доброї справи.",
+        fullDescription:
+          "Це спеціальний демонстраційний квест для знайомства з DniproXP. Волонтер подає заявку, команда Зеленого Дніпра схвалює участь, а після виконання завдання перевіряє звіт. Лише підтверджений внесок приносить досвід та бонусні бали.",
+        date: "2026-10-20T10:00:00+03:00",
+        participants: 0,
+        capacity: 20,
+        xp: 200,
+        rewardPoints: 100,
+        lifecycle: "published",
+        moderation: "approved",
+        instructions:
+          "Дочекайся схвалення заявки. У демосценарії виконай завдання, опиши результат у звіті та додай демонстраційне фото.",
+      },
+    ],
+    demoQuestId: "demo-city-team",
+    nextId: 1,
     revision: 0,
     clock: initialTime,
     profiles: Object.fromEntries(
-      users.map((u) => [
+      [
+        ...users,
+        ...baseOrganizations.map((o) => ({
+          id: o.id === "green" ? "demo-organizer" : `organizer-${o.id}`,
+          name: o.id === "green" ? "Марія Савченко" : `Команда «${o.name}»`,
+        })),
+        { id: "demo-admin", name: "Адміністратор DniproXP" },
+      ].map((u) => [
         u.id,
         {
           name: u.name,
@@ -136,65 +217,120 @@ function isState(value: unknown): value is VolunteerState {
   if (!value || typeof value !== "object") return false;
   const s = value as VolunteerState;
   return (
-    s.version === 3 &&
+    s.version === 4 &&
     Number.isFinite(s.revision) &&
     Number.isFinite(s.clock) &&
+    Number.isFinite(s.nextId) &&
+    Array.isArray(s.accounts) &&
+    s.accounts.every(
+      (a) =>
+        a &&
+        typeof a.id === "string" &&
+        ["VOLUNTEER", "ORGANIZER", "ADMIN"].includes(a.role),
+    ) &&
     !!s.profiles &&
-    users.every(
-      (u) =>
-        s.profiles[u.id] &&
-        typeof s.profiles[u.id].name === "string" &&
-        typeof s.profiles[u.id].bio === "string",
+    s.accounts.every(
+      (a) => s.profiles[a.id] && typeof s.profiles[a.id].name === "string",
+    ) &&
+    Array.isArray(s.organizations) &&
+    Array.isArray(s.questRecords) &&
+    s.questRecords.every(
+      (q) =>
+        q &&
+        typeof q.id === "string" &&
+        typeof q.title === "string" &&
+        Array.isArray(q.requirements) &&
+        Array.isArray(q.bring),
     ) &&
     Array.isArray(s.participations) &&
     s.participations.every(
       (p) =>
         p &&
-        allQuests.some((q) => q.id === p.questId) &&
-        users.some((u) => u.id === p.userId) &&
-        ["planned", "active", "pending", "completed", "cancelled"].includes(
-          p.status,
-        ),
+        s.accounts.some((a) => a.id === p.userId) &&
+        s.questRecords.some((q) => q.id === p.questId),
     ) &&
     Array.isArray(s.transactions) &&
     s.transactions.every(
       (t) =>
         t &&
         typeof t.id === "string" &&
-        typeof t.description === "string" &&
-        users.some((u) => u.id === t.userId) &&
         Number.isFinite(t.xp) &&
-        t.xp >= 0 &&
         Number.isFinite(t.points) &&
         Number.isFinite(Date.parse(t.date)),
     ) &&
     new Set(s.transactions.map((t) => t.id)).size === s.transactions.length &&
     Array.isArray(s.redemptions) &&
-    s.redemptions.every(
-      (r) =>
-        r &&
-        typeof r.id === "string" &&
-        typeof r.code === "string" &&
-        users.some((u) => u.id === r.userId) &&
-        Number.isFinite(r.cost) &&
-        r.cost >= 0 &&
-        Number.isFinite(Date.parse(r.date)) &&
-        rewards.some((item) => item.id === r.rewardId),
-    ) &&
-    Array.isArray(s.activity) &&
-    s.activity.every(
-      (a) =>
-        a &&
-        typeof a.id === "string" &&
-        typeof a.title === "string" &&
-        users.some((u) => u.id === a.userId) &&
-        Number.isFinite(Date.parse(a.date)),
-    )
+    Array.isArray(s.activity)
   );
 }
-const saved = readStorage<unknown>(KEY, null);
-if (saved !== null && !isState(saved)) writeStorage(`${KEY}:backup`, saved);
-let state: VolunteerState = isState(saved) ? saved : seed();
+function hydrate(): VolunteerState {
+  const saved = readStorage<unknown>(KEY, null);
+  if (isState(saved)) return saved;
+  if (saved !== null) writeStorage(`${KEY}:backup`, saved);
+  const base = seed();
+  const legacy = readStorage<unknown>(
+    "dniproxp:volunteer:v3",
+    null,
+  ) as Partial<VolunteerState> & { version?: number };
+  if (
+    legacy &&
+    Number(legacy.version) === 3 &&
+    Array.isArray(legacy.participations) &&
+    Array.isArray(legacy.transactions) &&
+    Array.isArray(legacy.redemptions) &&
+    legacy.profiles
+  ) {
+    base.participations = legacy.participations.filter(
+      (p) =>
+        p &&
+        base.accounts.some((a) => a.id === p.userId) &&
+        base.questRecords.some((q) => q.id === p.questId),
+    );
+    base.transactions = legacy.transactions.filter(
+      (t) => t && Number.isFinite(t.xp) && Number.isFinite(t.points),
+    );
+    base.redemptions = legacy.redemptions;
+    Object.assign(base.profiles, legacy.profiles);
+    base.activity = legacy.activity || base.activity;
+    base.clock = legacy.clock || base.clock;
+    base.revision = legacy.revision || 0;
+  }
+  base.participations = base.participations.map((p) => ({
+    ...p,
+    applicationStatus: p.applicationStatus || "approved",
+  }));
+  // Two organizer-facing examples; existing volunteer state is never replaced.
+  for (const [userId, questId, status] of [
+    ["u2", "quest-4", "planned"],
+    ["u3", "quest-7", "pending"],
+  ] as const)
+    if (
+      !base.participations.some(
+        (p) => p.userId === userId && p.questId === questId,
+      )
+    )
+      base.participations.push({
+        id: `p-${userId}-${questId}`,
+        userId,
+        questId,
+        status,
+        applicationStatus: status === "planned" ? "pending" : "approved",
+        createdAt: DEMO_NOW,
+        updatedAt: DEMO_NOW,
+        ...(status === "pending"
+          ? {
+              report: {
+                text: "Прибрали погоджену ділянку, відсортували вторсировину й передали координатору результат роботи.",
+                photo: "/images/nature.jpg",
+                photoName: "Демонстраційне фото",
+                submittedAt: DEMO_NOW,
+              },
+            }
+          : {}),
+      });
+  return base;
+}
+let state: VolunteerState = hydrate();
 writeStorage(KEY, state);
 function commit(change: (draft: VolunteerState, now: string) => void) {
   const next = structuredClone(state);
@@ -206,9 +342,157 @@ function commit(change: (draft: VolunteerState, now: string) => void) {
   writeStorage(KEY, state);
   listeners.forEach((listener) => listener());
 }
+function account() {
+  const a = state.accounts.find((a) => a.id === authSession.get());
+  if (!a) throw new Error("Увійди в демонстраційний обліковий запис.");
+  return a;
+}
 function actor(userId: string) {
-  if (userId !== self)
-    throw new Error("Редагування доступне лише для власного демопрофілю.");
+  const a = account();
+  if (a.id !== userId || a.role !== "VOLUNTEER")
+    throw new Error("Ця дія доступна лише для власного профілю волонтера.");
+}
+function owner(questId: string) {
+  const a = account();
+  const q = state.questRecords.find((q) => q.id === questId);
+  if (!q || a.role !== "ORGANIZER" || a.organizationId !== q.organizationId)
+    throw new Error("Квест не належить твоїй організації.");
+  return q;
+}
+function administrator() {
+  const a = account();
+  if (a.role !== "ADMIN") throw new Error("Потрібна роль адміністратора.");
+  return a;
+}
+function approvedOrganization(id: string, s = state) {
+  return s.organizations.find((o) => o.id === id)?.moderation === "approved";
+}
+function occupied(q: Quest, s = state) {
+  return (
+    q.participants +
+    s.participations.filter(
+      (p) =>
+        p.questId === q.id &&
+        p.status !== "cancelled" &&
+        p.applicationStatus !== "rejected",
+    ).length
+  );
+}
+function award(
+  s: VolunteerState,
+  questId: string,
+  userId: string,
+  now: string,
+) {
+  const p = entry(s, questId, userId);
+  const id = `completion:${userId}:${questId}`;
+  if (p.status === "completed" && s.transactions.some((t) => t.id === id))
+    return;
+  const q = s.questRecords.find((q) => q.id === questId)!;
+  if (
+    p.status !== "pending" ||
+    !p.report ||
+    p.applicationStatus !== "approved" ||
+    q.lifecycle === "cancelled"
+  )
+    throw new Error("Потрібен звіт схваленого учасника доступного квесту.");
+  if (s.transactions.some((t) => t.id === id))
+    throw new Error("Винагороду вже нараховано.");
+  p.status = "completed";
+  p.confirmedAt = now;
+  p.updatedAt = now;
+  p.awardedXp = q.xp;
+  p.awardedPoints = pointsForQuest(q);
+  s.transactions.push({
+    id,
+    userId,
+    questId,
+    xp: q.xp,
+    points: pointsForQuest(q),
+    date: now,
+    description: `Організатор підтвердив: ${q.title}`,
+  });
+  event(
+    s,
+    userId,
+    questId,
+    `Участь підтверджено: +${q.xp} XP та +${pointsForQuest(q)} бонусних балів`,
+    "confirm",
+    now,
+  );
+}
+export function pointsForQuest(q: Quest) {
+  return q.rewardPoints ?? rewardPointsFor(q.xp);
+}
+export function publicQuests(s = state) {
+  return s.questRecords.filter(
+    (q) =>
+      !q.id.startsWith("history-") &&
+      ["published", "active", "completed"].includes(
+        q.lifecycle || "published",
+      ) &&
+      q.moderation === "approved" &&
+      approvedOrganization(q.organizationId, s),
+  );
+}
+export function volunteerAccounts(s = state) {
+  return s.accounts.filter((a) => a.role === "VOLUNTEER");
+}
+function kyivDate(date: string, time: string) {
+  const part =
+    new Intl.DateTimeFormat("en", {
+      timeZone: "Europe/Kyiv",
+      timeZoneName: "shortOffset",
+    })
+      .formatToParts(new Date(`${date}T12:00:00Z`))
+      .find((p) => p.type === "timeZoneName")?.value || "GMT+2";
+  return `${date}T${time}:00+${String(Number(part.replace("GMT+", ""))).padStart(2, "0")}:00`;
+}
+function questFromForm(
+  values: QuestFormValues,
+  id: string,
+  organizationId: string,
+  lifecycle: QuestLifecycle,
+  now: string,
+): Quest {
+  const v = questDraftSchema.parse(values);
+  const loc = verifiedLocations[v.locationId];
+  return {
+    id,
+    organizationId,
+    title: v.title,
+    description: v.description,
+    fullDescription: v.fullDescription,
+    categoryId: v.categoryId,
+    district: v.district,
+    address: loc?.locationLabel || v.address,
+    date: v.date && v.time ? kyivDate(v.date, v.time) : "",
+    duration: `${String(v.durationHours).replace(".", ",")} години`,
+    capacity: v.capacity,
+    difficulty: v.difficulty,
+    xp: v.xp,
+    rewardPoints: v.rewardPoints,
+    image: v.image,
+    imageAlt: "Тематичне фото демонстраційної ініціативи",
+    requirements: v.requirements
+      .split("\n")
+      .map((s) => s.trim())
+      .filter(Boolean),
+    bring: v.bring
+      .split("\n")
+      .map((s) => s.trim())
+      .filter(Boolean),
+    instructions: v.instructions,
+    participants: 0,
+    status: "available",
+    lifecycle,
+    moderation: "pending",
+    createdAt: now,
+    updatedAt: now,
+    coordinates: loc?.coordinates || null,
+    coordinateSource: loc?.coordinateSource,
+    locationLabel: loc?.locationLabel,
+  };
 }
 function entry(draft: VolunteerState, questId: string, userId: string) {
   const p = draft.participations.find(
@@ -245,32 +529,51 @@ export const repository = {
   join(questId: string, userId: string) {
     actor(userId);
     commit((s, now) => {
-      const q = quests.find((q) => q.id === questId);
-      if (!q || q.status === "completed")
-        throw new Error("Квест завершений або недоступний.");
-      const existing = s.participations.find(
+      const q = s.questRecords.find((q) => q.id === questId);
+      if (
+        !q ||
+        !["published", "active"].includes(q.lifecycle || "") ||
+        q.moderation !== "approved" ||
+        !approvedOrganization(q.organizationId, s)
+      )
+        throw new Error("Запис на цей квест недоступний.");
+      const old = s.participations.find(
         (p) => p.questId === questId && p.userId === userId,
       );
-      if (existing && existing.status !== "cancelled") return;
-      const reserved = s.participations.filter(
-        (p) => p.questId === questId && p.status !== "cancelled",
-      ).length;
-      if (q.participants + reserved >= q.capacity)
-        throw new Error("Усі місця зайняті.");
-      if (existing) {
-        existing.status = "planned";
-        existing.report = undefined;
-        existing.updatedAt = now;
+      if (
+        old &&
+        old.status !== "cancelled" &&
+        old.applicationStatus !== "rejected"
+      )
+        return;
+      if (old?.applicationStatus === "rejected")
+        throw new Error(
+          "Організатор відхилив заявку. Повторне подання на цей квест недоступне.",
+        );
+      if (occupied(q, s) >= q.capacity) throw new Error("Усі місця зайняті.");
+      if (old) {
+        old.status = "planned";
+        old.applicationStatus = "pending";
+        old.report = undefined;
+        old.updatedAt = now;
       } else
         s.participations.push({
           id: `p-${userId}-${questId}`,
           questId,
           userId,
           status: "planned",
+          applicationStatus: "pending",
           createdAt: now,
           updatedAt: now,
         });
-      event(s, userId, questId, "Запис на квест", "join", now);
+      event(
+        s,
+        userId,
+        questId,
+        "Заявку на участь надіслано організатору",
+        "join",
+        now,
+      );
     });
     return state.participations.find(
       (p) => p.questId === questId && p.userId === userId,
@@ -280,10 +583,8 @@ export const repository = {
     actor(userId);
     commit((s, now) => {
       const p = entry(s, questId, userId);
-      if (p.status !== "planned")
-        throw new Error(
-          "Скасувати можна лише заплановану участь до початку квесту.",
-        );
+      if (p.status !== "planned" || p.applicationStatus === "rejected")
+        throw new Error("Можна скасувати лише заявку або заплановану участь.");
       p.status = "cancelled";
       p.updatedAt = now;
       event(s, userId, questId, "Участь скасовано", "cancel", now);
@@ -293,11 +594,16 @@ export const repository = {
     actor(userId);
     commit((s, now) => {
       const p = entry(s, questId, userId);
-      if (p.status !== "planned")
-        throw new Error("Почати можна лише запланований квест.");
+      const q = s.questRecords.find((q) => q.id === questId)!;
+      if (
+        p.status !== "planned" ||
+        p.applicationStatus !== "approved" ||
+        !["published", "active"].includes(q.lifecycle || "")
+      )
+        throw new Error("Потрібне схвалення організатора й доступний квест.");
       p.status = "active";
       p.updatedAt = now;
-      event(s, userId, questId, "Демосистема розпочала квест", "start", now);
+      event(s, userId, questId, "Розпочато схвалену демоучасть", "start", now);
     });
   },
   submitReport(
@@ -308,54 +614,309 @@ export const repository = {
     actor(userId);
     commit((s, now) => {
       const p = entry(s, questId, userId);
-      if (p.status !== "active")
-        throw new Error("Звіт доступний лише для активного квесту.");
+      const q = s.questRecords.find((q) => q.id === questId)!;
+      if (
+        p.status !== "active" ||
+        p.applicationStatus !== "approved" ||
+        !["active", "published"].includes(q.lifecycle || "")
+      )
+        throw new Error("Звіт доступний лише для активної схваленої участі.");
       if (report.text.trim().length < 30 || report.text.length > 2000)
-        throw new Error("Опис має містити від 30 до 2000 символів.");
+        throw new Error("Опис має містити 30–2000 символів.");
       if (report.photo && !report.photo.startsWith("/images/"))
-        throw new Error("Дозволені лише демонстраційні фото.");
+        throw new Error("Обери демонстраційне фото.");
+      if (p.report) p.reportHistory = [...(p.reportHistory || []), p.report];
       p.report = { ...report, text: report.text.trim(), submittedAt: now };
+      p.reportRejectionReason = undefined;
       p.status = "pending";
       p.updatedAt = now;
-      event(s, userId, questId, "Звіт подано на підтвердження", "report", now);
+      event(s, userId, questId, "Звіт надіслано організатору", "report", now);
     });
   },
   confirmDemo(questId: string, userId: string) {
-    actor(userId);
+    owner(questId);
+    commit((s, now) => award(s, questId, userId, now));
+  },
+  reviewApplication(
+    questId: string,
+    userId: string,
+    approve: boolean,
+    reason: string,
+  ) {
+    owner(questId);
     commit((s, now) => {
+      const q = s.questRecords.find((q) => q.id === questId)!;
+      if (
+        !["published", "active"].includes(q.lifecycle || "") ||
+        !approvedOrganization(q.organizationId, s)
+      )
+        throw new Error(
+          "Квест або організація недоступні для розгляду заявок.",
+        );
       const p = entry(s, questId, userId);
-      const id = `completion:${userId}:${questId}`;
-      if (p.status === "completed" && s.transactions.some((t) => t.id === id))
-        return;
-      if (p.status !== "pending" || !p.report)
-        throw new Error("Спершу потрібно виконати квест і подати звіт.");
-      if (s.transactions.some((t) => t.id === id))
-        throw new Error("Нагороду за цей квест уже нараховано.");
-      const q = allQuests.find((q) => q.id === questId)!;
-      p.status = "completed";
-      p.confirmedAt = now;
+      if (p.status !== "planned" || p.applicationStatus !== "pending")
+        throw new Error("Заявку вже розглянуто.");
+      if (!approve && reason.trim().length < 5)
+        throw new Error("Вкажи причину відхилення (від 5 символів).");
+      p.applicationStatus = approve ? "approved" : "rejected";
+      p.applicationReason = approve ? undefined : reason.trim();
+      p.status = approve ? "active" : "cancelled";
       p.updatedAt = now;
-      s.transactions.push({
-        id,
-        userId,
-        questId,
-        xp: q.xp,
-        points: rewardPointsFor(q.xp),
-        date: now,
-        description: `Демосистема підтвердила: ${q.title}`,
-      });
+      if (approve) q.lifecycle = "active";
       event(
         s,
         userId,
         questId,
-        `Квест підтверджено: +${q.xp} XP, +${rewardPointsFor(q.xp)} бонусних балів`,
-        "confirm",
+        approve
+          ? "Організатор схвалив заявку. Участь активна."
+          : `Заявку відхилено: ${reason.trim()}`,
+        "join",
         now,
       );
     });
   },
+  rejectReport(questId: string, userId: string, reason: string) {
+    owner(questId);
+    commit((s, now) => {
+      const p = entry(s, questId, userId);
+      if (p.status !== "pending" || !p.report)
+        throw new Error("Немає звіту, що очікує перевірки.");
+      if (reason.trim().length < 5 || reason.length > 1000)
+        throw new Error("Причина: 5–1000 символів.");
+      p.status = "active";
+      p.reportRejectionReason = reason.trim();
+      p.updatedAt = now;
+      event(
+        s,
+        userId,
+        questId,
+        `Звіт потребує доопрацювання: ${reason.trim()}`,
+        "report",
+        now,
+      );
+    });
+  },
+  saveQuest(values: QuestFormValues, id?: string) {
+    const a = account();
+    if (a.role !== "ORGANIZER" || !a.organizationId)
+      throw new Error("Створення доступне організатору.");
+    if (id) owner(id);
+    let savedId = id || "";
+    commit((s, now) => {
+      const old = id ? s.questRecords.find((q) => q.id === id) : undefined;
+      if (old && old.lifecycle !== "draft" && old.lifecycle !== "published")
+        throw new Error(
+          "Редагування доступне для чернетки або запланованого квесту.",
+        );
+      if (old && s.participations.some((p) => p.questId === id))
+        throw new Error("Після першої заявки параметри квесту зафіксовані.");
+      savedId = id || `created-${a.organizationId}-${s.nextId++}`;
+      const q = questFromForm(values, savedId, a.organizationId!, "draft", now);
+      if (old) {
+        q.createdAt = old.createdAt;
+        q.participants = old.participants;
+        s.questRecords = s.questRecords.map((item) =>
+          item.id === id ? q : item,
+        );
+      } else s.questRecords.push(q);
+      event(s, a.id, savedId, "Чернетку квесту збережено", "profile", now);
+    });
+    return savedId;
+  },
+  transitionQuest(id: string, next: QuestLifecycle) {
+    const q = owner(id);
+    commit((s, now) => {
+      const item = s.questRecords.find((q) => q.id === id)!;
+      const allowed: Record<QuestLifecycle, QuestLifecycle[]> = {
+        draft: ["published", "cancelled"],
+        published: ["active", "cancelled"],
+        active: ["completed", "cancelled"],
+        completed: [],
+        cancelled: [],
+      };
+      if (!allowed[item.lifecycle || "draft"].includes(next))
+        throw new Error("Такий перехід статусу недоступний.");
+      if (next === "published") {
+        if (!approvedOrganization(q.organizationId, s))
+          throw new Error("Спершу адміністратор має схвалити організацію.");
+        const form = questToForm(item);
+        const result = questPublishSchema.safeParse(form);
+        if (!result.success) throw new Error(result.error.issues[0].message);
+        if (Date.parse(item.date) <= s.clock)
+          throw new Error("Для публікації обери майбутню дату.");
+        item.moderation = "pending";
+      }
+      if (
+        next === "completed" &&
+        s.participations.some(
+          (p) =>
+            p.questId === id &&
+            ["active", "pending", "planned"].includes(p.status) &&
+            p.applicationStatus !== "rejected",
+        )
+      )
+        throw new Error(
+          "Спочатку розглянь заявки та звіти й заверши активну участь.",
+        );
+      if (next === "active")
+        s.participations
+          .filter(
+            (p) =>
+              p.questId === id &&
+              p.status === "planned" &&
+              p.applicationStatus === "approved",
+          )
+          .forEach((p) => {
+            p.status = "active";
+            p.updatedAt = now;
+          });
+      if (next === "cancelled")
+        s.participations
+          .filter((p) => p.questId === id && p.status !== "completed")
+          .forEach((p) => {
+            p.status = "cancelled";
+            p.updatedAt = now;
+          });
+      item.lifecycle = next;
+      item.status = next === "completed" ? "completed" : "available";
+      item.updatedAt = now;
+      event(
+        s,
+        account().id,
+        id,
+        `Статус квесту: ${questStatusLabels[next]}`,
+        "profile",
+        now,
+      );
+    });
+  },
+  moderateQuest(id: string, approve: boolean, reason: string) {
+    const admin = administrator();
+    commit((s, now) => {
+      const q = s.questRecords.find((q) => q.id === id);
+      if (!q || q.lifecycle === "draft")
+        throw new Error("Чернетки не модеруються.");
+      if (!approve && reason.trim().length < 5)
+        throw new Error("Вкажи причину приховування (від 5 символів).");
+      q.moderation = approve ? "approved" : "rejected";
+      q.moderationReason = approve ? undefined : reason.trim();
+      event(
+        s,
+        admin.id,
+        id,
+        approve ? "Квест пройшов модерацію" : "Квест приховано модератором",
+        "profile",
+        now,
+      );
+    });
+  },
+  moderateOrganization(id: string, approve: boolean, reason: string) {
+    const admin = administrator();
+    commit((s, now) => {
+      const org = s.organizations.find((o) => o.id === id);
+      if (!org) throw new Error("Організацію не знайдено.");
+      if (!approve && reason.trim().length < 5)
+        throw new Error("Вкажи причину призупинення (від 5 символів).");
+      org.moderation = approve ? "approved" : "suspended";
+      org.moderationReason = approve ? undefined : reason.trim();
+      event(
+        s,
+        admin.id,
+        undefined,
+        approve ? "Організацію схвалено" : "Діяльність організації призупинено",
+        "profile",
+        now,
+      );
+    });
+  },
+  register(input: RegistrationInput) {
+    if (input.code !== "dnipro-demo")
+      throw new Error("Демонстраційний код: dnipro-demo");
+    if (
+      !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(input.email) ||
+      input.name.trim().length < 2
+    )
+      throw new Error("Вкажи коректні ім’я та електронну пошту.");
+    if (!["VOLUNTEER", "ORGANIZER"].includes(input.role))
+      throw new Error("Роль недоступна для реєстрації.");
+    if (
+      state.accounts.some((a) => a.email === input.email.trim().toLowerCase())
+    )
+      throw new Error("Такий обліковий запис уже існує.");
+    let id = "";
+    commit((s, now) => {
+      id = `account-${s.nextId++}`;
+      let organizationId: string | undefined;
+      if (input.role === "ORGANIZER") {
+        if ((input.organizationName || "").trim().length < 3)
+          throw new Error("Назва організації — від 3 символів.");
+        organizationId = `org-${s.nextId++}`;
+        s.organizations.push({
+          id: organizationId,
+          name: input.organizationName!.trim(),
+          description:
+            "Нова демонстраційна організація. Ініціативи цієї команди очікують на знайомство зі спільнотою.",
+          initials: input.organizationName!.trim().slice(0, 2).toUpperCase(),
+          focus: "Міське волонтерство",
+          email: input.email.trim().toLowerCase(),
+          moderation: "pending",
+        });
+      }
+      s.accounts.push({
+        id,
+        email: input.email.trim().toLowerCase(),
+        role: input.role,
+        organizationId,
+      });
+      s.profiles[id] = { name: input.name.trim(), bio: "", avatar: null };
+      event(
+        s,
+        id,
+        undefined,
+        "Демонстраційний обліковий запис створено",
+        "profile",
+        now,
+      );
+    });
+    return id;
+  },
+  newDemoRun() {
+    const signed = account();
+    let id = "";
+    commit((s, now) => {
+      if (!approvedOrganization("green", s))
+        throw new Error(
+          "Спочатку віднови організацію «Зелений Дніпро» через модерацію.",
+        );
+      const source = s.questRecords.find((q) => q.id === "demo-city-team")!;
+      id = `demo-run-${s.nextId++}`;
+      s.questRecords.push({
+        ...source,
+        id,
+        title: `Добрі справи в парку · демопрохід ${s.nextId - 1}`,
+        participants: 0,
+        lifecycle: "published",
+        status: "available",
+        moderation: "approved",
+        createdAt: now,
+        updatedAt: now,
+      });
+      s.demoQuestId = id;
+      event(
+        s,
+        signed.id,
+        id,
+        "Підготовлено новий демонстраційний квест",
+        "profile",
+        now,
+      );
+    });
+    return id;
+  },
   updateProfile(userId: string, profile: ProfileData) {
-    actor(userId);
+    const signed = account();
+    if (signed.id !== userId)
+      throw new Error("Можна редагувати лише власний профіль.");
     commit((s, now) => {
       if (
         profile.name.trim().length < 2 ||
@@ -421,7 +982,20 @@ export function getVolunteer(
   userId: string,
   snapshot = state,
 ): VolunteerStats | null {
-  const base = users.find((u) => u.id === userId);
+  const identity = snapshot.accounts.find((a) => a.id === userId);
+  const base = identity
+    ? {
+        ...(users.find((u) => u.id === userId) || {
+          id: userId,
+          name: "",
+          xp: 0,
+          level: 1,
+          questsCompleted: 0,
+          initials: "",
+        }),
+        ...identity,
+      }
+    : null;
   if (!base) return null;
   const profile = snapshot.profiles[userId];
   const tx = snapshot.transactions.filter((t) => t.userId === userId);
@@ -446,11 +1020,8 @@ export function getVolunteer(
     questsCompleted: done.length,
     points: tx.reduce((n, t) => n + t.points, 0),
     hours: done.reduce((n, p) => {
-      const q = allQuests.find((q) => q.id === p.questId);
-      return (
-        n +
-        (q?.duration.startsWith("1,5") ? 1.5 : parseFloat(q?.duration || "0"))
-      );
+      const q = snapshot.questRecords.find((q) => q.id === p.questId);
+      return n + parseFloat((q?.duration || "0").replace(",", "."));
     }, 0),
     nextLevelXp: level.nextXp,
     levelStartXp: level.xp,
@@ -459,14 +1030,50 @@ export function getVolunteer(
 }
 
 export function getQuestSnapshot(id: string, snapshot = state): Quest | null {
-  const q = allQuests.find((q) => q.id === id);
+  const q = snapshot.questRecords.find((q) => q.id === id);
   if (!q) return null;
   return {
     ...q,
     participants:
       q.participants +
       snapshot.participations.filter(
-        (p) => p.questId === id && p.status !== "cancelled",
+        (p) =>
+          p.questId === id &&
+          p.status !== "cancelled" &&
+          p.applicationStatus !== "rejected",
       ).length,
+  };
+}
+
+export const questStatusLabels: Record<QuestLifecycle, string> = {
+  draft: "Чернетка",
+  published: "Заплановано",
+  active: "Активний",
+  completed: "Завершено",
+  cancelled: "Скасовано",
+};
+export function questToForm(q: Quest): QuestFormValues {
+  return {
+    title: q.title,
+    description: q.description,
+    fullDescription: q.fullDescription || q.description,
+    categoryId: q.categoryId,
+    district: q.district,
+    address: q.address,
+    date: q.date.slice(0, 10),
+    time: q.date.slice(11, 16),
+    capacity: q.capacity,
+    difficulty: q.difficulty,
+    xp: q.xp,
+    rewardPoints: pointsForQuest(q),
+    image: q.image,
+    requirements: q.requirements.join("\n"),
+    bring: q.bring.join("\n"),
+    instructions: q.instructions || "",
+    durationHours: parseFloat(q.duration.replace(",", ".")) || 2,
+    locationId:
+      Object.keys(verifiedLocations).find(
+        (id) => verifiedLocations[id].coordinateSource === q.coordinateSource,
+      ) || "",
   };
 }

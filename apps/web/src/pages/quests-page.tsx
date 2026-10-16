@@ -3,13 +3,12 @@ import { useSearchParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { Search, SlidersHorizontal, X, ArrowDown, Compass } from "lucide-react";
 import { questApi } from "../mocks/api";
-import { categories, quests as demoQuests, DEMO_NOW } from "../mocks/data";
+import { categories, DEMO_NOW } from "../mocks/data";
 import { Container } from "../shared/ui/container";
 import { Button } from "../shared/ui/button";
 import { Input } from "../shared/ui/primitives";
 import { QuestCard, QuestSkeleton } from "../entities/quest/quest-card";
 import { CategoryIcon } from "../entities/quest/category-icon";
-const districts = [...new Set(demoQuests.map((q) => q.district))].sort();
 export function QuestsPage() {
   const [params, setParams] = useSearchParams();
   const [filtersOpen, setFiltersOpen] = useState(false);
@@ -19,6 +18,7 @@ export function QuestsPage() {
     isError,
     refetch,
   } = useQuery({ queryKey: ["quests"], queryFn: () => questApi.list() });
+  const districts = [...new Set(data.map((q) => q.district))].sort();
   const set = (key: string, value: string) =>
     setParams((previous) => {
       const next = new URLSearchParams(previous);
