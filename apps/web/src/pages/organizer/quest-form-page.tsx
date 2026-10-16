@@ -155,7 +155,14 @@ function QuestForm({ initial, id }: { initial: QuestFormValues; id?: string }) {
         <div>
           <p className="eyebrow">ЗБЕРИ ЛЮДЕЙ НАВКОЛО ДОБРОЇ СПРАВИ</p>
           <h2>{id ? "Редагувати квест" : "Нова міська ініціатива"}</h2>
-          <p>Спочатку збережи чернетку або заповни всі дані для публікації.</p>
+          <p>
+            Спочатку збережи чернетку або заповни всі дані для публікації.{" "}
+            {!id && (
+              <Link className="text-link" to="/organizer/quests/generate">
+                Потрібна допомога з ідеєю? Відкрити майстер
+              </Link>
+            )}
+          </p>
         </div>
         <Badge>{isDirty ? "Є незбережені зміни" : "Чернетка"}</Badge>
       </div>

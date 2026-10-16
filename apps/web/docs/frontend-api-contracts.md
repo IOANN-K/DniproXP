@@ -53,3 +53,7 @@ XP накопичується й визначає рівень; Reward Points в
 - `POST /admin/organizations/:id/moderation`: approve/suspend + причина призупинення.
 
 Очікувані помилки: 401 — немає сесії, 403 — не та роль/організація, 404 — сутність недоступна, 409 — місця зайняті або конфлікт переходу/повторного обміну, 422 — помилки полів. Формат: `{ code, message, fieldErrors?, currentRevision? }`. Після мутацій клієнт оновлює snapshot і інвалідує пов’язані запити; backend повинен повертати актуальні сутності та баланси.
+
+## EPIC 04: versioned handoff
+
+See [DX-028 backend handoff](backend-integration-handoff.md) for the proposed `/v1` namespace, generation DTOs and canonical nested error envelope, which supersedes this earlier flat-error proposal. All listed domain endpoints remain planned, not implemented. Reports now also support optional `actualHours`; missing hours are unknown, never planned duration. See [EPIC 04 implementation](product-integration.md).

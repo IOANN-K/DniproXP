@@ -1,3 +1,4 @@
+import { QuestWizardPage } from "../pages/organizer/quest-wizard-page";
 import { ImpactPage } from "../pages/impact-page";
 import { ImpactReceiptsPage } from "../pages/impact-receipts-page";
 import {
@@ -97,6 +98,7 @@ export const router = createBrowserRouter([
               { index: true, element: <OrganizerDashboardPage /> },
               { path: "quests", element: <OrganizerQuestsPage /> },
               { path: "quests/new", element: <QuestFormPage /> },
+              { path: "quests/generate", element: <QuestWizardPage /> },
               { path: "quests/:id/edit", element: <QuestFormPage /> },
               { path: "quests/:id", element: <OrganizerQuestDetailPage /> },
             ],

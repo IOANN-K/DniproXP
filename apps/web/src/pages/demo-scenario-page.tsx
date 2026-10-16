@@ -1,4 +1,5 @@
-import { useNavigate } from "react-router-dom";
+import { ResetDemoDialog } from "../features/product-integration/reset-demo-dialog";
+import { Link, useNavigate } from "react-router-dom";
 import { useMutation } from "@tanstack/react-query";
 import { CheckCircle2, ArrowRight, Repeat2, Leaf } from "lucide-react";
 import { authAdapter } from "../features/auth/auth-adapter";
@@ -17,7 +18,7 @@ export function DemoScenarioPage() {
     (p) => p.questId === id && p.userId === "demo-user",
   );
   const confirmation = state.transactions.find(
-    (t) => t.questId === id && t.userId === "demo-user",
+    (t) => t.id === `completion:demo-user:${id}`,
   );
   const redeemed = state.redemptions.some(
     (r) =>
@@ -42,21 +43,22 @@ export function DemoScenarioPage() {
       text: "Відкрий деталі в ролі волонтера, ознайомся з умовами та натисни «Подати заявку».",
       role: "VOLUNTEER" as const,
       to: `/quests/${id}`,
-      done: !!p,
+      done:
+        !!p && p.status !== "cancelled" && p.applicationStatus !== "rejected",
     },
     {
       title: "Схвали заявку як організатор",
       text: "У «Зеленому Дніпрі» відкрий нову заявку Олександри й схвали участь. Демосценарій одразу відкриє активне виконання.",
       role: "ORGANIZER" as const,
       to: `/organizer/quests/${id}?tab=applications`,
-      done: p?.applicationStatus === "approved",
+      done: p?.applicationStatus === "approved" && p.status !== "cancelled",
     },
     {
       title: "Виконай завдання та подай звіт",
-      text: "Повернися до волонтера, відкрий активні квести, опиши результат і додай готове демонстраційне фото.",
+      text: "Повернися до волонтера, відкрий активні квести, опиши результат, вкажи фактичні години та за потреби додай демонстраційне фото.",
       role: "VOLUNTEER" as const,
       to: "/my-quests?tab=active",
-      done: !!p?.report,
+      done: !!p?.report && p.status !== "cancelled",
     },
     {
       title: "Перевір і підтвердь виконання",
@@ -67,10 +69,35 @@ export function DemoScenarioPage() {
     },
     {
       title: "Побач оновлений прогрес",
-      text: "У волонтера оновляться XP, бонусні бали, години, досягнення, історія та позиція в рейтингу.",
+      text: "У волонтера оновляться XP, бонусні бали, підтверджені фактичні години й історія. Планова тривалість не додається до фактичних годин.",
       role: "VOLUNTEER" as const,
       to: "/dashboard",
       done: !!confirmation,
+    },
+    {
+      title: "Додай спільний результат на мапу",
+      text: "Організатор фіксує виміряні показники всієї команди один раз на квест. Колективні кілограми чи дерева не множаться на кількість учасників.",
+      role: "ORGANIZER" as const,
+      to: `/organizer/quests/${id}`,
+      done: state.impactRecords.some(
+        (r) =>
+          r.questId === id &&
+          r.scope === "collective" &&
+          r.verificationStatus === "verified",
+      ),
+    },
+    {
+      title: "Збережи особистий чек допомоги",
+      text: "Відкрий підтверджену участь, перевір фактичні години та завантаж PNG. Ім’я приховане за замовчуванням; приватний звіт не експортується.",
+      role: "VOLUNTEER" as const,
+      to: confirmation
+        ? `/impact/receipts/${encodeURIComponent(`impact:${confirmation.id}`)}`
+        : "/impact/receipts",
+      done: state.impactRecords.some(
+        (r) =>
+          r.sourceEventId === `completion:demo-user:${id}` &&
+          r.verificationStatus === "verified",
+      ),
     },
     {
       title: "Обміняй бонусні бали на нагороду",
@@ -96,6 +123,36 @@ export function DemoScenarioPage() {
           Пройди весь шлях із двох ролей. Заявки, звіти й нарахування справжні в
           межах локальної демоверсії; серверна частина не використовується.
         </p>
+      </div>
+      <div className="demo-guide-links">
+        <Button asChild variant="outline">
+          <Link to="/impact">Мапа підтверджених результатів</Link>
+        </Button>
+        <Button
+          variant="outline"
+          disabled={move.isPending}
+          onClick={() =>
+            move.mutate({ role: "ORGANIZER", to: "/organizer/quests/generate" })
+          }
+        >
+          Почати зі своєї ідеї · майстер квестів
+        </Button>
+      </div>
+      <p className="field-hint">
+        Майстер створює окрему чернетку, не підміняє цей демоквест і не обходить
+        модерацію. Нижче — підготовлений сценарій для показу. Кроки можна
+        відкривати в будь-якому порядку; права та переходи перевіряє repository.
+      </p>
+      <div className="demo-progress">
+        <progress
+          max={steps.length}
+          value={steps.filter((step) => step.done).length}
+          aria-label="Готовність даних демосценарію"
+        />
+        <strong>
+          {steps.filter((step) => step.done).length} / {steps.length} кроків
+          мають готові дані
+        </strong>
       </div>
       <div className="demo-steps">
         {steps.map((s, i) => (
@@ -149,6 +206,25 @@ export function DemoScenarioPage() {
           Новий квест готовий. Почни з першого кроку.
         </p>
       )}
+      <Card className="demo-reset">
+        <h2>Чистий старт демоверсії</h2>
+        <p>
+          Новий демоквест зберігає історію. Повне скидання натомість видаляє
+          локальні зміни та завершує сесію — лише після явного підтвердження
+          демоадміністратором.
+        </p>
+        {user?.role === "ADMIN" ? (
+          <ResetDemoDialog />
+        ) : (
+          <Button
+            variant="outline"
+            disabled={move.isPending}
+            onClick={() => move.mutate({ role: "ADMIN", to: "/demo" })}
+          >
+            Перейти до демоадміністратора
+          </Button>
+        )}
+      </Card>
       {fresh.isError && (
         <p className="error-message" role="alert">
           {fresh.error.message}

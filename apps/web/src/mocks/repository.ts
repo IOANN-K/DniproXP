@@ -930,6 +930,42 @@ export const repository = {
     });
     return id;
   },
+  resetDemoData(confirmation: string) {
+    const signed = account();
+    if (signed.id !== "demo-admin" || signed.role !== "ADMIN")
+      throw new Error(
+        "Скидання доступне лише демонстраційному адміністратору.",
+      );
+    if (confirmation !== "СКИНУТИ")
+      throw new Error("Введи СКИНУТИ для підтвердження.");
+    const next = seed();
+    next.impactRecords = importLegacyImpact(next);
+    normalizeActivity(next);
+    next.revision = state.revision + 1;
+    // A destructive reset MUST NOT silently lose the previous snapshot if storage fails.
+    try {
+      localStorage.setItem(
+        `${KEY}:before-reset:${state.revision}`,
+        JSON.stringify(state),
+      );
+      localStorage.setItem(KEY, JSON.stringify(next));
+    } catch {
+      throw new Error(
+        "Не вдалося зберегти резервну копію. Скидання не виконано.",
+      );
+    }
+    state = next;
+    authSession.set(null);
+    try {
+      localStorage.removeItem("dniproxp:seen-xp:v1");
+      for (const key of Object.keys(sessionStorage))
+        if (key.startsWith("dniproxp:quest-wizard:v1:"))
+          sessionStorage.removeItem(key);
+    } catch {
+      /* Reset snapshot is already safely persisted. */
+    }
+    listeners.forEach((listener) => listener());
+  },
   newDemoRun() {
     const signed = account();
     let id = "";

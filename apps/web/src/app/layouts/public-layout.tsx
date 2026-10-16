@@ -29,6 +29,7 @@ const links = [
   ["/impact", "Вплив міста"],
   ["/leaderboard", "Рейтинг"],
   ["/rewards", "Нагороди"],
+  ["/demo", "Демосценарій"],
 ];
 export function Logo() {
   return (
@@ -150,11 +151,6 @@ export function PublicLayout() {
                   <SheetClose asChild>
                     <Link to="/organizations">
                       Організації <ArrowUpRight size={18} />
-                    </Link>
-                  </SheetClose>
-                  <SheetClose asChild>
-                    <Link to="/demo">
-                      Демосценарій <ArrowUpRight size={18} />
                     </Link>
                   </SheetClose>
                   {user && (

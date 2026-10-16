@@ -1,4 +1,5 @@
 import type { QuestFormValues, QuestLifecycle, Quest } from "../entities/types";
+import { authSession } from "./auth-session";
 import { repository } from "./repository";
 const wait = () => new Promise<void>((resolve) => setTimeout(resolve, 300));
 export interface OrganizerApi {
@@ -15,7 +16,12 @@ export interface OrganizerApi {
 }
 export const organizerApi: OrganizerApi = {
   async save(v, id) {
+    const principal = authSession.get();
     await wait();
+    if (principal !== authSession.get())
+      throw new Error(
+        "Обліковий запис змінився. Перевір чернетку й повтори збереження.",
+      );
     return repository.saveQuest(v, id);
   },
   async transition(id, next) {

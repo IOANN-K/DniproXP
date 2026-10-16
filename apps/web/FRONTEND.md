@@ -62,3 +62,13 @@ City Impact (DX-001–DX-007): [модель, інваріанти, міграц
 - `pnpm --filter web build`: TypeScript і production-збірка.
 
 Для City Impact додано Vitest і Playwright як devDependencies; кореневий `pnpm-lock.yaml` синхронізовано з фактичними frontend-залежностями. Backend і PostgreSQL не змінювалися. Стан перевірок і відомі обмеження — у документації City Impact та PR.
+
+## EPIC 04 · AI & Product Integration
+
+- [Реалізація DX-024–DX-028, перевірки та обмеження](docs/product-integration.md).
+- [Контракти генератора й backend handoff для NestJS](docs/backend-integration-handoff.md).
+- [Desktop/mobile screenshots](docs/screenshots/product-integration/README.md).
+- `/organizer/quests/generate`: локальний rule-based майстер, редагування та preview, збереження лише чернетки.
+- `/demo`: вісім кроків, повторний прохід зі збереженням історії та окремий захищений reset із резервною копією.
+
+Зовнішній AI та серверні domain endpoints не підключені. Робота в `Sergiy`; командні EPIC02/03 із `main` не об’єднані, сумісність має бути перевірена під час інтеграції.
