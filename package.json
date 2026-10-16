@@ -1,0 +1,21 @@
+{
+  "name": "dniproxp",
+  "version": "1.0.0",
+  "description": "Гейміфіковане міське волонтерство",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/IOANN-K/DniproXP.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/IOANN-K/DniproXP/issues"
+  },
+  "homepage": "https://github.com/IOANN-K/DniproXP#readme"
+}
