@@ -1,7 +1,9 @@
+import { isApiMode } from "../api/config";
 import { useEffect, useRef, useState } from "react";
 import { CheckCircle2, X } from "lucide-react";
 import { useVolunteerState } from "../lib/use-volunteer";
-export function PlatformToast() {
+export function PlatformToast() { return isApiMode ? null : <DemoPlatformToast />; }
+function DemoPlatformToast() {
   const state = useVolunteerState();
   const before = useRef(state.revision);
   const previousEvent = useRef(state.activity[0]?.id);

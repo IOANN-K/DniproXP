@@ -149,8 +149,6 @@ export function identitySeed(s: VolunteerState): IdentityState {
       if (!confirmed.length) return;
       const id = `team-quest-seed-${q.id}`;
       const createdAt = new Date(Date.parse(q.date) - 86400000).toISOString();
-      q.allowTeamParticipation = true;
-      q.teamParticipantLimit = 8;
       confirmed.forEach((p) => (p.teamParticipationId = id));
       result.teamQuests.push({
         id,

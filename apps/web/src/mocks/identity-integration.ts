@@ -38,22 +38,33 @@ export function initializeIdentity(s: VolunteerState) {
     }
     s.identity.recoveryMessage = `Відновлено демонстраційні команди: ${error instanceof Error ? error.message : "Некоректні дані."}`;
   }
-  for (const q of s.questRecords)
-    if (
-      q.allowTeamParticipation === undefined &&
-      [
-        "demo-city-team",
-        "quest-1",
-        "quest-4",
-        "quest-7",
-        "quest-14",
-        "quest-20",
-      ].includes(q.id)
-    ) {
-      q.allowTeamParticipation = true;
-      q.teamParticipantLimit = 8;
-    }
+  normalizeTeamQuestSettings(s);
   reconcileIdentity(s);
+}
+// Backfill legacy demo quests once. The guard also makes subsequent loads a
+// no-op and preserves explicit opt-outs and organizer-configured limits.
+function normalizeTeamQuestSettings(s: VolunteerState) {
+  const ids = new Set([
+    "demo-city-team",
+    "quest-1",
+    "quest-4",
+    "quest-7",
+    "quest-14",
+    "quest-20",
+    ...identityOf(s).teamQuests
+      .filter((record) => record.id.startsWith("team-quest-seed-"))
+      .map((record) => record.questId),
+  ]);
+  for (const quest of s.questRecords) {
+    if (!ids.has(quest.id)) continue;
+    if (quest.allowTeamParticipation === undefined)
+      quest.allowTeamParticipation = true;
+    if (
+      quest.allowTeamParticipation &&
+      quest.teamParticipantLimit === undefined
+    )
+      quest.teamParticipantLimit = 8;
+  }
 }
 export function validateIdentity(s: VolunteerState) {
   const i = identityOf(s);

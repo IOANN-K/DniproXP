@@ -1,3 +1,4 @@
+import { isApiMode } from "../../shared/api/config";
 import { useState } from "react";
 import { useMutation } from "@tanstack/react-query";
 import { Link, useNavigate } from "react-router-dom";
@@ -15,7 +16,8 @@ import { organizations } from "../../mocks/data";
 import { useSession } from "../session/store";
 import { Dialog, DialogTrigger, DialogContent } from "../../shared/ui/dialog";
 import { Button } from "../../shared/ui/button";
-export function DemoSwitcher() {
+export function DemoSwitcher() { return isApiMode ? null : <DemoDemoSwitcher />; }
+function DemoDemoSwitcher() {
   const [open, setOpen] = useState(false);
   const [organization, setOrganization] = useState("green");
   const state = useVolunteerState();

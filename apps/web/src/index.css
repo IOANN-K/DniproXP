@@ -7811,92 +7811,180 @@ input[type="radio"] {
   color: var(--muted-foreground);
   font-size: 16px;
   font-weight: 700;
+/* ==========================================================================
+   DNIPROXP — MOBILE-FIRST PWA & NATIVE-LIKE RESPONSIVE APP EXPERIENCE
+   ========================================================================== */
+
+/* Global Mobile & PWA Setup */
+:root {
+  --sat: env(safe-area-inset-top, 0px);
+  --sar: env(safe-area-inset-right, 0px);
+  --sab: env(safe-area-inset-bottom, 0px);
+  --sal: env(safe-area-inset-left, 0px);
+  --bottom-nav-height: 60px;
 }
-.explore-menu summary {
-  display: flex;
-  align-items: center;
-  gap: 7px;
-  cursor: pointer;
-  list-style: none;
-  min-height: 44px;
-  padding: 8px 0;
-  border-radius: 8px;
+
+html {
+  -webkit-text-size-adjust: 100%;
+  touch-action: manipulation;
+  overscroll-behavior-y: none;
+  scroll-behavior: smooth;
+  scroll-padding-top: 76px;
 }
-.explore-menu summary::-webkit-details-marker {
-  display: none;
+
+body {
+  overflow-x: hidden;
+  max-width: 100vw;
+  position: relative;
+  -webkit-tap-highlight-color: transparent;
 }
-.explore-menu[open] summary,
-.explore-menu.is-active summary {
-  color: var(--primary-hover);
+
+/* Standalone PWA mode enhancements */
+@media (display-mode: standalone) {
+  .app-header {
+    padding-top: max(var(--sat), 6px);
+  }
+  .mobile-bottom-nav {
+    padding-bottom: max(var(--sab), 10px);
+  }
 }
-.explore-menu-content {
-  position: absolute;
-  top: calc(100% + 8px);
+
+/* Mobile Bottom Navigation Bar */
+.mobile-bottom-nav {
+  position: fixed;
+  bottom: 0;
   left: 0;
-  width: 260px;
-  padding: 10px;
-  background: white;
-  border: 1px solid var(--border);
-  border-radius: 18px;
-  box-shadow: 0 16px 50px #20362f18;
+  right: 0;
   z-index: 50;
-  display: grid;
-}
-.desktop-nav .explore-menu-content a {
+  background: rgba(250, 249, 245, 0.94);
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+  border-top: 1px solid var(--border);
   display: flex;
   align-items: center;
-  gap: 11px;
-  min-height: 46px;
-  padding: 10px 12px;
-  border-radius: 10px;
+  justify-content: space-around;
+  padding: 6px 8px calc(6px + var(--sab));
+  box-shadow: 0 -4px 20px rgba(32, 54, 47, 0.05);
+  transition: transform 0.25s ease;
 }
-.desktop-nav .explore-menu-content a:hover,
-.desktop-nav .explore-menu-content a.active {
-  background: #edf6f0;
-  color: var(--primary-hover);
+
+@media (min-width: 851px) {
+  .mobile-bottom-nav {
+    display: none !important;
+  }
 }
-.exploration-page {
-  padding-bottom: 80px;
-}
-.exploration-page :is(h1, h2, h3),
-.exploration-entry :is(h2, p) {
-  overflow-wrap: anywhere;
-}
-.exploration-catalog-hero {
-  display: grid;
-  grid-template-columns: 1.15fr 1fr;
-  gap: 64px;
+
+.mobile-bottom-nav-item {
+  display: flex;
+  flex-direction: column;
   align-items: center;
-  padding: 30px 0 45px;
+  justify-content: center;
+  gap: 3px;
+  flex: 1;
+  min-height: 48px;
+  padding: 4px 2px;
+  color: #65716b;
+  text-decoration: none;
+  font-size: 0.68rem;
+  font-weight: 700;
+  border-radius: 12px;
+  transition: all 0.2s ease;
+  position: relative;
+  -webkit-tap-highlight-color: transparent;
 }
-.exploration-catalog-hero h1 {
-  font-size: clamp(34px, 4.3vw, 60px);
-  line-height: 1.13;
-  letter-spacing: -2.1px;
-  margin: 24px 0;
+
+.mobile-bottom-nav-item svg {
+  width: 20px;
+  height: 20px;
+  transition: transform 0.2s ease;
 }
-.exploration-catalog-hero h1 span {
-  color: var(--primary-hover);
+
+.mobile-bottom-nav-item:hover,
+.mobile-bottom-nav-item:focus-visible {
+  color: var(--primary);
 }
-.exploration-catalog-hero > div > p {
-  font-size: 17px;
-  color: var(--muted-foreground);
-  max-width: 550px;
-  line-height: 1.8;
+
+.mobile-bottom-nav-item.active {
+  color: var(--primary);
+  background: rgba(38, 133, 104, 0.09);
 }
-.exploration-catalog-hero .badge {
-  max-width: 100%;
-  white-space: normal;
-  line-height: 1.5;
+
+.mobile-bottom-nav-item.active svg {
+  transform: translateY(-1px);
 }
-.exploration-hero-links {
+
+.mobile-bottom-nav-item .nav-active-pill {
+  display: none;
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: var(--primary);
+  position: absolute;
+  bottom: 3px;
+}
+
+.mobile-bottom-nav-item.active .nav-active-pill {
+  display: block;
+}
+
+/* Ensure body does not get covered by bottom nav on mobile */
+@media (max-width: 850px) {
+  body {
+    padding-bottom: calc(var(--bottom-nav-height) + var(--sab) + 12px);
+  }
+  .desktop-logout-button {
+    display: none !important;
+  }
+  .footer {
+    margin-bottom: 0;
+    padding-bottom: calc(28px + var(--sab));
+  }
+  .xp-award-toast {
+    bottom: calc(var(--bottom-nav-height) + var(--sab) + 14px) !important;
+  }
+}
+
+/* Navigation Drawer (Sheet) Native Styling */
+.sheet-content {
+  right: 0;
+  left: auto;
+  top: 0;
+  transform: none;
+  max-width: 380px;
+  width: min(88vw, 380px);
+  height: 100dvh;
+  max-height: 100dvh;
+  border-radius: 24px 0 0 24px;
+  padding: max(24px, var(--sat)) 20px max(24px, var(--sab)) 20px;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  background: #faf9f5;
+  border-left: 1px solid var(--border);
+  box-shadow: -10px 0 35px rgba(23, 46, 40, 0.15);
+  display: flex;
+  flex-direction: column;
+}
+
+.drawer-user-card {
   display: flex;
   align-items: center;
-  gap: 24px;
-  flex-wrap: wrap;
-  margin: 25px 0;
+  gap: 14px;
+  padding: 16px;
+  background: #edf2e5;
+  border: 1px solid #dce6d2;
+  border-radius: 16px;
+  margin-top: 18px;
+  margin-bottom: 8px;
 }
-.story-hero-note {
+
+.drawer-user-card strong {
+  display: block;
+  font-size: 0.96rem;
+  color: #20362f;
+  margin-bottom: 4px;
+}
+
+.drawer-group {
   display: flex;
   align-items: center;
   gap: 12px;
@@ -7904,28 +7992,38 @@ input[type="radio"] {
   color: var(--muted-foreground);
   margin-top: 24px;
 }
-.story-hero-note > svg {
-  flex-shrink: 0;
-  color: var(--primary);
+
+.drawer-group:first-of-type {
+  margin-top: 12px;
+  padding-top: 0;
+  border-top: none;
 }
-.exploration-hero-art {
-  position: relative;
-  min-width: 0;
-  padding: 0 14px 25px 0;
+
+.drawer-group-title {
+  font-size: 0.65rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  color: #63715c;
+  text-transform: uppercase;
+  margin-bottom: 4px;
+  padding-inline: 8px;
 }
-.exploration-hero-art > img {
-  width: 100%;
-  height: 370px;
-  object-fit: cover;
-  border-radius: 28px 70px 28px 28px;
-  box-shadow: 12px 14px 0 #e9eee3;
-}
-.exploration-hero-art > div {
-  position: absolute;
-  right: 0;
-  bottom: 0;
+
+.drawer-link {
   display: flex;
-  gap: 12px;
+  align-items: center;
+  justify-content: space-between;
+  padding: 11px 12px;
+  border-radius: 12px;
+  font-size: 0.86rem;
+  font-weight: 700;
+  color: #3b4e43;
+  min-height: 44px;
+  transition: all 0.18s ease;
+}
+
+.drawer-link-label {
+  display: flex;
   align-items: center;
   max-width: 90%;
   background: #fff7e2;
@@ -7936,20 +8034,21 @@ input[type="radio"] {
   font-size: 16px;
   font-weight: 800;
 }
-.exploration-hero-art > div svg {
-  color: var(--primary-hover);
+
+.drawer-link-label svg {
+  color: var(--primary);
   flex-shrink: 0;
 }
-.exploration-filters {
-  background: white;
-  padding: 20px;
-  border: 1px solid var(--border);
-  border-radius: 20px;
+
+.drawer-link:hover,
+.drawer-link:focus-visible {
+  background: #eef3e6;
+  color: var(--primary-hover);
 }
-.exploration-filter-fields {
-  display: grid;
-  grid-template-columns: 1.6fr repeat(4, 1fr);
-  gap: 14px;
+
+.drawer-link.active {
+  background: #e4edd8;
+  color: var(--primary-hover);
 }
 .exploration-filter-fields label,
 .contribution-chart label {
@@ -7959,8 +8058,8 @@ input[type="radio"] {
   font-weight: 700;
   min-width: 0;
 }
-.exploration-filter-fields select,
-.contribution-chart select {
+
+.drawer-logout-button {
   width: 100%;
   min-width: 0;
   height: 46px;
@@ -8002,36 +8101,33 @@ input[type="radio"] {
   box-shadow: 0 14px 35px #20362f0f;
   border-color: #bdcfc3;
 }
-.story-card-link {
+
+.drawer-guest-buttons {
   display: flex;
   flex-direction: column;
-  height: 100%;
-}
-.story-card-link:focus-visible {
-  outline-offset: -4px;
-  border-radius: 20px;
-}
-.story-card-photo {
-  height: 200px;
-  position: relative;
-  overflow: hidden;
-  background: var(--muted);
-}
-.story-card-photo > img {
+  gap: 9px;
   width: 100%;
-  height: 100%;
-  object-fit: cover;
-  transition: transform 0.5s;
 }
-.story-card:hover .story-card-photo > img {
-  transform: scale(1.035);
+
+.drawer-action-btn {
+  width: 100%;
+  min-height: 46px;
 }
-.story-card-photo > .story-status {
-  position: absolute;
-  top: 14px;
-  left: 14px;
-  max-width: calc(100% - 28px);
-  box-shadow: 0 2px 10px #20362f12;
+
+/* Touch-friendly Sub-Navigation Bars (horizontal scrollable pills) */
+.volunteer-nav,
+.workspace-nav,
+.my-quest-tabs,
+.rewards-tabs,
+.participant-tabs {
+  display: flex !important;
+  overflow-x: auto !important;
+  flex-wrap: nowrap !important;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+  gap: 8px;
+  padding-bottom: 6px;
+  margin-bottom: 16px;
 }
 .story-status {
   white-space: normal;
@@ -8075,12 +8171,15 @@ input[type="radio"] {
   padding: 7px 10px;
   border-radius: 10px;
 }
-.story-card-body {
-  display: flex;
-  flex-direction: column;
-  flex: 1;
-  padding: 23px;
-  gap: 16px;
+
+.volunteer-nav a,
+.workspace-nav a,
+.my-quest-tabs .tabs-trigger,
+.rewards-tabs .tabs-trigger,
+.participant-tabs .tabs-trigger {
+  white-space: nowrap;
+  flex-shrink: 0;
+  min-height: 44px;
 }
 .story-card-meta {
   display: flex;
@@ -10989,9 +11088,10 @@ input[type="radio"] {
     font-size: 16px;
     letter-spacing: 0.7px;
   }
-  .passport-card-footer {
-    gap: 16px;
+  .organizer-space-header {
     flex-direction: column;
+    align-items: flex-start;
+    gap: 16px;
   }
   .passport-card-footer strong {
     font-size: 16px;
@@ -11077,7 +11177,7 @@ input[type="radio"] {
   .team-profile-hero > img {
     height: 180px;
   }
-  .team-profile-hero > div {
+  .workspace-page-heading {
     flex-direction: column;
     padding: 23px;
   }
@@ -11096,41 +11196,64 @@ input[type="radio"] {
     gap: 13px;
     font-size: 16px;
   }
-  .team-member-row {
-    padding: 20px;
-    gap: 12px;
+  .workspace-decoration {
+    display: none;
   }
-  .team-member-actions {
-    padding-left: 0;
+}
+
+/* Mobile Quests Catalog Filters Panel */
+@media (max-width: 640px) {
+  .filter-panel {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    padding: 20px 16px;
+    border-radius: 18px;
   }
   .team-member-row h3 {
     font-size: 16px;
   }
-  .team-quest-list > .card {
-    padding: 21px;
+  .filter-panel select {
+    width: 100%;
+    min-height: 46px;
   }
-  .team-quest-list h3 {
-    font-size: 18px;
+  .filter-panel > .button {
+    width: 100%;
+    min-height: 44px;
   }
-  .team-contribution-list > div {
+}
+
+/* Quest Detail Mobile Experience */
+@media (max-width: 850px) {
+  .detail-layout {
+    display: flex;
     flex-direction: column;
-    gap: 8px;
+    gap: 28px;
   }
-  .team-ranking-row {
-    gap: 10px;
-    padding: 17px 14px;
-    flex-wrap: wrap;
+  .detail-layout aside {
+    width: 100%;
+    order: -1;
   }
-  .team-ranking-row > .team-avatar {
-    width: 36px;
-    height: 36px;
-    border-radius: 12px;
+  .participation-panel {
+    position: static !important;
+    width: 100%;
+    border-radius: 20px;
+    padding: 22px 18px;
+    box-shadow: 0 4px 16px rgba(32, 54, 47, 0.04);
   }
-  .team-ranking-row > .team-avatar svg {
-    width: 20px;
+  .participation-panel .button {
+    width: 100%;
+    min-height: 50px;
+    font-size: 0.9rem;
   }
-  .team-ranking-row > strong {
-    width: 18px;
+}
+
+/* Responsive Podium for Leaderboard */
+@media (max-width: 768px) {
+  .modern-podium {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
   }
   .team-ranking-row h3 {
     font-size: 16px;
@@ -11142,7 +11265,7 @@ input[type="radio"] {
     margin-left: auto;
     font-size: 16px;
   }
-  .team-ranking-row > svg {
+  .modern-podium .podium p {
     display: none;
   }
   .team-invite-form {
@@ -11214,124 +11337,98 @@ input[type="radio"] {
     transform: none;
   }
 }
-@media print {
-  @page {
-    margin: 15mm;
-    size: A4;
+
+/* Dialog & Modal Mobile Safety */
+@media (max-width: 640px) {
+  .dialog-content {
+    width: min(calc(100% - 20px), 480px);
+    max-height: calc(100dvh - 36px - var(--sat) - var(--sab));
+    padding: 24px 18px;
+    border-radius: 20px;
   }
-  body {
-    background: white !important;
-    color: #20362f !important;
+  .dialog-close {
+    width: 44px;
+    height: 44px;
+    top: 10px;
+    right: 10px;
   }
-  body:has(.passport-page) .app-header,
-  body:has(.passport-page) .footer,
-  body:has(.passport-page) .skip-link,
-  body:has(.passport-page) .no-print,
-  body:has(.passport-page) .xp-award-toast,
-  body:has(.passport-page) .platform-toast {
-    display: none !important;
+  .dialog-content > .button {
+    min-height: 48px;
   }
-  .passport-page {
-    width: 100% !important;
-    max-width: none !important;
-    padding: 0 !important;
+}
+
+/* 320px–360px Ultra-Compact Device Safeguards */
+@media (max-width: 360px) {
+  .container {
+    width: calc(100% - 20px) !important;
   }
-  .passport-hero {
-    grid-template-columns: 1fr 210px !important;
-    gap: 18px;
-  }
-  .passport-hero > .card:last-child {
-    display: block !important;
-    padding: 12px;
-  }
-  .passport-qr svg {
-    width: 120px;
-    height: 120px;
-  }
-  .volunteer-passport-card {
-    print-color-adjust: exact;
-    -webkit-print-color-adjust: exact;
-    padding: 22px;
-    box-shadow: none;
-  }
-  .passport-identity {
-    margin: 24px 0;
-  }
-  .passport-identity h2 {
-    font-size: 24px;
-  }
-  .passport-card-footer {
-    flex-direction: row;
+  .stats-strip {
+    grid-template-columns: 1fr !important;
+    gap: 16px !important;
   }
   .passport-hero .field-hint {
     font-size: 16px;
   }
-  .passport-page .card {
-    box-shadow: none;
-    break-inside: avoid;
+  .stat:first-of-type {
+    border-top: none;
   }
-  .passport-page .personal-section {
-    margin-top: 24px;
+  .categories-grid {
+    grid-template-columns: 1fr !important;
   }
-  .passport-page h2 {
-    font-size: 20px;
+  .hero-buttons {
+    flex-direction: column;
+    width: 100%;
   }
-  .passport-page .personal-stats {
-    grid-template-columns: repeat(4, 1fr);
-    gap: 12px;
+  .hero-buttons .button {
+    width: 100%;
   }
-  .passport-page .personal-stat {
-    padding: 14px;
+  .floating-xp,
+  .floating-achievement {
+    transform: none !important;
+    position: static !important;
+    margin-top: 12px;
+    max-width: 100% !important;
   }
-  .passport-page .personal-stat strong {
-    font-size: 24px;
+  .hero-photo {
+    height: 250px !important;
+    transform: none !important;
   }
   .passport-page .personal-stat h3 {
     font-size: 16px;
   }
-  .passport-page .identity-small-grid,
-  .passport-skills {
-    grid-template-columns: repeat(2, 1fr);
+  .hero-round,
+  .hero-spark {
+    display: none !important;
   }
-  .passport-timeline > .card {
-    padding: 15px;
+  .personal-stats {
+    grid-template-columns: 1fr !important;
   }
-  .passport-page a[href]:after {
-    content: none;
+  .reward-filter-checks {
+    flex-direction: column;
+    align-items: flex-start;
   }
 }
 
-@media (max-width: 640px) {
-  .passport-hero > .card:last-child {
-    grid-template-columns: 1fr;
-    gap: 12px;
-  }
-  .passport-qr svg {
-    width: 144px;
-  }
-  .team-allow-toggle {
-    display: flex !important;
-    align-items: center;
-    gap: 12px;
-  }
-}
-.identity-workflow-note {
+/* City Impact Activity Chart Responsiveness */
+.activity-chart {
   display: flex;
-  align-items: flex-start;
-  gap: 20px;
-  padding: 28px;
-  margin: 25px 0;
-  background: #edf3e9;
-  border-color: #d9e4d2;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 8px;
+  height: 160px;
+  padding: 20px 14px;
+  overflow-x: auto;
 }
-.identity-workflow-note > svg {
-  flex-shrink: 0;
-  color: var(--primary);
-}
-.identity-workflow-note h2 {
-  font-size: 23px;
-  line-height: 1.4;
-  margin: 0 0 12px;
+
+.activity-chart > div {
+  flex: 1;
+  min-width: 28px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  height: 100%;
+  justify-content: flex-end;
 }
 .identity-workflow-note p {
   font-size: 16px;
@@ -11351,3 +11448,4 @@ input[type="radio"] {
     font-size: 16px;
   }
 }
+

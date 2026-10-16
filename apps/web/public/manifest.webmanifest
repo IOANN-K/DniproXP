@@ -1,0 +1,76 @@
+{
+  "name": "DniproXP",
+  "short_name": "DniproXP",
+  "description": "Платформа міського волонтерства DniproXP. Знаходь добрі справи, накопичуй XP та розвивай місто разом зі спільнотою.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#faf9f5",
+  "theme_color": "#268568",
+  "lang": "uk",
+  "dir": "ltr",
+  "categories": ["lifestyle", "social", "productivity"],
+  "icons": [
+    {
+      "src": "/pwa-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "/pwa-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    },
+    {
+      "src": "/pwa-maskable-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    },
+    {
+      "src": "/favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Знайти квест",
+      "short_name": "Квести",
+      "description": "Каталог волонтерських квестів Дніпра",
+      "url": "/quests",
+      "icons": [
+        {
+          "src": "/pwa-192x192.png",
+          "sizes": "192x192"
+        }
+      ]
+    },
+    {
+      "name": "Мапа добрих справ",
+      "short_name": "Мапа",
+      "description": "Перевірені локації на мапі міста",
+      "url": "/map",
+      "icons": [
+        {
+          "src": "/pwa-192x192.png",
+          "sizes": "192x192"
+        }
+      ]
+    },
+    {
+      "name": "Мій простір",
+      "short_name": "Простір",
+      "description": "Особистий прогрес, XP та відзнаки",
+      "url": "/dashboard",
+      "icons": [
+        {
+          "src": "/pwa-192x192.png",
+          "sizes": "192x192"
+        }
+      ]
+    }
+  ]
+}
+

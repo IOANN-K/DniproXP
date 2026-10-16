@@ -323,10 +323,7 @@ function normalizeActivity(s: VolunteerState) {
 }
 function hydrate(): VolunteerState {
   const saved = readStorage<unknown>(KEY, null);
-  if (isState(saved)) {
-    normalizeActivity(saved);
-    return saved;
-  }
+  if (isState(saved)) return saved;
   if (saved !== null) writeStorage(`${KEY}:backup`, saved);
   const v4 = readStorage<unknown>("dniproxp:platform:v4", null);
   if (
@@ -342,7 +339,6 @@ function hydrate(): VolunteerState {
       } as unknown as VolunteerState;
       if (isState(migrated)) {
         migrated.impactRecords = importLegacyImpact(migrated);
-        normalizeActivity(migrated);
         return migrated;
       }
     } catch {
@@ -412,22 +408,34 @@ function hydrate(): VolunteerState {
           : {}),
       });
   base.impactRecords = importLegacyImpact(base);
-  normalizeActivity(base);
   return base;
 }
-let state: VolunteerState = hydrate();
-initializeExploration(state);
-initializeIdentity(state);
+// Publish the same JSON representation that storage can restore. Optional object
+// fields with undefined values are absent, while explicit null/false/0 survive.
+function canonicalSnapshot(snapshot: VolunteerState): VolunteerState {
+  const restored: unknown = JSON.parse(JSON.stringify(snapshot));
+  if (!isState(restored))
+    throw new Error("Не вдалося підготувати стан до збереження.");
+  return restored;
+}
+function initializeSnapshot(snapshot: VolunteerState): VolunteerState {
+  normalizeActivity(snapshot);
+  initializeExploration(snapshot);
+  initializeIdentity(snapshot);
+  return canonicalSnapshot(snapshot);
+}
+let state: VolunteerState = initializeSnapshot(hydrate());
 writeStorage(KEY, state);
 function commit(change: (draft: VolunteerState, now: string) => void) {
   const next = structuredClone(state);
   next.clock = Math.max(initialTime, next.clock) + 60_000;
   const now = new Date(next.clock).toISOString();
   change(next, now);
+  normalizeActivity(next);
   reconcileExploration(next);
   reconcileIdentity(next);
   next.revision += 1;
-  state = next;
+  state = canonicalSnapshot(next);
   writeStorage(KEY, state);
   listeners.forEach((listener) => listener());
 }

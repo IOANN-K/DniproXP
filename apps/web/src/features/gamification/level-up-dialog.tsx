@@ -1,3 +1,4 @@
+import { isApiMode } from "../../shared/api/config";
 import { useEffect, useState } from "react";
 import { Sparkles, Trophy, Zap } from "lucide-react";
 import { Dialog, DialogContent } from "../../shared/ui/dialog";
@@ -10,7 +11,8 @@ import { useSession } from "../session/store";
 import { readStorage, writeStorage } from "../../shared/lib/storage";
 import { DEMO_NOW } from "../../mocks/data";
 import { levelFor } from "../../entities/gamification/levels";
-export function LevelUpDialog() {
+export function LevelUpDialog() { return isApiMode ? null : <DemoLevelUpDialog />; }
+function DemoLevelUpDialog() {
   const user = useVolunteer();
   const state = useVolunteerState();
   const role = useSession((s) => s.user?.role);

@@ -1,4 +1,5 @@
 import type { ActivityEvent, ImpactRecord } from "./impact/types";
+export type { ActivityEvent, ActivityKind } from "./impact/types";
 import type { IdentityState } from "./identity-types";
 import type { ExplorationState } from "./exploration-types";
 export type QuestCategory = {
