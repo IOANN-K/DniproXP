@@ -30,8 +30,10 @@ const links = [
   ["/missions", "Сюжетні місії"],
   ["/challenges", "Міські виклики"],
   ["/map", "Мапа"],
+  ["/impact", "Вплив міста"],
   ["/leaderboard", "Рейтинг"],
   ["/rewards", "Нагороди"],
+  ["/demo", "Демосценарій"],
   ["/teams", "Команди"],
   ["/passport", "Мій паспорт"],
   ["/skills", "Мої навички"],
@@ -115,7 +117,80 @@ export function PublicLayout() {
                 </Button>
               </>
             )}
-            <MobileNavigation key={`${location.pathname}${location.hash}`} />
+            <Sheet open={open} onOpenChange={setOpen}>
+              <SheetTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="mobile-menu-trigger"
+                  aria-label="Відкрити меню"
+                >
+                  <Menu />
+                </Button>
+              </SheetTrigger>
+              <SheetContent
+                title="Навігація DniproXP"
+                description="Знайди свій спосіб допомогти місту"
+              >
+                <nav className="mobile-nav">
+                  {links.map(([to, title]) => (
+                    <SheetClose asChild key={to}>
+                      <NavLink to={to} end={to === "/"}>
+                        {title}
+                        <ArrowUpRight size={18} />
+                      </NavLink>
+                    </SheetClose>
+                  ))}
+                  {!session && (
+                    <>
+                      <SheetClose asChild>
+                        <Link to="/login">
+                          Увійти <ArrowUpRight size={18} />
+                        </Link>
+                      </SheetClose>
+                      <SheetClose asChild>
+                        <Link to="/register">
+                          Зареєструватися <ArrowUpRight size={18} />
+                        </Link>
+                      </SheetClose>
+                    </>
+                  )}
+                  <SheetClose asChild>
+                    <Link to="/organizations">
+                      Організації <ArrowUpRight size={18} />
+                    </Link>
+                  </SheetClose>
+                  {user && (
+                    <>
+                      <SheetClose asChild>
+                        <Link
+                          to={session ? roleHome(session.role) : "/dashboard"}
+                        >
+                          Мій простір
+                          <ArrowUpRight size={18} />
+                        </Link>
+                      </SheetClose>
+                      {session?.role === "VOLUNTEER" && (
+                        <SheetClose asChild>
+                          <Link to="/my-quests">
+                            Мої квести
+                            <ArrowUpRight size={18} />
+                          </Link>
+                        </SheetClose>
+                      )}
+                    </>
+                  )}
+                  {session?.role === "VOLUNTEER" && (
+                    <SheetClose asChild>
+                      <Link to="/profile">
+                        Мій профіль
+                        <ArrowUpRight size={18} />
+                      </Link>
+                    </SheetClose>
+                  )}
+                </nav>
+              </SheetContent>
+            </Sheet>
           </div>
         </div>
       </header>

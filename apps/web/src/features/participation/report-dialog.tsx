@@ -15,11 +15,15 @@ export function ReportDialog({
 }) {
   const [open, setOpen] = useState(false);
   const [text, setText] = useState(participation.report?.text || "");
+  const [actualHours, setActualHours] = useState(
+    participation.report?.actualHours?.toString() || "",
+  );
   const [photo, setPhoto] = useState(!!participation.report?.photo);
   const mutation = useMutation({
     mutationFn: () =>
       questApi.submitReport(quest.id, participation.userId, {
         text,
+        actualHours: actualHours ? Number(actualHours) : undefined,
         photo: photo ? quest.image : null,
         photoName: photo ? "Демонстраційне фото участі" : null,
       }),
@@ -70,6 +74,23 @@ export function ReportDialog({
           <span className="field-hint">
             Від 30 до 2000 символів · {text.length}/2000
           </span>
+          <label htmlFor={`hours-${quest.id}`}>
+            Фактичний час допомоги, год (необов’язково)
+          </label>
+          <input
+            id={`hours-${quest.id}`}
+            type="number"
+            min="0.01"
+            max="24"
+            step="0.01"
+            value={actualHours}
+            onChange={(e) => setActualHours(e.target.value)}
+            placeholder="Наприклад, 1.5"
+          />
+          <p className="field-hint">
+            Лише фактично витрачений час. Організатор підтверджує його разом зі
+            звітом; запланована тривалість не підставляється.
+          </p>
           <div className="report-photo-box">
             {photo ? (
               <>

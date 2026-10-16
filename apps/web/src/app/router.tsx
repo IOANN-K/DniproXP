@@ -1,3 +1,12 @@
+import { QuestWizardPage } from "../pages/organizer/quest-wizard-page";
+import { ImpactPage } from "../pages/impact-page";
+import { ImpactReceiptsPage } from "../pages/impact-receipts-page";
+import {
+  createBrowserRouter,
+  Link,
+  useRouteError,
+  isRouteErrorResponse,
+} from "react-router-dom";
 import { IdentityDemoPage } from "../pages/identity-demo-page";
 import { PassportPage, PassportCredentialPage } from "../pages/passport";
 import { SkillsPage } from "../pages/skills";
@@ -49,6 +58,7 @@ export const router = createBrowserRouter([
       { path: "challenges/:slug", element: <ChallengeDetailsPage /> },
       { path: "quests/:id", element: <QuestDetailPage /> },
       { path: "map", element: <MapPage /> },
+      { path: "impact", element: <ImpactPage /> },
       { path: "leaderboard", element: <LeaderboardPage /> },
       { path: "rewards", element: <RewardsPage /> },
 
@@ -65,6 +75,8 @@ export const router = createBrowserRouter([
         element: <ProtectedRoute roles={["VOLUNTEER"]} />,
         children: [
           { path: "dashboard", element: <DashboardPage /> },
+          { path: "impact/receipts", element: <ImpactReceiptsPage /> },
+          { path: "impact/receipts/:id", element: <ImpactReceiptsPage /> },
           { path: "passport", element: <PassportPage /> },
           { path: "skills", element: <SkillsPage /> },
           { path: "teams/create", element: <CreateTeamPage /> },
@@ -82,6 +94,7 @@ export const router = createBrowserRouter([
               { index: true, element: <OrganizerDashboardPage /> },
               { path: "quests", element: <OrganizerQuestsPage /> },
               { path: "quests/new", element: <QuestFormPage /> },
+              { path: "quests/generate", element: <QuestWizardPage /> },
               { path: "quests/:id/edit", element: <QuestFormPage /> },
               { path: "quests/:id", element: <OrganizerQuestDetailPage /> },
             ],

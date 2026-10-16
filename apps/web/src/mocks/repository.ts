@@ -1,3 +1,13 @@
+import {
+  importLegacyImpact,
+  validateImpactRecord,
+  aggregateImpact,
+} from "../entities/impact/domain";
+import {
+  verifyParticipation,
+  verifyCollectiveImpact,
+} from "../entities/impact/verification";
+import type { CollectiveImpactInput } from "../entities/impact/types";
 import { initializeIdentity, reconcileIdentity } from "./identity-integration";
 import { applyIdentityCommand } from "./identity-commands";
 import type { IdentityCommand } from "../entities/identity-types";
@@ -40,7 +50,7 @@ import {
   questPublishSchema,
 } from "../entities/quest/form-schema";
 import { verifiedLocations } from "./locations";
-const KEY = "dniproxp:platform:v4";
+const KEY = "dniproxp:platform:v5";
 const self = "demo-user";
 const listeners = new Set<() => void>();
 const initialTime = new Date(DEMO_NOW).getTime();
@@ -129,7 +139,8 @@ function seed(): VolunteerState {
         }))
     : [];
   return {
-    version: 4,
+    version: 5,
+    impactRecords: [],
     accounts: [
       ...users.map((u) => ({
         id: u.id,
@@ -222,6 +233,10 @@ function seed(): VolunteerState {
       .filter((t) => t.userId === self)
       .map((t) => ({
         id: `a-${t.id}`,
+        sourceEventId: t.id,
+        type: "confirm",
+        occurredAt: t.date,
+        metadata: {},
         userId: self,
         questId: t.questId,
         title: t.description,
@@ -234,7 +249,16 @@ function isState(value: unknown): value is VolunteerState {
   if (!value || typeof value !== "object") return false;
   const s = value as VolunteerState;
   return (
-    s.version === 4 &&
+    s.version === 5 &&
+    Array.isArray(s.impactRecords) &&
+    s.impactRecords.every((r) => {
+      try {
+        validateImpactRecord(r);
+        return true;
+      } catch {
+        return false;
+      }
+    }) &&
     Number.isFinite(s.revision) &&
     Number.isFinite(s.clock) &&
     Number.isFinite(s.nextId) &&
@@ -280,10 +304,52 @@ function isState(value: unknown): value is VolunteerState {
     Array.isArray(s.activity)
   );
 }
+function normalizeActivity(s: VolunteerState) {
+  s.activity = s.activity.map((e) => ({
+    ...e,
+    sourceEventId: e.sourceEventId || e.id,
+    type: e.type || e.kind,
+    occurredAt: e.occurredAt || e.date,
+    metadata: e.metadata || {},
+    organizationId:
+      e.organizationId ||
+      s.questRecords.find((q) => q.id === e.questId)?.organizationId,
+    participationId:
+      e.participationId ||
+      s.participations.find(
+        (p) => p.questId === e.questId && p.userId === e.userId,
+      )?.id,
+  }));
+}
 function hydrate(): VolunteerState {
   const saved = readStorage<unknown>(KEY, null);
-  if (isState(saved)) return saved;
+  if (isState(saved)) {
+    normalizeActivity(saved);
+    return saved;
+  }
   if (saved !== null) writeStorage(`${KEY}:backup`, saved);
+  const v4 = readStorage<unknown>("dniproxp:platform:v4", null);
+  if (
+    v4 &&
+    typeof v4 === "object" &&
+    (v4 as { version?: number }).version === 4
+  ) {
+    try {
+      const migrated = {
+        ...v4,
+        version: 5,
+        impactRecords: [],
+      } as unknown as VolunteerState;
+      if (isState(migrated)) {
+        migrated.impactRecords = importLegacyImpact(migrated);
+        normalizeActivity(migrated);
+        return migrated;
+      }
+    } catch {
+      /* Keep the original snapshot untouched for recovery. */
+    }
+  }
+  if (v4 !== null) writeStorage("dniproxp:platform:v4:backup", v4);
   const base = seed();
   const legacy = readStorage<unknown>(
     "dniproxp:volunteer:v3",
@@ -345,6 +411,8 @@ function hydrate(): VolunteerState {
             }
           : {}),
       });
+  base.impactRecords = importLegacyImpact(base);
+  normalizeActivity(base);
   return base;
 }
 let state: VolunteerState = hydrate();
@@ -388,6 +456,15 @@ function administrator() {
 function approvedOrganization(id: string, s = state) {
   return s.organizations.find((o) => o.id === id)?.moderation === "approved";
 }
+function occupied(q: Quest, s = state) {
+  return (
+    q.participants +
+    s.participations.filter(
+      (p) =>
+        p.questId === q.id &&
+        p.status !== "cancelled" &&
+        p.applicationStatus !== "rejected",
+    ).length
 function award(
   s: VolunteerState,
   questId: string,
@@ -525,6 +602,15 @@ function event(
 ) {
   draft.activity.unshift({
     id: `activity-${draft.revision + 1}`,
+    sourceEventId: `activity-${draft.revision + 1}`,
+    type: kind,
+    occurredAt: date,
+    metadata: {},
+    organizationId: draft.questRecords.find((q) => q.id === questId)
+      ?.organizationId,
+    participationId: draft.participations.find(
+      (p) => p.questId === questId && p.userId === userId,
+    )?.id,
     userId,
     questId,
     title,
@@ -771,7 +857,7 @@ export const repository = {
   submitReport(
     questId: string,
     userId: string,
-    report: Pick<QuestReport, "text" | "photo" | "photoName">,
+    report: Pick<QuestReport, "text" | "photo" | "photoName" | "actualHours">,
   ) {
     actor(userId);
     commit((s, now) => {
@@ -785,6 +871,15 @@ export const repository = {
         throw new Error("Звіт доступний лише для активної схваленої участі.");
       if (report.text.trim().length < 30 || report.text.length > 2000)
         throw new Error("Опис має містити 30–2000 символів.");
+      if (
+        report.actualHours !== undefined &&
+        (!Number.isFinite(report.actualHours) ||
+          report.actualHours <= 0 ||
+          report.actualHours > 24)
+      )
+        throw new Error(
+          "Фактичні години мають бути в межах від 0 до 24 (не включаючи 0).",
+        );
       if (report.photo && !report.photo.startsWith("/images/"))
         throw new Error("Обери демонстраційне фото.");
       if (p.report) p.reportHistory = [...(p.reportHistory || []), p.report];
@@ -797,7 +892,15 @@ export const repository = {
   },
   confirmDemo(questId: string, userId: string) {
     owner(questId);
-    commit((s, now) => award(s, questId, userId, now));
+    const verifier = account();
+    commit((s, now) => verifyParticipation(s, questId, userId, verifier, now));
+  },
+  publishCollectiveImpact(questId: string, input: CollectiveImpactInput) {
+    owner(questId);
+    const verifier = account();
+    commit((s, now) =>
+      verifyCollectiveImpact(s, questId, verifier, input, now),
+    );
   },
   reviewApplication(
     questId: string,
@@ -1042,6 +1145,42 @@ export const repository = {
     });
     return id;
   },
+  resetDemoData(confirmation: string) {
+    const signed = account();
+    if (signed.id !== "demo-admin" || signed.role !== "ADMIN")
+      throw new Error(
+        "Скидання доступне лише демонстраційному адміністратору.",
+      );
+    if (confirmation !== "СКИНУТИ")
+      throw new Error("Введи СКИНУТИ для підтвердження.");
+    const next = seed();
+    next.impactRecords = importLegacyImpact(next);
+    normalizeActivity(next);
+    next.revision = state.revision + 1;
+    // A destructive reset MUST NOT silently lose the previous snapshot if storage fails.
+    try {
+      localStorage.setItem(
+        `${KEY}:before-reset:${state.revision}`,
+        JSON.stringify(state),
+      );
+      localStorage.setItem(KEY, JSON.stringify(next));
+    } catch {
+      throw new Error(
+        "Не вдалося зберегти резервну копію. Скидання не виконано.",
+      );
+    }
+    state = next;
+    authSession.set(null);
+    try {
+      localStorage.removeItem("dniproxp:seen-xp:v1");
+      for (const key of Object.keys(sessionStorage))
+        if (key.startsWith("dniproxp:quest-wizard:v1:"))
+          sessionStorage.removeItem(key);
+    } catch {
+      /* Reset snapshot is already safely persisted. */
+    }
+    listeners.forEach((listener) => listener());
+  },
   newDemoRun() {
     const signed = account();
     let id = "";
@@ -1165,9 +1304,7 @@ export function getVolunteer(
   const tx = snapshot.transactions.filter((t) => t.userId === userId);
   const xp = tx.reduce((n, t) => n + t.xp, 0);
   const level = levelFor(xp);
-  const done = snapshot.participations.filter(
-    (p) => p.userId === userId && p.status === "completed",
-  );
+  const impact = aggregateImpact(snapshot.impactRecords, { userId });
   return {
     ...base,
     name: profile.name,
@@ -1181,12 +1318,9 @@ export function getVolunteer(
       .toUpperCase(),
     xp,
     level: level.level,
-    questsCompleted: done.length,
+    questsCompleted: impact.activities,
     points: tx.reduce((n, t) => n + t.points, 0),
-    hours: done.reduce((n, p) => {
-      const q = snapshot.questRecords.find((q) => q.id === p.questId);
-      return n + parseFloat((q?.duration || "0").replace(",", "."));
-    }, 0),
+    hours: impact.totals.volunteer_hours,
     nextLevelXp: level.nextXp,
     levelStartXp: level.xp,
     progress: level.progress,

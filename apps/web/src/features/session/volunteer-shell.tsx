@@ -59,6 +59,10 @@ export function VolunteerShell({ children }: { children: ReactNode }) {
           <UserRound size={17} />
           Профіль
         </NavLink>
+        <NavLink to="/impact/receipts">
+          <Flag size={17} />
+          Чеки допомоги
+        </NavLink>
         <NavLink to="/rewards">
           <Gift size={17} />
           Винагороди

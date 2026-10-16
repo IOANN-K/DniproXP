@@ -1,5 +1,6 @@
 import { NavLink, Outlet, Link } from "react-router-dom";
 import {
+  Sparkles,
   Building2,
   LayoutDashboard,
   Flag,
@@ -33,7 +34,11 @@ export function OrganizerLayout() {
           <LayoutDashboard size={17} />
           Огляд
         </NavLink>
-        <NavLink to="/organizer/quests">
+        <NavLink to="/organizer/quests/generate">
+          <Sparkles size={17} />
+          Майстер квестів
+        </NavLink>
+        <NavLink to="/organizer/quests" end>
           <Flag size={17} />
           Мої квести та заявки
         </NavLink>

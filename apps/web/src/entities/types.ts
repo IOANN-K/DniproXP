@@ -1,3 +1,4 @@
+import type { ActivityEvent, ImpactRecord } from "./impact/types";
 import type { IdentityState } from "./identity-types";
 import type { ExplorationState } from "./exploration-types";
 export type QuestCategory = {
@@ -97,6 +98,7 @@ export type Reward = {
 };
 
 export type QuestReport = {
+  actualHours?: number;
   text: string;
   photo: string | null;
   photoName: string | null;
@@ -155,8 +157,9 @@ export type VolunteerStats = User & {
   progress: number;
 };
 export type VolunteerState = {
-  version: 4;
+  version: 5;
   identity?: IdentityState;
+  impactRecords: ImpactRecord[];
   identityRejectedSnapshot?: unknown;
   exploration?: ExplorationState;
   explorationRejectedSnapshot?: unknown;
@@ -176,11 +179,7 @@ export type VolunteerState = {
 
 export type Role = "VOLUNTEER" | "ORGANIZER" | "ADMIN";
 export type QuestLifecycle =
-  | "draft"
-  | "published"
-  | "active"
-  | "completed"
-  | "cancelled";
+  "draft" | "published" | "active" | "completed" | "cancelled";
 export type DemoAccount = {
   id: string;
   email: string;

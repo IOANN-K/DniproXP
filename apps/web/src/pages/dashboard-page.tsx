@@ -1,3 +1,4 @@
+import { ImpactSummary } from "../features/impact/impact-summary";
 import { IdentitySummary } from "../features/teams/integration";
 import { PersonalExploration } from "../features/exploration/sections";
 import { Link } from "react-router-dom";
@@ -120,7 +121,7 @@ function Dashboard() {
             icon: Clock3,
             value: user.hours.toLocaleString("uk-UA"),
             label: "годин волонтерства",
-            note: "Твій час для міста",
+            note: "Фактичний час із підтверджених звітів",
           },
           {
             icon: Flag,

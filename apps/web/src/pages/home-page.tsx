@@ -1,3 +1,4 @@
+import { ImpactSummary } from "../features/impact/impact-summary";
 import { ExplorationEntryCards } from "../features/exploration/sections";
 import { Link } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
@@ -142,29 +143,10 @@ export function HomePage() {
             </div>
           </div>
         </div>
-        <div className="container">
-          <div className="stats-strip">
-            <div className="stats-intro">
-              <span className="eyebrow">РАЗОМ МОЖЕМО БІЛЬШЕ</span>
-              <span>Так може виглядати наш спільний вплив</span>
-              <small>Демонстраційні показники</small>
-            </div>
-            {[
-              ["1 240+", "небайдужих містян"],
-              ["86", "добрих ініціатив"],
-              ["320+", "виконаних квестів"],
-            ].map(([n, t]) => (
-              <div className="stat" key={t}>
-                <strong>
-                  {n}
-                  <span />
-                </strong>
-                <span>{t}</span>
-              </div>
-            ))}
-          </div>
-        </div>
       </section>
+      <div className="container">
+        <ImpactSummary />
+      </div>
       <section className="section container">
         <SectionHeading
           eyebrow="ЗНАЙДИ ТЕ, ЩО ВІДГУКУЄТЬСЯ"

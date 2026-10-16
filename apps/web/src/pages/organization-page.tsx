@@ -10,6 +10,7 @@ import {
 } from "lucide-react";
 import { useVolunteerState } from "../shared/lib/use-volunteer";
 import { publicQuests } from "../mocks/repository";
+import { aggregateImpact } from "../entities/impact/domain";
 import { QuestCard } from "../entities/quest/quest-card";
 import { Card, Badge } from "../shared/ui/primitives";
 import { Button } from "../shared/ui/button";
@@ -71,17 +72,12 @@ export function OrganizationPage() {
   const entries = state.participations.filter((p) =>
     quests.some((q) => q.id === p.questId),
   );
-  const hours = entries
-    .filter((p) => p.status === "completed")
-    .reduce(
-      (n, p) =>
-        n +
-        parseFloat(
-          quests.find((q) => q.id === p.questId)?.duration.replace(",", ".") ||
-            "0",
-        ),
-      0,
-    );
+  const impact = aggregateImpact(state.impactRecords, {
+    organizationId: org.id,
+  });
+  const hours = impact.known.has("volunteer_hours")
+    ? impact.totals.volunteer_hours
+    : "—";
   return (
     <div className="container page-section">
       <Card className="organization-public-hero">
@@ -120,7 +116,11 @@ export function OrganizationPage() {
             ).size,
             label: "волонтерів долучилося",
           },
-          { icon: Clock3, value: hours, label: "підтверджених годин" },
+          {
+            icon: Clock3,
+            value: hours,
+            label: "фактичних підтверджених годин",
+          },
           { icon: Flag, value: active.length, label: "відкритих квестів" },
         ].map((s) => (
           <Card className="personal-stat" key={s.label}>
