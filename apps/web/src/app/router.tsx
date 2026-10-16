@@ -7,6 +7,16 @@ import {
   useRouteError,
   isRouteErrorResponse,
 } from "react-router-dom";
+import { IdentityDemoPage } from "../pages/identity-demo-page";
+import { PassportPage, PassportCredentialPage } from "../pages/passport";
+import { SkillsPage } from "../pages/skills";
+import { TeamsPage, CreateTeamPage, TeamPage } from "../pages/teams";
+import { MissionsPage } from "../pages/missions";
+import { MissionDetailsPage } from "../pages/mission-details";
+import { ChallengesPage } from "../pages/challenges";
+import { ChallengeDetailsPage } from "../pages/challenge-details";
+import { createBrowserRouter } from "react-router-dom";
+import { NotFound, RouteError } from "./route-feedback";
 import { PublicLayout } from "./layouts/public-layout";
 import { HomePage } from "../pages/home-page";
 import { QuestsPage } from "../pages/quests-page";
@@ -18,7 +28,6 @@ import { DashboardPage } from "../pages/dashboard-page";
 import { MyQuestsPage } from "../pages/my-quests-page";
 import { OrganizersPage } from "../pages/community-pages";
 import { MapPage } from "../pages/map-page";
-import { Button } from "../shared/ui/button";
 import { ProtectedRoute } from "../features/auth/protected-route";
 import { DemoScenarioPage } from "../pages/demo-scenario-page";
 import { AuthPage } from "../pages/auth-page";
@@ -29,34 +38,6 @@ import { QuestFormPage } from "../pages/organizer/quest-form-page";
 import { OrganizerQuestDetailPage } from "../pages/organizer/quest-detail-page";
 import { OrganizationPage } from "../pages/organization-page";
 import { AdminPage } from "../pages/admin-page";
-function NotFound() {
-  return (
-    <div className="container empty-state">
-      <p className="eyebrow">404</p>
-      <h1>Тут поки немає квесту</h1>
-      <p>Але в місті є багато добрих справ, які чекають на тебе.</p>
-      <Button asChild>
-        <Link to="/quests">Знайти квест</Link>
-      </Button>
-    </div>
-  );
-}
-function RouteError() {
-  const error = useRouteError();
-  return (
-    <div className="container empty-state">
-      <h1>
-        {isRouteErrorResponse(error) && error.status === 404
-          ? "Сторінку не знайдено"
-          : "Щось пішло не так"}
-      </h1>
-      <p>Спробуй відкрити сторінку ще раз.</p>
-      <Button asChild>
-        <a href="/">На головну</a>
-      </Button>
-    </div>
-  );
-}
 export const router = createBrowserRouter([
   {
     element: <PublicLayout />,
@@ -64,6 +45,17 @@ export const router = createBrowserRouter([
     children: [
       { index: true, element: <HomePage /> },
       { path: "quests", element: <QuestsPage /> },
+      { path: "passport/credentials/:id", element: <PassportCredentialPage /> },
+      { path: "passport/:userId", element: <PassportPage /> },
+      { path: "teams", element: <TeamsPage /> },
+      { path: "teams/:slug", element: <TeamPage /> },
+      { path: "teams/:slug/members", element: <TeamPage view="members" /> },
+      { path: "teams/:slug/quests", element: <TeamPage view="quests" /> },
+      { path: "teams/:slug/settings", element: <TeamPage view="settings" /> },
+      { path: "missions", element: <MissionsPage /> },
+      { path: "missions/:slug", element: <MissionDetailsPage /> },
+      { path: "challenges", element: <ChallengesPage /> },
+      { path: "challenges/:slug", element: <ChallengeDetailsPage /> },
       { path: "quests/:id", element: <QuestDetailPage /> },
       { path: "map", element: <MapPage /> },
       { path: "impact", element: <ImpactPage /> },
@@ -78,12 +70,16 @@ export const router = createBrowserRouter([
       { path: "login", element: <AuthPage /> },
       { path: "register", element: <AuthPage register /> },
       { path: "demo", element: <DemoScenarioPage /> },
+      { path: "demo/identity", element: <IdentityDemoPage /> },
       {
         element: <ProtectedRoute roles={["VOLUNTEER"]} />,
         children: [
           { path: "dashboard", element: <DashboardPage /> },
           { path: "impact/receipts", element: <ImpactReceiptsPage /> },
           { path: "impact/receipts/:id", element: <ImpactReceiptsPage /> },
+          { path: "passport", element: <PassportPage /> },
+          { path: "skills", element: <SkillsPage /> },
+          { path: "teams/create", element: <CreateTeamPage /> },
           { path: "my-quests", element: <MyQuestsPage /> },
           { path: "profile", element: <ProfilePage /> },
         ],

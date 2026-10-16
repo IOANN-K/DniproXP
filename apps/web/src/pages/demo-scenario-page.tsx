@@ -153,6 +153,12 @@ export function DemoScenarioPage() {
           {steps.filter((step) => step.done).length} / {steps.length} кроків
           мають готові дані
         </strong>
+      <div className="exploration-hero-links">
+        <Button asChild variant="outline">
+          <Link to="/demo/identity">
+            Паспорт, навички та командна історія <ArrowRight size={16} />
+          </Link>
+        </Button>
       </div>
       <div className="demo-steps">
         {steps.map((s, i) => (
@@ -187,6 +193,32 @@ export function DemoScenarioPage() {
           {move.error.message}
         </p>
       )}
+      <section className="personal-section">
+        <h2>Продовж історію міста</h2>
+        <p className="muted">
+          Перший демоквест «Разом озеленюємо парк» пов’язаний із місією «Берег
+          спільних дій» та двома міськими викликами. Після його підтвердження
+          відкрий наступний етап місії. Повторні демоквести створюються окремими
+          подіями й автоматично до цих історій не додаються.
+        </p>
+        <div className="exploration-hero-links">
+          <Button asChild variant="outline">
+            <Link to="/missions/bereh-spilnykh-diy">
+              Берег спільних дій <ArrowRight size={16} />
+            </Link>
+          </Button>
+          <Button asChild variant="outline">
+            <Link to="/challenges/chystyi-bereh">
+              Спільна мета берега <ArrowRight size={16} />
+            </Link>
+          </Button>
+          <Button asChild variant="outline">
+            <Link to="/challenges/bilsh-zelenyi-dnipro">
+              Озеленення міста <ArrowRight size={16} />
+            </Link>
+          </Button>
+        </div>
+      </section>
       <Card className="demo-replay">
         <Repeat2 size={28} />
         <div>

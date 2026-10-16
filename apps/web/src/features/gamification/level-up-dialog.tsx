@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { Sparkles, Trophy, Zap } from "lucide-react";
 import { Dialog, DialogContent } from "../../shared/ui/dialog";
 import { Button } from "../../shared/ui/button";
@@ -14,74 +14,116 @@ export function LevelUpDialog() {
   const user = useVolunteer();
   const state = useVolunteerState();
   const role = useSession((s) => s.user?.role);
-  const acknowledged = useRef(
-    readStorage<Record<string, number>>("dniproxp:seen-xp:v1", {}),
+  if (!user || role !== "VOLUNTEER") return null;
+  const baseline = state.transactions
+    .filter(
+      (t) => t.userId === user.id && Date.parse(t.date) <= Date.parse(DEMO_NOW),
+    )
+    .reduce((total, t) => total + t.xp, 0);
+  return (
+    <VolunteerXPNotice
+      key={user.id}
+      userId={user.id}
+      xp={user.xp}
+      level={user.level}
+      baseline={baseline}
+    />
   );
-  const [level, setLevel] = useState<number | null>(null);
-  const [award, setAward] = useState(0);
+}
+
+function VolunteerXPNotice({
+  userId,
+  xp,
+  level,
+  baseline,
+}: {
+  userId: string;
+  xp: number;
+  level: number;
+  baseline: number;
+}) {
+  const [notice, setNotice] = useState<{
+    seenXp: number;
+    level: number | null;
+    award: number;
+  }>(() => {
+    const acknowledged = readStorage<Record<string, number>>(
+      "dniproxp:seen-xp:v1",
+      {},
+    );
+    return {
+      seenXp: Number.isFinite(acknowledged[userId])
+        ? acknowledged[userId]
+        : baseline,
+      level: null,
+      award: 0,
+    };
+  });
+  // Adjust only when XP changes; no external writes or effect-triggered render loop.
+  if (xp !== notice.seenXp) {
+    setNotice({
+      seenXp: xp,
+      award: xp > notice.seenXp ? xp - notice.seenXp : notice.award,
+      level:
+        levelFor(xp).level > levelFor(notice.seenXp).level
+          ? level
+          : notice.level,
+    });
+  }
   useEffect(() => {
-    if (!user || role !== "VOLUNTEER") {
-      setLevel(null);
-      setAward(0);
-      return;
-    }
-    const baseline = state.transactions
-      .filter(
-        (t) =>
-          t.userId === user.id && Date.parse(t.date) <= Date.parse(DEMO_NOW),
-      )
-      .reduce((n, t) => n + t.xp, 0);
-    const last = Number.isFinite(acknowledged.current[user.id])
-      ? acknowledged.current[user.id]
-      : baseline;
-    if (user.xp > last) {
-      setAward(user.xp - last);
-      if (levelFor(user.xp).level > levelFor(last).level) setLevel(user.level);
-    }
-    acknowledged.current[user.id] = user.xp;
-    writeStorage("dniproxp:seen-xp:v1", acknowledged.current);
-  }, [user?.id, user?.xp, user?.level, role, state.transactions]);
+    const acknowledged = readStorage<Record<string, number>>(
+      "dniproxp:seen-xp:v1",
+      {},
+    );
+    writeStorage("dniproxp:seen-xp:v1", { ...acknowledged, [userId]: xp });
+  }, [userId, xp]);
+  const award = notice.award;
+  const awardedXp = notice.seenXp;
+  const unlockedLevel = notice.level;
   useEffect(() => {
     if (!award) return;
-    const timer = setTimeout(() => setAward(0), 5000);
+    const timer = setTimeout(
+      () => setNotice((current) => ({ ...current, award: 0 })),
+      5000,
+    );
     return () => clearTimeout(timer);
-  }, [award]);
+  }, [award, awardedXp]);
+  const dismissLevel = () =>
+    setNotice((current) => ({ ...current, level: null }));
   return (
     <>
       {award > 0 && (
-        <div className="xp-award-toast" role="status" key={`${user?.xp}`}>
+        <div className="xp-award-toast" role="status" key={`${xp}`}>
           <span>
             <Zap size={25} />
           </span>
           <div>
             <strong>+{award} XP</strong>
-            <p>Організатор підтвердив твою добру справу</p>
+            <p>Новий досвід за підтверджені справи та досягнення</p>
           </div>
           <Sparkles size={22} />
         </div>
       )}
       <Dialog
-        open={level !== null}
+        open={unlockedLevel !== null}
         onOpenChange={(open) => {
-          if (!open) setLevel(null);
+          if (!open) dismissLevel();
         }}
       >
         <DialogContent
-          title={`Вітаємо! Новий рівень ${level || ""}`}
+          title={`Вітаємо! Новий рівень ${unlockedLevel || ""}`}
           description="Твої підтверджені добрі справи перетворюються на досвід."
         >
           <div className="level-up-art">
             <Trophy size={75} />
             <Sparkles size={30} />
           </div>
-          <p className="level-up-name">{user ? levelFor(user.xp).name : ""}</p>
+          <p className="level-up-name">{levelFor(xp).name}</p>
           <p className="muted">
             Дніпро стає кращим завдяки твоїй турботі. Попереду ще багато
             можливостей!
           </p>
-          <Button onClick={() => setLevel(null)}>
-            Продовжувати добрі справи
-          </Button>
+          <Button onClick={dismissLevel}>Продовжувати добрі справи</Button>
         </DialogContent>
       </Dialog>
     </>

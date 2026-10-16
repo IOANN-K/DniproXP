@@ -8,6 +8,24 @@ import {
   verifyCollectiveImpact,
 } from "../entities/impact/verification";
 import type { CollectiveImpactInput } from "../entities/impact/types";
+import { initializeIdentity, reconcileIdentity } from "./identity-integration";
+import { applyIdentityCommand } from "./identity-commands";
+import type { IdentityCommand } from "../entities/identity-types";
+import { applyParticipation } from "../entities/quest/apply-participation";
+import {
+  initializeExploration,
+  reconcileExploration,
+  validateExploration,
+} from "./exploration-integration";
+import {
+  explorationOf,
+  selectMissionProgress,
+  selectChallengeProgress,
+  activitiesOf,
+} from "./exploration-selectors";
+import { challengeRewardAvailable } from "../entities/challenge/progress";
+import type { QuestChain } from "../entities/mission/types";
+import type { CityChallenge } from "../entities/challenge/types";
 import type {
   Participation,
   ProfileData,
@@ -30,7 +48,7 @@ import { organizations as baseOrganizations } from "./data";
 import {
   questDraftSchema,
   questPublishSchema,
-} from "../features/organizer/quest-schema";
+} from "../entities/quest/form-schema";
 import { verifiedLocations } from "./locations";
 const KEY = "dniproxp:platform:v5";
 const self = "demo-user";
@@ -398,12 +416,16 @@ function hydrate(): VolunteerState {
   return base;
 }
 let state: VolunteerState = hydrate();
+initializeExploration(state);
+initializeIdentity(state);
 writeStorage(KEY, state);
 function commit(change: (draft: VolunteerState, now: string) => void) {
   const next = structuredClone(state);
   next.clock = Math.max(initialTime, next.clock) + 60_000;
   const now = new Date(next.clock).toISOString();
   change(next, now);
+  reconcileExploration(next);
+  reconcileIdentity(next);
   next.revision += 1;
   state = next;
   writeStorage(KEY, state);
@@ -443,6 +465,49 @@ function occupied(q: Quest, s = state) {
         p.status !== "cancelled" &&
         p.applicationStatus !== "rejected",
     ).length
+function award(
+  s: VolunteerState,
+  questId: string,
+  userId: string,
+  now: string,
+) {
+  const p = entry(s, questId, userId);
+  const id = `completion:${userId}:${questId}`;
+  if (p.status === "completed" && s.transactions.some((t) => t.id === id))
+    return;
+  const q = s.questRecords.find((q) => q.id === questId)!;
+  if (
+    p.status !== "pending" ||
+    !p.report ||
+    p.applicationStatus !== "approved" ||
+    q.lifecycle === "cancelled"
+  )
+    throw new Error("Потрібен звіт схваленого учасника доступного квесту.");
+  if (s.transactions.some((t) => t.id === id))
+    throw new Error("Винагороду вже нараховано.");
+  p.status = "completed";
+  p.confirmedAt = now;
+  p.updatedAt = now;
+  p.awardedXp = q.xp;
+  p.awardedPoints = pointsForQuest(q);
+  s.transactions.push({
+    id,
+    userId,
+    questId,
+    xp: q.xp,
+    points: pointsForQuest(q),
+    date: now,
+    description: `Організатор підтвердив: ${q.title}`,
+    kind: "QUEST_COMPLETION",
+    sourceId: p.id,
+  });
+  event(
+    s,
+    userId,
+    questId,
+    `Участь підтверджено: +${q.xp} XP та +${pointsForQuest(q)} бонусних балів`,
+    "confirm",
+    now,
   );
 }
 export function pointsForQuest(q: Quest) {
@@ -507,6 +572,8 @@ function questFromForm(
       .map((s) => s.trim())
       .filter(Boolean),
     instructions: v.instructions,
+    allowTeamParticipation: !!v.allowTeamParticipation,
+    teamParticipantLimit: v.teamParticipantLimit || 8,
     participants: 0,
     status: "available",
     lifecycle,
@@ -553,6 +620,182 @@ function event(
 }
 export const repository = {
   getSnapshot: () => state,
+  mutateIdentity(command: IdentityCommand) {
+    const signed = account();
+    actor(signed.id);
+    let result: string | void = undefined;
+    commit((s, now) => {
+      const previous = s.identity?.events[0]?.id;
+      result = applyIdentityCommand(s, signed.id, command, now);
+      const latest = s.identity?.events[0];
+      if (latest && latest.id !== previous)
+        event(s, signed.id, undefined, latest.title, "team", now);
+      if (command.type === "PASSPORT_PRIVACY")
+        event(
+          s,
+          signed.id,
+          undefined,
+          "Видимість паспорта оновлено",
+          "profile",
+          now,
+        );
+    });
+    return result;
+  },
+  joinMission(chainId: string, userId: string) {
+    actor(userId);
+    commit((s, now) => {
+      const epic = explorationOf(s);
+      const m = epic.missions.find((m) => m.id === chainId);
+      if (!m) throw new Error("Місію не знайдено.");
+      const p = selectMissionProgress(s, chainId, userId)!;
+      if (p.status === "LOCKED" || p.status === "COMPLETED")
+        throw new Error(p.reasons[0] || "Місію вже завершено.");
+      if (
+        epic.missionEnrollments.some(
+          (e) => e.chainId === chainId && e.userId === userId,
+        )
+      )
+        return;
+      epic.missionEnrollments.push({
+        id: `mission-enrollment:${chainId}:${userId}`,
+        chainId,
+        userId,
+        joinedAt: now,
+      });
+      event(
+        s,
+        userId,
+        undefined,
+        `До твоїх історій додано місію «${m.title}»`,
+        "mission",
+        now,
+      );
+    });
+  },
+  claimMissionReward(chainId: string, userId: string) {
+    actor(userId);
+    commit((s, now) => {
+      const id = `mission:${chainId}:${userId}`;
+      if (s.transactions.some((t) => t.id === id)) return;
+      const m = explorationOf(s).missions.find((m) => m.id === chainId);
+      if (
+        !m ||
+        selectMissionProgress(s, chainId, userId)?.status !== "COMPLETED"
+      )
+        throw new Error(
+          "Спочатку підтвердь усі обов’язкові етапи місії та виконай передумови.",
+        );
+      s.transactions.push({
+        id,
+        userId,
+        kind: "MISSION_REWARD",
+        sourceId: chainId,
+        xp: m.rewards.xp,
+        points: m.rewards.rewardPoints,
+        date: now,
+        description: `Фінал місії: ${m.title}`,
+      });
+      event(
+        s,
+        userId,
+        undefined,
+        `Отримано нагороду місії: +${m.rewards.xp} XP та +${m.rewards.rewardPoints} балів`,
+        "mission",
+        now,
+      );
+    });
+  },
+  joinChallenge(challengeId: string, userId: string) {
+    actor(userId);
+    commit((s, now) => {
+      const epic = explorationOf(s);
+      const c = epic.challenges.find((c) => c.id === challengeId);
+      const result = selectChallengeProgress(s, challengeId);
+      if (!c || result?.status !== "ACTIVE")
+        throw new Error("Долучитися можна лише до активного виклику.");
+      if (
+        epic.challengeParticipants.some(
+          (p) => p.challengeId === challengeId && p.userId === userId,
+        ) ||
+        c.participantIds.includes(userId)
+      )
+        return;
+      epic.challengeParticipants.push({ challengeId, userId, joinedAt: now });
+      event(
+        s,
+        userId,
+        undefined,
+        `Ти долучився до виклику «${c.title}»`,
+        "challenge",
+        now,
+      );
+    });
+  },
+  claimChallengeReward(challengeId: string, userId: string) {
+    actor(userId);
+    commit((s, now) => {
+      const id = `challenge:${challengeId}:${userId}`;
+      if (s.transactions.some((t) => t.id === id)) return;
+      const c = explorationOf(s).challenges.find((c) => c.id === challengeId);
+      const result = selectChallengeProgress(s, challengeId);
+      if (
+        !c ||
+        !result ||
+        !challengeRewardAvailable(
+          c,
+          userId,
+          result,
+          activitiesOf(s),
+          s.transactions,
+        )
+      )
+        throw new Error(
+          "Потрібні завершені спільні цілі й твій підтверджений внесок у період виклику.",
+        );
+      s.transactions.push({
+        id,
+        userId,
+        kind: "CHALLENGE_REWARD",
+        sourceId: challengeId,
+        xp: c.rewards.xp,
+        points: c.rewards.rewardPoints,
+        date: now,
+        description: `Спільна перемога: ${c.title}`,
+      });
+      event(
+        s,
+        userId,
+        undefined,
+        `Отримано нагороду міського виклику: +${c.rewards.xp} XP та +${c.rewards.rewardPoints} балів`,
+        "challenge",
+        now,
+      );
+    });
+  },
+  saveMission(definition: QuestChain) {
+    administrator();
+    commit((s) => {
+      const epic = explorationOf(s);
+      epic.missions = [
+        ...epic.missions.filter((m) => m.id !== definition.id),
+        structuredClone(definition),
+      ];
+      validateExploration(s, epic);
+    });
+  },
+  saveChallenge(definition: CityChallenge) {
+    administrator();
+    commit((s) => {
+      const epic = explorationOf(s);
+      epic.challenges = [
+        ...epic.challenges.filter((c) => c.id !== definition.id),
+        structuredClone(definition),
+      ];
+      validateExploration(s, epic);
+    });
+  },
+
   subscribe(listener: () => void) {
     listeners.add(listener);
     return () => {
@@ -562,43 +805,15 @@ export const repository = {
   join(questId: string, userId: string) {
     actor(userId);
     commit((s, now) => {
-      const q = s.questRecords.find((q) => q.id === questId);
-      if (
-        !q ||
-        !["published", "active"].includes(q.lifecycle || "") ||
-        q.moderation !== "approved" ||
-        !approvedOrganization(q.organizationId, s)
-      )
-        throw new Error("Запис на цей квест недоступний.");
       const old = s.participations.find(
         (p) => p.questId === questId && p.userId === userId,
       );
-      if (
+      const alreadyJoined =
         old &&
         old.status !== "cancelled" &&
-        old.applicationStatus !== "rejected"
-      )
-        return;
-      if (old?.applicationStatus === "rejected")
-        throw new Error(
-          "Організатор відхилив заявку. Повторне подання на цей квест недоступне.",
-        );
-      if (occupied(q, s) >= q.capacity) throw new Error("Усі місця зайняті.");
-      if (old) {
-        old.status = "planned";
-        old.applicationStatus = "pending";
-        old.report = undefined;
-        old.updatedAt = now;
-      } else
-        s.participations.push({
-          id: `p-${userId}-${questId}`,
-          questId,
-          userId,
-          status: "planned",
-          applicationStatus: "pending",
-          createdAt: now,
-          updatedAt: now,
-        });
+        old.applicationStatus !== "rejected";
+      applyParticipation(s, questId, userId, now);
+      if (alreadyJoined) return;
       event(
         s,
         userId,
@@ -1056,6 +1271,8 @@ export const repository = {
         points: -r.cost,
         date: now,
         description: `Обмін: ${r.name}`,
+        kind: "REWARD_REDEMPTION",
+        sourceId: id,
       });
       event(s, userId, undefined, `Отримано: ${r.name}`, "reward", now);
     });
@@ -1135,6 +1352,8 @@ export const questStatusLabels: Record<QuestLifecycle, string> = {
 };
 export function questToForm(q: Quest): QuestFormValues {
   return {
+    allowTeamParticipation: !!q.allowTeamParticipation,
+    teamParticipantLimit: q.teamParticipantLimit || 8,
     title: q.title,
     description: q.description,
     fullDescription: q.fullDescription || q.description,

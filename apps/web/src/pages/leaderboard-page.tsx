@@ -1,3 +1,4 @@
+import { TeamsRanking } from "../features/teams/rankings";
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import { Medal, Trophy, ArrowUpRight, Zap, TrendingUp } from "lucide-react";
@@ -33,7 +34,15 @@ export function LeaderboardPage() {
       return {
         ...user,
         periodXp: tx.reduce((n, t) => n + t.xp, 0),
-        periodQuests: tx.length,
+        periodQuests: new Set(
+          tx
+            .filter(
+              (t) =>
+                t.questId &&
+                (t.kind === undefined || t.kind === "QUEST_COMPLETION"),
+            )
+            .map((t) => t.questId),
+        ).size,
       };
     })
     .sort(
@@ -143,6 +152,7 @@ export function LeaderboardPage() {
           </Link>
         ))}
       </section>
+      <TeamsRanking />
       <p className="demo-caption">
         XP обчислюється з журналу нарахувань. Обмін бонусних балів не впливає на
         рейтинг. За рівності XP вище стоїть учасник із більшою загальною

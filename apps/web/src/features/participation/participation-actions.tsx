@@ -8,7 +8,6 @@ import { pointsForQuest } from "../../mocks/repository";
 import { Dialog, DialogContent } from "../../shared/ui/dialog";
 import { Button } from "../../shared/ui/button";
 import { ReportDialog, ReportPreview } from "./report-dialog";
-export { participationLabels } from "../../entities/quest/participation-status";
 export function ParticipationActions({
   quest,
   participation: p,

@@ -1,4 +1,5 @@
 import { ImpactSummary } from "../features/impact/impact-summary";
+import { ExplorationEntryCards } from "../features/exploration/sections";
 import { Link } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import {
@@ -202,6 +203,13 @@ export function HomePage() {
           Це демонстраційні квести. Реальні події та організації поки не
           підключені.
         </p>
+      </section>
+      <section className="container section">
+        <SectionHeading
+          eyebrow="БІЛЬШЕ НІЖ ОДНА ДОБРА СПРАВА"
+          title="Створюй історії. Змінюй місто разом."
+        />
+        <ExplorationEntryCards />
       </section>
       <section className="how-section section" id="how-it-works">
         <div className="container">

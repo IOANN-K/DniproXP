@@ -46,6 +46,9 @@ function Viewport({
   reset: number;
 }) {
   const map = useMap();
+  const selectedId = selected?.id;
+  const latitude = selected?.coordinates?.[0];
+  const longitude = selected?.coordinates?.[1];
   useEffect(() => {
     const points = quests.flatMap((q) =>
       q.coordinates ? [q.coordinates] : [],
@@ -60,11 +63,11 @@ function Viewport({
     map.invalidateSize();
   }, [map, quests, reset]);
   useEffect(() => {
-    if (selected?.coordinates)
-      map.setView(selected.coordinates, 15, {
+    if (selectedId && latitude !== undefined && longitude !== undefined)
+      map.setView([latitude, longitude], 15, {
         animate: !window.matchMedia("(prefers-reduced-motion: reduce)").matches,
       });
-  }, [map, selected?.id]);
+  }, [map, selectedId, latitude, longitude]);
   return null;
 }
 export function MapPage() {
