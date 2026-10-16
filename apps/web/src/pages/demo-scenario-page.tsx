@@ -153,6 +153,7 @@ export function DemoScenarioPage() {
           {steps.filter((step) => step.done).length} / {steps.length} кроків
           мають готові дані
         </strong>
+      </div>
       <div className="exploration-hero-links">
         <Button asChild variant="outline">
           <Link to="/demo/identity">

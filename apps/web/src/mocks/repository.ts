@@ -323,10 +323,7 @@ function normalizeActivity(s: VolunteerState) {
 }
 function hydrate(): VolunteerState {
   const saved = readStorage<unknown>(KEY, null);
-  if (isState(saved)) {
-    normalizeActivity(saved);
-    return saved;
-  }
+  if (isState(saved)) return saved;
   if (saved !== null) writeStorage(`${KEY}:backup`, saved);
   const v4 = readStorage<unknown>("dniproxp:platform:v4", null);
   if (
@@ -342,7 +339,6 @@ function hydrate(): VolunteerState {
       } as unknown as VolunteerState;
       if (isState(migrated)) {
         migrated.impactRecords = importLegacyImpact(migrated);
-        normalizeActivity(migrated);
         return migrated;
       }
     } catch {
@@ -412,22 +408,34 @@ function hydrate(): VolunteerState {
           : {}),
       });
   base.impactRecords = importLegacyImpact(base);
-  normalizeActivity(base);
   return base;
 }
-let state: VolunteerState = hydrate();
-initializeExploration(state);
-initializeIdentity(state);
+// Publish the same JSON representation that storage can restore. Optional object
+// fields with undefined values are absent, while explicit null/false/0 survive.
+function canonicalSnapshot(snapshot: VolunteerState): VolunteerState {
+  const restored: unknown = JSON.parse(JSON.stringify(snapshot));
+  if (!isState(restored))
+    throw new Error("Не вдалося підготувати стан до збереження.");
+  return restored;
+}
+function initializeSnapshot(snapshot: VolunteerState): VolunteerState {
+  normalizeActivity(snapshot);
+  initializeExploration(snapshot);
+  initializeIdentity(snapshot);
+  return canonicalSnapshot(snapshot);
+}
+let state: VolunteerState = initializeSnapshot(hydrate());
 writeStorage(KEY, state);
 function commit(change: (draft: VolunteerState, now: string) => void) {
   const next = structuredClone(state);
   next.clock = Math.max(initialTime, next.clock) + 60_000;
   const now = new Date(next.clock).toISOString();
   change(next, now);
+  normalizeActivity(next);
   reconcileExploration(next);
   reconcileIdentity(next);
   next.revision += 1;
-  state = next;
+  state = canonicalSnapshot(next);
   writeStorage(KEY, state);
   listeners.forEach((listener) => listener());
 }
@@ -455,60 +463,6 @@ function administrator() {
 }
 function approvedOrganization(id: string, s = state) {
   return s.organizations.find((o) => o.id === id)?.moderation === "approved";
-}
-function occupied(q: Quest, s = state) {
-  return (
-    q.participants +
-    s.participations.filter(
-      (p) =>
-        p.questId === q.id &&
-        p.status !== "cancelled" &&
-        p.applicationStatus !== "rejected",
-    ).length
-function award(
-  s: VolunteerState,
-  questId: string,
-  userId: string,
-  now: string,
-) {
-  const p = entry(s, questId, userId);
-  const id = `completion:${userId}:${questId}`;
-  if (p.status === "completed" && s.transactions.some((t) => t.id === id))
-    return;
-  const q = s.questRecords.find((q) => q.id === questId)!;
-  if (
-    p.status !== "pending" ||
-    !p.report ||
-    p.applicationStatus !== "approved" ||
-    q.lifecycle === "cancelled"
-  )
-    throw new Error("Потрібен звіт схваленого учасника доступного квесту.");
-  if (s.transactions.some((t) => t.id === id))
-    throw new Error("Винагороду вже нараховано.");
-  p.status = "completed";
-  p.confirmedAt = now;
-  p.updatedAt = now;
-  p.awardedXp = q.xp;
-  p.awardedPoints = pointsForQuest(q);
-  s.transactions.push({
-    id,
-    userId,
-    questId,
-    xp: q.xp,
-    points: pointsForQuest(q),
-    date: now,
-    description: `Організатор підтвердив: ${q.title}`,
-    kind: "QUEST_COMPLETION",
-    sourceId: p.id,
-  });
-  event(
-    s,
-    userId,
-    questId,
-    `Участь підтверджено: +${q.xp} XP та +${pointsForQuest(q)} бонусних балів`,
-    "confirm",
-    now,
-  );
 }
 export function pointsForQuest(q: Quest) {
   return q.rewardPoints ?? rewardPointsFor(q.xp);
@@ -1153,10 +1107,10 @@ export const repository = {
       );
     if (confirmation !== "СКИНУТИ")
       throw new Error("Введи СКИНУТИ для підтвердження.");
-    const next = seed();
-    next.impactRecords = importLegacyImpact(next);
-    normalizeActivity(next);
-    next.revision = state.revision + 1;
+    const fresh = seed();
+    fresh.impactRecords = importLegacyImpact(fresh);
+    fresh.revision = state.revision + 1;
+    const next = initializeSnapshot(fresh);
     // A destructive reset MUST NOT silently lose the previous snapshot if storage fails.
     try {
       localStorage.setItem(

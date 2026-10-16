@@ -1,4 +1,6 @@
 /** City Impact domain. No React, storage or network dependencies. */
+// Categories of the shared platform activity log. A log entry alone is not a
+// verified impact: impact calculations use validated ImpactRecord entries.
 export type ActivityKind =
   | "join"
   | "start"
@@ -7,7 +9,10 @@ export type ActivityKind =
   | "cancel"
   | "reward"
   | "profile"
-  | "impact";
+  | "impact"
+  | "team"
+  | "mission"
+  | "challenge";
 export type ActivityEvent = {
   id: string;
   sourceEventId: string;

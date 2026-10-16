@@ -1,4 +1,5 @@
 import type { ActivityEvent, ImpactRecord } from "./impact/types";
+export type { ActivityEvent, ActivityKind } from "./impact/types";
 import type { IdentityState } from "./identity-types";
 import type { ExplorationState } from "./exploration-types";
 export type QuestCategory = {
@@ -127,24 +128,6 @@ export type Redemption = {
   cost: number;
   code: string;
   date: string;
-};
-export type ActivityEvent = {
-  id: string;
-  userId: string;
-  questId?: string;
-  title: string;
-  date: string;
-  kind:
-    | "join"
-    | "start"
-    | "report"
-    | "confirm"
-    | "cancel"
-    | "reward"
-    | "profile"
-    | "mission"
-    | "challenge"
-    | "team";
 };
 export type ProfileData = { name: string; bio: string; avatar: string | null };
 export type VolunteerStats = User & {

@@ -1,33 +1,23 @@
 import { Module } from '@nestjs/common';
-import { ConfigModule, ConfigService } from '@nestjs/config';
-import { TypeOrmModule } from '@nestjs/typeorm';
-import type { TypeOrmModuleOptions } from '@nestjs/typeorm';
 import { AppController } from './app.controller.js';
 import { AppService } from './app.service.js';
-import { databaseConfig } from './database/typeorm.config.js';
-
+import { SettingsModule } from './config/settings.module.js';
+import { DatabaseModule } from './database/database.module.js';
+import { AuditModule } from './audit/audit.module.js';
+import { AuthModule } from './auth/auth.module.js';
+import { UsersModule } from './users/users.module.js';
+import { OrganizationsModule } from './organizations/organizations.module.js';
+import { HealthController } from './health/health.controller.js';
 @Module({
   imports: [
-    ConfigModule.forRoot({
-      isGlobal: true,
-      envFilePath: ['apps/api/.env', '.env'],
-      load: [databaseConfig],
-    }),
-    TypeOrmModule.forRootAsync({
-      inject: [ConfigService],
-      useFactory: (config: ConfigService): TypeOrmModuleOptions => {
-        const options =
-          config.get<TypeOrmModuleOptions>('database');
-
-        if (!options) {
-          throw new Error('Database configuration is missing');
-        }
-
-        return options;
-      },
-    }),
+    SettingsModule,
+    DatabaseModule,
+    AuditModule,
+    AuthModule,
+    UsersModule,
+    OrganizationsModule,
   ],
-  controllers: [AppController],
+  controllers: [AppController, HealthController],
   providers: [AppService],
 })
 export class AppModule {}

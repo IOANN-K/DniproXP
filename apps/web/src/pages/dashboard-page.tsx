@@ -144,6 +144,7 @@ function Dashboard() {
           </Card>
         ))}
       </div>
+      <ImpactSummary userId={user.id} />
       <IdentitySummary userId={user.id} own />
       <PersonalExploration userId={user.id} />
       <div className="dashboard-middle">
