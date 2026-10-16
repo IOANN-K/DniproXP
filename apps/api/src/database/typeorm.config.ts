@@ -1,3 +1,6 @@
+import { ImpactEvent, ImpactReceipt, CollectiveMeasurement } from '../impact/impact.entity.js';
+import { MissionDefinition, ChallengeDefinition, MissionEnrollment, MissionCompletion, ProgressRewardClaim, ChallengeParticipant, ChallengeMilestoneCompletion } from '../progress/definition.entity.js';
+import { VerifiedProgress1792281600000 } from './migrations/1792281600000-verified-progress.js';
 import type { DataSourceOptions } from 'typeorm';
 import type { Environment } from '../config/environment.js';
 import { User } from './entities/user.entity.js';
@@ -54,8 +57,10 @@ export function databaseOptions(env: Environment): DataSourceOptions {
       ParticipationReport,
       RewardLedger,
       VerifiedActivity,
+      ImpactEvent, ImpactReceipt, CollectiveMeasurement,
+      MissionDefinition, ChallengeDefinition, MissionEnrollment, MissionCompletion, ProgressRewardClaim, ChallengeParticipant, ChallengeMilestoneCompletion,
     ],
-    migrations: [Foundation1792108800000, QuestEngine1792195200000],
+    migrations: [Foundation1792108800000, QuestEngine1792195200000, VerifiedProgress1792281600000],
     migrationsTableName: 'api_migrations',
     migrationsRun: false,
     synchronize: false,

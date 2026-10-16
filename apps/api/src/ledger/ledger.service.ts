@@ -138,6 +138,28 @@ export class LedgerService {
     }
     return entries;
   }
+  // Internal only: the caller validates eligibility and supplies the frozen server definition.
+  async awardProgress(
+    manager: EntityManager,
+    userId: string,
+    kind: 'mission' | 'challenge',
+    definition: { id: string; rewardXp: number; rewardPoints: number },
+  ): Promise<RewardLedger[]> {
+    const entries: RewardLedger[] = [];
+    for (const [currency, amount] of [
+      [Currency.XP, definition.rewardXp],
+      [Currency.REWARD_POINTS, definition.rewardPoints],
+    ] satisfies [Currency, number][]) {
+      entries.push(await this.append(manager, {
+        userId, currency, amount,
+        transactionType: kind === 'mission' ? LedgerType.MISSION_REWARD : LedgerType.CHALLENGE_REWARD,
+        sourceType: kind, sourceId: definition.id,
+        idempotencyKey: `${kind}:${definition.id}:${userId}:${currency}`,
+        metadata: { definitionId: definition.id },
+      }));
+    }
+    return entries;
+  }
   // Internal transaction API for BE-05. No HTTP endpoint can choose arbitrary amounts.
   spendPoints(
     manager: EntityManager,

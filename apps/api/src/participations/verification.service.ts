@@ -1,4 +1,5 @@
 import { Injectable } from '@nestjs/common';
+import { VerifiedProgressService } from '../progress/verified-progress.service.js';
 import { Transactions } from '../database/database.module.js';
 import type { EntityManager } from 'typeorm';
 import { AuditService } from '../audit/audit.service.js';
@@ -35,6 +36,7 @@ export class VerificationService {
     private readonly policy: QuestPolicy,
     private readonly ledger: LedgerService,
     private readonly audit: AuditService,
+    private readonly progress: VerifiedProgressService,
   ) {}
   approve(actorId: string, reportId: string): Promise<VerificationDto> {
     return this.transactions.run((manager) =>
@@ -124,6 +126,7 @@ export class VerificationService {
         verifiedAt: now,
       }),
     );
+    await this.progress.process(manager, p.userId);
     await this.audit.record(
       manager,
       actorId,

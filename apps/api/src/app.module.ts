@@ -1,3 +1,6 @@
+import { ImpactModule } from './impact/impact.module.js';
+import { MissionsModule } from './missions/missions.module.js';
+import { ChallengesModule } from './challenges/challenges.module.js';
 import { Module } from '@nestjs/common';
 import { AppController } from './app.controller.js';
 import { AppService } from './app.service.js';
@@ -22,6 +25,9 @@ import { LedgerModule } from './ledger/ledger.module.js';
     QuestsModule,
     ParticipationsModule,
     LedgerModule,
+    ImpactModule,
+    MissionsModule,
+    ChallengesModule,
   ],
   controllers: [AppController, HealthController],
   providers: [AppService],

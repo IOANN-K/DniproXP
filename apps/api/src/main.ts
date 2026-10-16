@@ -54,7 +54,7 @@ async function bootstrap(): Promise<void> {
     const options = new DocumentBuilder()
       .setTitle('DniproXP API')
       .setDescription(
-        'BE-01: Identity, users, organization scope. Auth cookie mutations require an allowlisted Origin and X-DniproXP-CSRF: 1. ADMIN has no organization-scope bypass.',
+        'BE-01–03: Identity, organization scope, quest verification, immutable ledger, City Impact, Missions and City Challenges. Personal receipts and leaderboards respect privacy preferences. Auth cookie mutations require an allowlisted Origin and X-DniproXP-CSRF: 1. ADMIN has no organization-scope bypass.',
       )
       .setVersion('1.0')
       .addBearerAuth()

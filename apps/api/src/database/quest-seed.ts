@@ -19,6 +19,7 @@ import {
   ParticipationReport,
 } from '../participations/participation.entity.js';
 import { LedgerService } from '../ledger/ledger.service.js';
+import { progressServices } from './progress-seed.js';
 import { VerificationService } from '../participations/verification.service.js';
 import { applyQuestInput } from '../quests/quest.mapper.js';
 
@@ -48,6 +49,7 @@ export async function seedQuestEngine(
     policy,
     new LedgerService(source),
     audit,
+    progressServices(source).coordinator,
   );
   const definitions: {
     key: string;

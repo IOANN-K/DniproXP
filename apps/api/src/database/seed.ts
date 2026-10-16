@@ -1,3 +1,4 @@
+import { seedVerifiedProgress } from './progress-seed.js';
 import 'reflect-metadata';
 import { z } from 'zod';
 import dataSource from './data-source.js';
@@ -269,6 +270,7 @@ async function seed(): Promise<void> {
         organizationIds.set(definition.slug, org.id);
       }
       await seedQuestEngine(manager, dataSource, ids, organizationIds);
+      await seedVerifiedProgress(manager, dataSource, ids, organizationIds);
     });
     console.log(
       'Demo seed completed. Existing profiles, memberships, preferences and passwords were preserved.',
