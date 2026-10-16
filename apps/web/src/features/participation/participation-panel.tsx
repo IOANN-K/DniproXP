@@ -1,124 +1,88 @@
-import { useState } from "react";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import {
-  CheckCircle2,
-  Users,
-  Zap,
-  ArrowUpRight,
-  ShieldCheck,
-} from "lucide-react";
+import { useMutation } from "@tanstack/react-query";
+import { Link } from "react-router-dom";
+import { Users, Zap, ShieldCheck } from "lucide-react";
 import type { Quest } from "../../entities/types";
+import { getQuestSnapshot } from "../../mocks/repository";
 import { questApi } from "../../mocks/api";
 import { useSession } from "../session/store";
 import { DemoDialog } from "../session/demo-dialog";
 import { Button } from "../../shared/ui/button";
-import { Card } from "../../shared/ui/primitives";
+import { Card, Badge } from "../../shared/ui/primitives";
+import { useVolunteerState } from "../../shared/lib/use-volunteer";
+import {
+  ParticipationActions,
+  participationLabels,
+} from "./participation-actions";
+import { rewardPointsFor } from "../../entities/gamification/levels";
 export function ParticipationPanel({ quest }: { quest: Quest }) {
   const user = useSession((s) => s.user);
-  const client = useQueryClient();
-  const [notice, setNotice] = useState("");
-  const {
-    data: participations = [],
-    isPending,
-    isError,
-    refetch,
-  } = useQuery({
-    queryKey: ["participations"],
-    queryFn: () => questApi.participations(),
-  });
-  const joined = participations.some(
+  const state = useVolunteerState();
+  const p = state.participations.find(
     (p) => p.questId === quest.id && p.userId === user?.id,
   );
   const mutation = useMutation({
-    mutationFn: async () => {
-      if (!user) throw new Error("Увійди в демопрофіль.");
-      if (joined) return questApi.cancel(quest.id, user.id);
-      return questApi.join(quest.id, user.id);
-    },
-    onSuccess: async () => {
-      setNotice(
-        joined
-          ? "Запис скасовано. Будемо раді побачитися на іншому квесті."
-          : "Ти в команді! Деталі зустрічі — на цій сторінці.",
-      );
-      await Promise.all([
-        client.invalidateQueries({ queryKey: ["quests"] }),
-        client.invalidateQueries({ queryKey: ["quest", quest.id] }),
-        client.invalidateQueries({ queryKey: ["participations"] }),
-      ]);
-    },
+    mutationFn: () => questApi.join(quest.id, user!.id),
   });
-  const completed = quest.status === "completed";
-  const full = quest.participants >= quest.capacity;
+  const joined = p && p.status !== "cancelled";
+  const reserved = state.participations.filter(
+    (p) => p.questId === quest.id && p.status !== "cancelled",
+  ).length;
+  const count =
+    getQuestSnapshot(quest.id, state)?.participants ?? quest.participants;
+  const full = count >= quest.capacity;
   return (
     <Card className="participation-panel">
       <span className="eyebrow">ТВОЯ ДОБРА СПРАВА</span>
       <div className="participation-xp">
-        <Zap size={28} fill="currentColor" />
+        <Zap size={28} />
         <strong>+{quest.xp}</strong>
         <span>XP</span>
       </div>
+      <Badge className="points-tag">
+        +{rewardPointsFor(quest.xp)} бонусних балів
+      </Badge>
       <p className="muted">
-        Нараховується після підтвердження участі координатором.
+        Після підтвердження виконання. Запис на квест не приносить XP.
       </p>
       <div className="places-line">
         <Users size={18} />
         <span>
-          {quest.participants} із {quest.capacity} учасників
+          {Math.min(count, quest.capacity)} із {quest.capacity} учасників
         </span>
       </div>
       <div className="places-progress">
         <span
-          style={{
-            width: `${Math.min(100, (quest.participants / quest.capacity) * 100)}%`,
-          }}
+          style={{ width: `${Math.min(100, (count / quest.capacity) * 100)}%` }}
         />
       </div>
-      <p className="availability">
-        {completed
-          ? "Квест завершено"
-          : joined
-            ? "Твоє місце в команді заброньовано"
-            : full
-              ? "Усі місця зайняті"
-              : `Ще ${quest.capacity - quest.participants} місць у команді`}
-      </p>
-      {isError ? (
-        <Button onClick={() => void refetch()} variant="outline">
-          Повторити завантаження
-        </Button>
-      ) : completed || (full && !joined) ? (
+      {joined ? (
+        <>
+          <p className="availability">
+            <Badge>{participationLabels[p.status]}</Badge>
+          </p>
+          <ParticipationActions quest={quest} participation={p} />
+          <Button asChild variant="ghost">
+            <Link to="/my-quests">До моїх квестів</Link>
+          </Button>
+        </>
+      ) : quest.status === "completed" || full ? (
         <Button disabled>
-          {completed ? "Квест завершено" : "Немає вільних місць"}
+          {quest.status === "completed"
+            ? "Квест завершено"
+            : "Усі місця зайняті"}
         </Button>
       ) : user ? (
-        <Button
-          onClick={() => {
-            setNotice("");
-            mutation.mutate();
-          }}
-          disabled={mutation.isPending || isPending}
-          variant={joined ? "outline" : "default"}
-        >
+        <Button disabled={mutation.isPending} onClick={() => mutation.mutate()}>
           {mutation.isPending
-            ? "Зберігаємо…"
-            : joined
-              ? "Скасувати запис"
+            ? "Записуємо…"
+            : p?.status === "cancelled"
+              ? "Записатися знову"
               : "Долучитися"}
-          {!mutation.isPending &&
-            (joined ? <CheckCircle2 size={18} /> : <ArrowUpRight size={18} />)}
         </Button>
       ) : (
         <DemoDialog>
-          <Button>
-            Долучитися <ArrowUpRight size={18} />
-          </Button>
+          <Button>Долучитися</Button>
         </DemoDialog>
-      )}
-      {notice && (
-        <p className="success-message" role="status">
-          {notice}
-        </p>
       )}
       {mutation.isError && (
         <p className="error-message" role="alert">
@@ -128,9 +92,8 @@ export function ParticipationPanel({ quest }: { quest: Quest }) {
       <div className="safe-note">
         <ShieldCheck size={19} />
         <span>
-          Безкоштовна участь.
-          <br />
-          Демонстраційний запис у цьому браузері.
+          Демонстраційна участь · Збережено в цьому браузері.
+          {reserved > 0 ? " Стан синхронізовано." : ""}
         </span>
       </div>
     </Card>

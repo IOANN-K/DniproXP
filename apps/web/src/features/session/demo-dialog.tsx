@@ -2,9 +2,11 @@ import { useState, type ReactNode } from "react";
 import { ArrowRight, ShieldCheck } from "lucide-react";
 import { Dialog, DialogContent, DialogTrigger } from "../../shared/ui/dialog";
 import { Button } from "../../shared/ui/button";
+import { useVolunteer } from "../../shared/lib/use-volunteer";
 import { useSession } from "./store";
 export function DemoDialog({ children }: { children: ReactNode }) {
   const [open, setOpen] = useState(false);
+  const demo = useVolunteer("demo-user")!;
   const enter = useSession((s) => s.enterDemo);
   return (
     <Dialog open={open} onOpenChange={setOpen}>
@@ -16,13 +18,15 @@ export function DemoDialog({ children }: { children: ReactNode }) {
         <div className="demo-profile">
           <ShieldCheck size={34} />
           <div>
-            <strong>Олександра Коваль</strong>
-            <p>Рівень 3 · 650 XP · 4 завершені квести</p>
+            <strong>{demo.name}</strong>
+            <p>
+              Рівень {demo.level} · {demo.xp} XP · {demo.points} бонусних балів
+            </p>
           </div>
         </div>
         <p className="muted">
           Увійди в готовий демопрофіль, щоб записуватися на квести та спробувати
-          обмін XP. Дані зберігаються лише в цьому браузері.
+          обмін бонусних балів. Дані зберігаються лише в цьому браузері.
         </p>
         <Button
           onClick={() => {

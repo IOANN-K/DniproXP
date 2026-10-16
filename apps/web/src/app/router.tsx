@@ -8,12 +8,12 @@ import { PublicLayout } from "./layouts/public-layout";
 import { HomePage } from "../pages/home-page";
 import { QuestsPage } from "../pages/quests-page";
 import { QuestDetailPage } from "../pages/quest-detail-page";
-import {
-  LeaderboardPage,
-  RewardsPage,
-  ProfilePage,
-  OrganizersPage,
-} from "../pages/community-pages";
+import { LeaderboardPage } from "../pages/leaderboard-page";
+import { RewardsPage } from "../pages/rewards-page";
+import { ProfilePage } from "../pages/profile-page";
+import { DashboardPage } from "../pages/dashboard-page";
+import { MyQuestsPage } from "../pages/my-quests-page";
+import { OrganizersPage } from "../pages/community-pages";
 import { MapPage } from "../pages/map-page";
 import { Button } from "../shared/ui/button";
 function NotFound() {
@@ -56,6 +56,9 @@ export const router = createBrowserRouter([
       { path: "leaderboard", element: <LeaderboardPage /> },
       { path: "rewards", element: <RewardsPage /> },
       { path: "profile", element: <ProfilePage /> },
+      { path: "profile/:id", element: <ProfilePage /> },
+      { path: "dashboard", element: <DashboardPage /> },
+      { path: "my-quests", element: <MyQuestsPage /> },
       { path: "organizers", element: <OrganizersPage /> },
       { path: "*", element: <NotFound /> },
     ],

@@ -1,108 +1,90 @@
-import type { Participation, Quest, Reward, User } from "../entities/types";
-import { quests, users, rewards, DEMO_NOW } from "./data";
-import { readStorage, writeStorage } from "../shared/lib/storage";
+import type {
+  Participation,
+  Quest,
+  QuestReport,
+  ProfileData,
+  VolunteerStats,
+} from "../entities/types";
+import { quests } from "./data";
+import { repository, getVolunteer, getQuestSnapshot } from "./repository";
+const wait = () => new Promise<void>((resolve) => setTimeout(resolve, 350));
 export interface QuestApi {
   list(): Promise<Quest[]>;
   get(id: string): Promise<Quest | null>;
   participations(): Promise<Participation[]>;
   join(questId: string, userId: string): Promise<Participation>;
   cancel(questId: string, userId: string): Promise<void>;
+  startDemo(questId: string, userId: string): Promise<void>;
+  submitReport(
+    questId: string,
+    userId: string,
+    report: Pick<QuestReport, "text" | "photo" | "photoName">,
+  ): Promise<void>;
+  confirmDemo(questId: string, userId: string): Promise<void>;
 }
-const wait = () => new Promise<void>((resolve) => setTimeout(resolve, 420));
-const key = "dniproxp:participations:v1";
-let entries = readStorage<Participation[]>(key, []).filter(
-  (p) =>
-    p && quests.some((q) => q.id === p.questId) && p.userId === "demo-user",
-);
-let redeemed = readStorage<string[]>("dniproxp:rewards:v1", []).filter((id) =>
-  rewards.some((r) => r.id === id),
-);
-const snapshot = (q: Quest): Quest => ({
-  ...q,
-  participants:
-    q.participants + entries.filter((p) => p.questId === q.id).length,
-});
 export const questApi: QuestApi = {
   async list() {
     await wait();
-    return quests.map(snapshot);
+    return quests.map((q) => getQuestSnapshot(q.id)!);
   },
   async get(id) {
     await wait();
-    const q = quests.find((item) => item.id === id);
-    return q ? snapshot(q) : null;
+    return getQuestSnapshot(id);
   },
   async participations() {
     await wait();
-    return [...entries];
+    return structuredClone(repository.getSnapshot().participations);
   },
-  async join(questId, userId) {
+  async join(q, u) {
     await wait();
-    const q = quests.find((item) => item.id === questId);
-    if (!q || q.status === "completed")
-      throw new Error("Цей квест уже завершений.");
-    if (userId !== users[0].id) throw new Error("Доступний лише демопрофіль.");
-    const existing = entries.find(
-      (p) => p.questId === questId && p.userId === userId,
-    );
-    if (existing) return existing;
-    if (snapshot(q).participants >= q.capacity)
-      throw new Error("Усі місця вже зайняті. Обери інший квест.");
-    const p: Participation = {
-      id: `participation-${questId}-${userId}`,
-      questId,
-      userId,
-      status: "registered",
-      createdAt: DEMO_NOW,
-    };
-    entries = [...entries, p];
-    writeStorage(key, entries);
-    return p;
+    return repository.join(q, u);
   },
-  async cancel(questId, userId) {
+  async cancel(q, u) {
     await wait();
-    entries = entries.filter(
-      (p) => !(p.questId === questId && p.userId === userId),
-    );
-    writeStorage(key, entries);
+    repository.cancel(q, u);
+  },
+  async startDemo(q, u) {
+    await wait();
+    repository.startDemo(q, u);
+  },
+  async submitReport(q, u, r) {
+    await wait();
+    repository.submitReport(q, u, r);
+  },
+  async confirmDemo(q, u) {
+    await wait();
+    repository.confirmDemo(q, u);
   },
 };
+export interface ProfileApi {
+  update(userId: string, profile: ProfileData): Promise<VolunteerStats | null>;
+}
 export interface RewardsApi {
   balance(): Promise<number>;
   redeemed(): Promise<string[]>;
-  redeem(id: Reward["id"], userId: User["id"]): Promise<string>;
+  redeem(id: string, userId: string): Promise<string>;
 }
+export const profileApi: ProfileApi = {
+  async update(userId: string, profile: ProfileData) {
+    await wait();
+    repository.updateProfile(userId, profile);
+    return getVolunteer(userId);
+  },
+};
 export const rewardsApi: RewardsApi = {
   async balance() {
     await wait();
-    return (
-      users[0].xp -
-      rewards
-        .filter((r) => redeemed.includes(r.id))
-        .reduce((sum, r) => sum + r.cost, 0)
-    );
+    return getVolunteer("demo-user")!.points;
   },
   async redeemed() {
     await wait();
-    return [...redeemed];
+    return repository
+      .getSnapshot()
+      .redemptions.filter((r) => r.userId === "demo-user")
+      .map((r) => r.rewardId);
   },
-  async redeem(id, userId) {
+  async redeem(id: string, userId: string) {
     await wait();
-    const r = rewards.find((item) => item.id === id);
-    const balance =
-      users[0].xp -
-      rewards
-        .filter((item) => redeemed.includes(item.id))
-        .reduce((sum, item) => sum + item.cost, 0);
-    if (
-      userId !== users[0].id ||
-      !r ||
-      redeemed.includes(id) ||
-      balance < r.cost
-    )
-      throw new Error("Нагорода недоступна або бракує XP.");
-    redeemed = [...redeemed, id];
-    writeStorage("dniproxp:rewards:v1", redeemed);
-    return `DEMO-${id.toUpperCase()}-2026`;
+    return repository.redeem(id, userId).code;
   },
 };

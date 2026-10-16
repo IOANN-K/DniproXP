@@ -18,6 +18,8 @@ export type User = {
   level: number;
   questsCompleted: number;
   initials: string;
+  bio?: string;
+  avatar?: string;
 };
 export type Quest = {
   id: string;
@@ -38,13 +40,18 @@ export type Quest = {
   status: "available" | "completed";
   requirements: string[];
   bring: string[];
-  coordinates: [number, number];
+  coordinates: [number, number] | null;
+  coordinateSource?: string;
+  locationLabel?: string;
 };
 export type Participation = {
   id: string;
   questId: string;
   userId: string;
-  status: "registered" | "confirmed";
+  status: "planned" | "active" | "pending" | "completed" | "cancelled";
+  report?: QuestReport;
+  confirmedAt?: string;
+  updatedAt?: string;
   createdAt: string;
 };
 export type Achievement = {
@@ -60,4 +67,67 @@ export type Reward = {
   description: string;
   cost: number;
   organizationId: string;
+  category: "Напої та їжа" | "Екотовари" | "Враження" | "Мерч";
+  stock: number;
+  details: string;
+};
+
+export type QuestReport = {
+  text: string;
+  photo: string | null;
+  photoName: string | null;
+  submittedAt: string;
+};
+export type Transaction = {
+  id: string;
+  userId: string;
+  questId?: string;
+  rewardId?: string;
+  xp: number;
+  points: number;
+  date: string;
+  description: string;
+};
+export type Redemption = {
+  id: string;
+  userId: string;
+  rewardId: string;
+  cost: number;
+  code: string;
+  date: string;
+};
+export type ActivityEvent = {
+  id: string;
+  userId: string;
+  questId?: string;
+  title: string;
+  date: string;
+  kind:
+    | "join"
+    | "start"
+    | "report"
+    | "confirm"
+    | "cancel"
+    | "reward"
+    | "profile";
+};
+export type ProfileData = { name: string; bio: string; avatar: string | null };
+export type VolunteerStats = User & {
+  bio: string;
+  avatar: string;
+  points: number;
+  hours: number;
+  nextLevelXp: number | null;
+  levelStartXp: number;
+  progress: number;
+};
+export type VolunteerState = {
+  version: 3;
+  revision: number;
+  profiles: Record<string, ProfileData>;
+  participations: Participation[];
+  transactions: Transaction[];
+  redemptions: Redemption[];
+  activity: ActivityEvent[];
+  clock: number;
 };

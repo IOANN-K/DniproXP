@@ -16,6 +16,9 @@ import {
   SheetClose,
 } from "../../shared/ui/sheet";
 import { DemoDialog } from "../../features/session/demo-dialog";
+import { LevelUpDialog } from "../../features/gamification/level-up-dialog";
+import { VolunteerAvatar } from "../../entities/gamification/components";
+import { useVolunteer } from "../../shared/lib/use-volunteer";
 import { useSession } from "../../features/session/store";
 const links = [
   ["/", "Головна"],
@@ -38,7 +41,7 @@ export function Logo() {
   );
 }
 export function PublicLayout() {
-  const user = useSession((s) => s.user);
+  const user = useVolunteer();
   const logout = useSession((s) => s.logout);
   const [open, setOpen] = useState(false);
   const location = useLocation();
@@ -72,8 +75,12 @@ export function PublicLayout() {
           <div className="header-actions">
             {user ? (
               <>
-                <Link className="profile-link" to="/profile">
-                  <span className="avatar">{user.initials}</span>
+                <Link
+                  className="profile-link"
+                  to="/dashboard"
+                  aria-label="Мій простір"
+                >
+                  <VolunteerAvatar user={user} />
                   <span>{user.name.split(" ")[0]}</span>
                 </Link>
                 <Button
@@ -123,6 +130,22 @@ export function PublicLayout() {
                       </NavLink>
                     </SheetClose>
                   ))}
+                  {user && (
+                    <>
+                      <SheetClose asChild>
+                        <Link to="/dashboard">
+                          Мій простір
+                          <ArrowUpRight size={18} />
+                        </Link>
+                      </SheetClose>
+                      <SheetClose asChild>
+                        <Link to="/my-quests">
+                          Мої квести
+                          <ArrowUpRight size={18} />
+                        </Link>
+                      </SheetClose>
+                    </>
+                  )}
                   <SheetClose asChild>
                     <Link to="/profile">
                       Мій профіль
@@ -138,6 +161,7 @@ export function PublicLayout() {
       <main id="main" tabIndex={-1}>
         <Outlet />
       </main>
+      <LevelUpDialog />
       <footer className="footer">
         <div className="container">
           <div className="footer-main">

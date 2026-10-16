@@ -1,10 +1,25 @@
+import {
+  useVolunteerState,
+  useVolunteer,
+} from "../../shared/lib/use-volunteer";
+import { getQuestSnapshot } from "../../mocks/repository";
+import { participationLabels } from "./participation-status";
 import { Link } from "react-router-dom";
 import { ArrowUpRight, CalendarDays, MapPin, Users, Zap } from "lucide-react";
 import type { Quest } from "../types";
 import { categories, organizations } from "../../mocks/data";
 import { Badge, Card, Photo, Skeleton } from "../../shared/ui/primitives";
 import { formatDate } from "../../shared/lib/utils";
-export function QuestCard({ quest }: { quest: Quest }) {
+export function QuestCard({ quest: suppliedQuest }: { quest: Quest }) {
+  const state = useVolunteerState();
+  const user = useVolunteer();
+  const quest = getQuestSnapshot(suppliedQuest.id, state) || suppliedQuest;
+  const participation = state.participations.find(
+    (p) =>
+      p.questId === quest.id &&
+      p.userId === user?.id &&
+      p.status !== "cancelled",
+  );
   const category = categories.find((c) => c.id === quest.categoryId)!;
   const org = organizations.find((o) => o.id === quest.organizationId)!;
   return (
@@ -46,7 +61,12 @@ export function QuestCard({ quest }: { quest: Quest }) {
               <ArrowUpRight size={20} />
             </span>
           </div>
-          {quest.status === "completed" ? (
+          {participation && (
+            <Badge className={`status-${participation.status}`}>
+              {participationLabels[participation.status]}
+            </Badge>
+          )}
+          {quest.status === "completed" && !participation ? (
             <Badge>Завершено</Badge>
           ) : quest.participants >= quest.capacity ? (
             <Badge>Усі місця зайняті</Badge>
