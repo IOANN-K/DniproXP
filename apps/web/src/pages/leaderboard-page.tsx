@@ -33,7 +33,15 @@ export function LeaderboardPage() {
       return {
         ...user,
         periodXp: tx.reduce((n, t) => n + t.xp, 0),
-        periodQuests: tx.length,
+        periodQuests: new Set(
+          tx
+            .filter(
+              (t) =>
+                t.questId &&
+                (t.kind === undefined || t.kind === "QUEST_COMPLETION"),
+            )
+            .map((t) => t.questId),
+        ).size,
       };
     })
     .sort(

@@ -1,3 +1,4 @@
+import { PersonalExploration } from "../features/exploration/sections";
 import { Link, useParams } from "react-router-dom";
 import {
   CalendarDays,
@@ -138,6 +139,7 @@ function ProfileContent({ userId }: { userId: string }) {
         <SectionHeading title="Досягнення" />
         <AchievementGrid completed={user.questsCompleted} />
       </section>
+      <PersonalExploration userId={user.id} publicProfile={!own} />
       <div className="profile-columns">
         <section>
           <SectionHeading title="Завершені квести" />

@@ -1,3 +1,4 @@
+import { ExplorationEntryCards } from "../features/exploration/sections";
 import { useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
@@ -233,6 +234,9 @@ export function QuestsPage() {
           )}
         </>
       )}
+      <section className="personal-section">
+        <ExplorationEntryCards />
+      </section>
       <p className="demo-caption">
         Усі квести, адреси зустрічей і організатори — частина демонстраційного
         сценарію.

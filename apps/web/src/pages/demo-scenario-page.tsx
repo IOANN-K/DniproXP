@@ -1,4 +1,4 @@
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { useMutation } from "@tanstack/react-query";
 import { CheckCircle2, ArrowRight, Repeat2, Leaf } from "lucide-react";
 import { authAdapter } from "../features/auth/auth-adapter";
@@ -130,6 +130,32 @@ export function DemoScenarioPage() {
           {move.error.message}
         </p>
       )}
+      <section className="personal-section">
+        <h2>Продовж історію міста</h2>
+        <p className="muted">
+          Перший демоквест «Разом озеленюємо парк» пов’язаний із місією «Берег
+          спільних дій» та двома міськими викликами. Після його підтвердження
+          відкрий наступний етап місії. Повторні демоквести створюються окремими
+          подіями й автоматично до цих історій не додаються.
+        </p>
+        <div className="exploration-hero-links">
+          <Button asChild variant="outline">
+            <Link to="/missions/bereh-spilnykh-diy">
+              Берег спільних дій <ArrowRight size={16} />
+            </Link>
+          </Button>
+          <Button asChild variant="outline">
+            <Link to="/challenges/chystyi-bereh">
+              Спільна мета берега <ArrowRight size={16} />
+            </Link>
+          </Button>
+          <Button asChild variant="outline">
+            <Link to="/challenges/bilsh-zelenyi-dnipro">
+              Озеленення міста <ArrowRight size={16} />
+            </Link>
+          </Button>
+        </div>
+      </section>
       <Card className="demo-replay">
         <Repeat2 size={28} />
         <div>

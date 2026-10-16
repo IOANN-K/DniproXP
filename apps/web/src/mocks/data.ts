@@ -321,8 +321,9 @@ export const quests: Quest[] = seeds.map(
       "Пляшку води й гарний настрій",
       "Робочі рукавички, якщо маєш",
     ],
-    coordinates: null,
-    ...verifiedLocations[`quest-${i + 1}`],
+    coordinates: verifiedLocations[`quest-${i + 1}`]?.coordinates ?? null,
+    coordinateSource: verifiedLocations[`quest-${i + 1}`]?.coordinateSource,
+    locationLabel: verifiedLocations[`quest-${i + 1}`]?.locationLabel,
   }),
 );
 export const users: User[] = [

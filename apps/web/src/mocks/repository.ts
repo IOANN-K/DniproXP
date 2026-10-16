@@ -1,3 +1,17 @@
+import {
+  initializeExploration,
+  reconcileExploration,
+  validateExploration,
+} from "./exploration-integration";
+import {
+  explorationOf,
+  selectMissionProgress,
+  selectChallengeProgress,
+  activitiesOf,
+} from "./exploration-selectors";
+import { challengeRewardAvailable } from "../entities/challenge/progress";
+import type { QuestChain } from "../entities/mission/types";
+import type { CityChallenge } from "../entities/challenge/types";
 import type {
   Participation,
   ProfileData,
@@ -7,7 +21,6 @@ import type {
   VolunteerState,
   VolunteerStats,
   Transaction,
-  DemoAccount,
   RegistrationInput,
   QuestFormValues,
   QuestLifecycle,
@@ -21,7 +34,7 @@ import { organizations as baseOrganizations } from "./data";
 import {
   questDraftSchema,
   questPublishSchema,
-} from "../features/organizer/quest-schema";
+} from "../entities/quest/form-schema";
 import { verifiedLocations } from "./locations";
 const KEY = "dniproxp:platform:v4";
 const self = "demo-user";
@@ -331,12 +344,14 @@ function hydrate(): VolunteerState {
   return base;
 }
 let state: VolunteerState = hydrate();
+initializeExploration(state);
 writeStorage(KEY, state);
 function commit(change: (draft: VolunteerState, now: string) => void) {
   const next = structuredClone(state);
   next.clock = Math.max(initialTime, next.clock) + 60_000;
   const now = new Date(next.clock).toISOString();
   change(next, now);
+  reconcileExploration(next);
   next.revision += 1;
   state = next;
   writeStorage(KEY, state);
@@ -411,6 +426,8 @@ function award(
     points: pointsForQuest(q),
     date: now,
     description: `Організатор підтвердив: ${q.title}`,
+    kind: "QUEST_COMPLETION",
+    sourceId: p.id,
   });
   event(
     s,
@@ -520,6 +537,160 @@ function event(
 }
 export const repository = {
   getSnapshot: () => state,
+  joinMission(chainId: string, userId: string) {
+    actor(userId);
+    commit((s, now) => {
+      const epic = explorationOf(s);
+      const m = epic.missions.find((m) => m.id === chainId);
+      if (!m) throw new Error("Місію не знайдено.");
+      const p = selectMissionProgress(s, chainId, userId)!;
+      if (p.status === "LOCKED" || p.status === "COMPLETED")
+        throw new Error(p.reasons[0] || "Місію вже завершено.");
+      if (
+        epic.missionEnrollments.some(
+          (e) => e.chainId === chainId && e.userId === userId,
+        )
+      )
+        return;
+      epic.missionEnrollments.push({
+        id: `mission-enrollment:${chainId}:${userId}`,
+        chainId,
+        userId,
+        joinedAt: now,
+      });
+      event(
+        s,
+        userId,
+        undefined,
+        `До твоїх історій додано місію «${m.title}»`,
+        "mission",
+        now,
+      );
+    });
+  },
+  claimMissionReward(chainId: string, userId: string) {
+    actor(userId);
+    commit((s, now) => {
+      const id = `mission:${chainId}:${userId}`;
+      if (s.transactions.some((t) => t.id === id)) return;
+      const m = explorationOf(s).missions.find((m) => m.id === chainId);
+      if (
+        !m ||
+        selectMissionProgress(s, chainId, userId)?.status !== "COMPLETED"
+      )
+        throw new Error(
+          "Спочатку підтвердь усі обов’язкові етапи місії та виконай передумови.",
+        );
+      s.transactions.push({
+        id,
+        userId,
+        kind: "MISSION_REWARD",
+        sourceId: chainId,
+        xp: m.rewards.xp,
+        points: m.rewards.rewardPoints,
+        date: now,
+        description: `Фінал місії: ${m.title}`,
+      });
+      event(
+        s,
+        userId,
+        undefined,
+        `Отримано нагороду місії: +${m.rewards.xp} XP та +${m.rewards.rewardPoints} балів`,
+        "mission",
+        now,
+      );
+    });
+  },
+  joinChallenge(challengeId: string, userId: string) {
+    actor(userId);
+    commit((s, now) => {
+      const epic = explorationOf(s);
+      const c = epic.challenges.find((c) => c.id === challengeId);
+      const result = selectChallengeProgress(s, challengeId);
+      if (!c || result?.status !== "ACTIVE")
+        throw new Error("Долучитися можна лише до активного виклику.");
+      if (
+        epic.challengeParticipants.some(
+          (p) => p.challengeId === challengeId && p.userId === userId,
+        ) ||
+        c.participantIds.includes(userId)
+      )
+        return;
+      epic.challengeParticipants.push({ challengeId, userId, joinedAt: now });
+      event(
+        s,
+        userId,
+        undefined,
+        `Ти долучився до виклику «${c.title}»`,
+        "challenge",
+        now,
+      );
+    });
+  },
+  claimChallengeReward(challengeId: string, userId: string) {
+    actor(userId);
+    commit((s, now) => {
+      const id = `challenge:${challengeId}:${userId}`;
+      if (s.transactions.some((t) => t.id === id)) return;
+      const c = explorationOf(s).challenges.find((c) => c.id === challengeId);
+      const result = selectChallengeProgress(s, challengeId);
+      if (
+        !c ||
+        !result ||
+        !challengeRewardAvailable(
+          c,
+          userId,
+          result,
+          activitiesOf(s),
+          s.transactions,
+        )
+      )
+        throw new Error(
+          "Потрібні завершені спільні цілі й твій підтверджений внесок у період виклику.",
+        );
+      s.transactions.push({
+        id,
+        userId,
+        kind: "CHALLENGE_REWARD",
+        sourceId: challengeId,
+        xp: c.rewards.xp,
+        points: c.rewards.rewardPoints,
+        date: now,
+        description: `Спільна перемога: ${c.title}`,
+      });
+      event(
+        s,
+        userId,
+        undefined,
+        `Отримано нагороду міського виклику: +${c.rewards.xp} XP та +${c.rewards.rewardPoints} балів`,
+        "challenge",
+        now,
+      );
+    });
+  },
+  saveMission(definition: QuestChain) {
+    administrator();
+    commit((s) => {
+      const epic = explorationOf(s);
+      epic.missions = [
+        ...epic.missions.filter((m) => m.id !== definition.id),
+        structuredClone(definition),
+      ];
+      validateExploration(s, epic);
+    });
+  },
+  saveChallenge(definition: CityChallenge) {
+    administrator();
+    commit((s) => {
+      const epic = explorationOf(s);
+      epic.challenges = [
+        ...epic.challenges.filter((c) => c.id !== definition.id),
+        structuredClone(definition),
+      ];
+      validateExploration(s, epic);
+    });
+  },
+
   subscribe(listener: () => void) {
     listeners.add(listener);
     return () => {
@@ -970,6 +1141,8 @@ export const repository = {
         points: -r.cost,
         date: now,
         description: `Обмін: ${r.name}`,
+        kind: "REWARD_REDEMPTION",
+        sourceId: id,
       });
       event(s, userId, undefined, `Отримано: ${r.name}`, "reward", now);
     });

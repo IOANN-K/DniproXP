@@ -53,3 +53,34 @@ XP накопичується й визначає рівень; Reward Points в
 - `POST /admin/organizations/:id/moderation`: approve/suspend + причина призупинення.
 
 Очікувані помилки: 401 — немає сесії, 403 — не та роль/організація, 404 — сутність недоступна, 409 — місця зайняті або конфлікт переходу/повторного обміну, 422 — помилки полів. Формат: `{ code, message, fieldErrors?, currentRevision? }`. Після мутацій клієнт оновлює snapshot і інвалідує пов’язані запити; backend повинен повертати актуальні сутності та баланси.
+
+## EPIC 02 — сюжетні місії та міські виклики
+
+Поточні адаптери: `mocks/missions-api.ts` (`MissionsRepository`) та `mocks/challenges-api.ts` (`ChallengesRepository`). Усі мутації використовують той самий snapshot. Query hooks у `features/mission-progress` та `features/challenge-progress` можуть бути переключені на HTTP-адаптери без зміни чистих доменних обчислень.
+
+- `GET /missions?search&category&difficulty&status&sort`: каталог `QuestChain`; неопубліковані визначення доступні тільки ADMIN.
+- `GET /missions/:slug`: місія, її етапи та передумови.
+- `GET /users/me/missions`, `GET /missions/:id/progress`: особистий `QuestChainProgress`, а не глобальний lifecycle.
+- `POST /missions/:id/enrollments`: додати місію до власного простору; не створює verified activity.
+- `POST /missions/:id/reward-claims`: атомарно перевірити всі основні етапи/передумови, видати додаткові XP, Reward Points і відзнаку; повтор повертає попередню видачу.
+- `PUT /admin/missions/:id`: збереження визначення; перевірити ID, посилання та цикли між місіями й між етапами до запису.
+- `GET /challenges?search&category&status&sort`, `GET /challenges/:slug`: `CityChallenge`, цілі та фактичний `ChallengeProgressResult`.
+- `GET /challenges/:id/contributions?metric&cursor`, `GET /challenges/:id/leaderboard`, `GET /challenges/:id/participants?cursor`: підтверджені внески, рейтинг особистих годин та учасники. Cursor-пагінація — майбутній HTTP-контракт; mock зараз повертає колекції й UI показує їх порціями.
+- `GET /challenges/:id/contributions/me`: особисті години/квести та окремо спільні результати відповідних квестів.
+- `POST /challenges/:id/participants`: долучення без штучного внеску.
+- `POST /challenges/:id/reward-claims`: лише після всіх основних цілей та за наявності власного підтвердженого внеску у визначений період; один фінальний бонус на користувача.
+- `PUT /admin/challenges/:id`: перевірка цілей, одиниць, позитивних порогів, явних зв’язків із квестами та ролі.
+
+`QuestChain`: id, slug, title, shortDescription, description, coverImage, category, difficulty, organizationId, steps[], prerequisites `{ chainIds, questIds, minLevel }`, rewards `{ xp, rewardPoints, achievement }`, status, startsAt/endsAt nullable, estimatedDuration. Глобальні статуси: `DRAFT | PUBLISHED | ACTIVE | COMPLETED | ARCHIVED`. `QuestChainStep`: id, chainId, questId, title, description, order, isOptional, prerequisiteStepIds[]. Особисті статуси місії/етапів: `LOCKED | AVAILABLE | IN_PROGRESS | COMPLETED`. `QuestChainProgress` додатково містить required/optional counts, percentage, nextStepId, completedAt, rewardClaimed, reasons, enrolled. Бонусний етап не може бути передумовою основного. Ретроспективні підтвердження в межах дат зараховуються.
+
+`CityChallenge`: id, slug, title, description, coverImage, category, organizationId, startDate, endDate, status, goals[], relatedQuestIds[], participantIds[], rewards, createdAt. Статуси: `DRAFT | UPCOMING | ACTIVE | COMPLETED | EXPIRED | CANCELLED`; completion визначається всіма обов’язковими цілями, а не ручним виставленням довільного 100%. `CityChallengeGoal`: id, metric, targetValue, unit, description, isOptional. Канонічні одиниці: `VOLUNTEER_HOURS → год`, `LITTER_KG → кг`, `TREES_PLANTED → дерев`, `HUMANITARIAN_UNITS → од.`.
+
+`ChallengeContribution`: id, challengeId, goalId, userId, questId, participationId, verifiedActivityId, impactRecordId?, metric, value, unit, occurredAt, scope `PERSONAL | QUEST`. Особистий час відокремлений від спільного результату квесту. У колективному записі userId — provenance перевірки, не особиста власність на весь результат. Один квест може містити різні метрики. Заборонено множити спільний результат на кількість волонтерів або додавати несумісні одиниці. Пороги й фактичні суми зберігаються точно; тільки UI обмежує індикатори 100%.
+
+У mock окремого ImpactRecord/Submission немає: `VerifiedActivity` — адаптер completed-участі, confirmedAt та відповідної базової транзакції; `QuestImpactMeasurement` — явно демонстраційне колективне вимірювання, активоване підтвердженням. Backend має замінити його довіреними verified impact records, а не приймати довільні числа клієнта. Teams відсутні; чистий helper уже може агрегувати явний список членів майбутньої команди.
+
+`Transaction` розширено `kind: QUEST_COMPLETION | REWARD_REDEMPTION | MISSION_REWARD | CHALLENGE_REWARD` і `sourceId`; у старих записах kind/sourceId можуть бути відсутні. Базовий completion має questId та sourceId участі. Фінальні бонуси мають sourceId місії/виклику і не мають questId. Унікальність на backend: `(kind, sourceId, userId)`. Локальні ключі: `completion:<userId>:<questId>`, `mission:<chainId>:<userId>`, `challenge:<challengeId>:<userId>`. Contributions унікальні на `(challengeId, goalId, verifiedActivityId)` для особистих годин або `(challengeId, goalId, impactRecordId)` для спільних вимірювань. Рейтинг XP враховує фінальні бонуси; кількість квестів — тільки підтверджені квести.
+
+Підтвердження участі та базова нагорода залишаються атомарними. Похідний перерахунок місій/викликів має бути ідемпотентним; claim нагороди потребує серверної транзакції/unique constraint. Після підтвердження або claim повертаються актуальні баланси, прогрес, відзнаки та revision; клієнт інвалідує dashboard/profile/leaderboard/quests/missions/challenges. Рекомендовані помилки: 409 — вже отримано/неправильний lifecycle; 422 — циклічні передумови, несумісна одиниця, від’ємний вимір, некоректний зв’язок; 403 — чужий профіль або недостатня роль. Повторний ідентичний claim краще повертати як успішний попередній результат.
+
+Деталі політики та ручне проходження: [EPIC 02](epic-02-missions-challenges.md).

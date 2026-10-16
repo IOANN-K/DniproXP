@@ -1,3 +1,4 @@
+import type { ExplorationState } from "./exploration-types";
 export type QuestCategory = {
   id: string;
   name: string;
@@ -98,6 +99,12 @@ export type QuestReport = {
   submittedAt: string;
 };
 export type Transaction = {
+  kind?:
+    | "QUEST_COMPLETION"
+    | "REWARD_REDEMPTION"
+    | "MISSION_REWARD"
+    | "CHALLENGE_REWARD";
+  sourceId?: string;
   id: string;
   userId: string;
   questId?: string;
@@ -128,7 +135,9 @@ export type ActivityEvent = {
     | "confirm"
     | "cancel"
     | "reward"
-    | "profile";
+    | "profile"
+    | "mission"
+    | "challenge";
 };
 export type ProfileData = { name: string; bio: string; avatar: string | null };
 export type VolunteerStats = User & {
@@ -142,6 +151,8 @@ export type VolunteerStats = User & {
 };
 export type VolunteerState = {
   version: 4;
+  exploration?: ExplorationState;
+  explorationRejectedSnapshot?: unknown;
   accounts: DemoAccount[];
   organizations: Organization[];
   questRecords: Quest[];

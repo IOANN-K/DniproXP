@@ -1,3 +1,4 @@
+import { QuestExplorationLinks } from "../features/exploration/sections";
 import { Link, useParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import {
@@ -209,6 +210,7 @@ export function QuestDetailPage() {
               </Link>
             </div>
           </section>
+          <QuestExplorationLinks questId={quest.id} />
         </article>
         <aside>
           <ParticipationPanel quest={quest} />

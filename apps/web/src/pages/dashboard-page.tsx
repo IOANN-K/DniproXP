@@ -1,3 +1,4 @@
+import { PersonalExploration } from "../features/exploration/sections";
 import { Link } from "react-router-dom";
 import {
   ArrowUpRight,
@@ -24,7 +25,7 @@ import {
 import { getQuestSnapshot, publicQuests } from "../mocks/repository";
 import { QuestCard } from "../entities/quest/quest-card";
 import { formatDate } from "../shared/lib/utils";
-import { participationLabels } from "../features/participation/participation-actions";
+import { participationLabels } from "../entities/quest/participation-status";
 export function DashboardPage() {
   return (
     <VolunteerShell>
@@ -141,6 +142,7 @@ function Dashboard() {
           </Card>
         ))}
       </div>
+      <PersonalExploration userId={user.id} />
       <div className="dashboard-middle">
         <section>
           <SectionHeading

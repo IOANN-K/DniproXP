@@ -1,6 +1,6 @@
 import { useRef } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
-import { useForm } from "react-hook-form";
+import { useForm, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation } from "@tanstack/react-query";
 import { ArrowLeft, Save, Send, Image, MapPin } from "lucide-react";
@@ -75,15 +75,15 @@ function QuestForm({ initial, id }: { initial: QuestFormValues; id?: string }) {
     handleSubmit,
     setError,
     setValue,
-    watch,
+    control,
     formState: { errors, isDirty },
   } = useForm<QuestFormValues>({
     resolver: zodResolver(questDraftSchema),
     defaultValues: initial,
     shouldFocusError: true,
   });
-  const image = watch("image");
-  const location = watch("locationId");
+  const image = useWatch({ control, name: "image" });
+  const location = useWatch({ control, name: "locationId" });
   const mutation = useMutation({
     mutationFn: async ({
       values,
