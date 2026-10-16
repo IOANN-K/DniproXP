@@ -111,6 +111,8 @@ export function verifyParticipation(
   p.awardedPoints = points;
   s.transactions.push({
     id: sourceEventId,
+    kind: "QUEST_COMPLETION",
+    sourceId: p.id,
     userId,
     questId,
     xp: q.xp,

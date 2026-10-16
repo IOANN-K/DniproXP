@@ -1,27 +1,10 @@
-import {
-  Leaf,
-  Heart,
-  PawPrint,
-  Palette,
-  BookOpen,
-  Building2,
-} from "lucide-react";
+import { BrandIcon } from "../../features/brand/brand-icon";
+import type { BrandIconName } from "../../features/brand/brand-icon";
 import type { QuestCategory } from "../types";
-const icons = {
-  leaf: Leaf,
-  heart: Heart,
-  paw: PawPrint,
-  palette: Palette,
-  book: BookOpen,
-  building: Building2,
+const icons: Record<QuestCategory["icon"], BrandIconName> = {
+  leaf: "eco", heart: "care", paw: "animals", palette: "culture",
+  book: "education", building: "workspace",
 };
-export function CategoryIcon({
-  category,
-  size = 24,
-}: {
-  category: QuestCategory;
-  size?: number;
-}) {
-  const Icon = icons[category.icon];
-  return <Icon size={size} aria-hidden="true" />;
+export function CategoryIcon({ category, size = 32 }: { category: QuestCategory; size?: number }) {
+  return <BrandIcon name={icons[category.icon]} size={Math.max(size, 24)} />;
 }

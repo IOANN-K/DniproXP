@@ -1,8 +1,16 @@
 import { ExplorationEntryCards } from "../features/exploration/sections";
 import { useState } from "react";
-import { useSearchParams } from "react-router-dom";
+import { Link, useSearchParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
-import { Search, SlidersHorizontal, X, ArrowDown, Compass } from "lucide-react";
+import {
+  Search,
+  SlidersHorizontal,
+  X,
+  ArrowDown,
+  Compass,
+  MapPin,
+  ArrowUpRight,
+} from "lucide-react";
 import { questApi } from "../mocks/api";
 import { categories, DEMO_NOW } from "../mocks/data";
 import { Container } from "../shared/ui/container";
@@ -67,121 +75,181 @@ export function QuestsPage() {
           : a.date.localeCompare(b.date),
     );
   return (
-    <Container className="page-section">
-      <div className="page-intro">
-        <p className="eyebrow">ТВІЙ ЧАС ДЛЯ ДОБРИХ СПРАВ</p>
-        <h1>Знайди свій квест</h1>
-        <p>Маленька дія для тебе. Велика зміна для Дніпра.</p>
-        <span className="demo-caption">
-          Демонстраційні події · Дата сценарію: 16 жовтня 2026
-        </span>
-      </div>
-      <div className="catalog-toolbar">
-        <div className="search-field">
-          <Search size={20} />
-          <Input
-            placeholder="Що хочеш зробити для міста?"
-            aria-label="Пошук за назвою та описом"
-            value={search}
-            onChange={(e) => set("search", e.target.value)}
-          />
-          {search && (
-            <button
-              aria-label="Очистити пошук"
-              onClick={() => set("search", "")}
-            >
-              <X size={18} />
-            </button>
-          )}
+    <Container className="page-section discovery-page">
+      <div className="discovery-heading">
+        <div className="page-intro">
+          <p className="eyebrow">ТВІЙ ЧАС ДЛЯ ДОБРИХ СПРАВ</p>
+          <h1>Знайди свій квест</h1>
+          <p>Маленька дія для тебе. Велика зміна для Дніпра.</p>
+          <span className="demo-caption">
+            Демонстраційні події · Дата сценарію: 16 жовтня 2026
+          </span>
         </div>
-        <Button
-          variant="outline"
-          onClick={() => setFiltersOpen(!filtersOpen)}
-          aria-expanded={filtersOpen}
-          aria-controls="quest-filters"
-        >
-          <SlidersHorizontal size={18} />
-          Фільтри {active > 0 && <span className="count-badge">{active}</span>}
-        </Button>
+        <Link className="text-link discovery-map-link" to="/map">
+          <MapPin size={18} /> Дослідити на мапі <ArrowUpRight size={16} />
+        </Link>
       </div>
-      <div className="category-tabs" aria-label="Категорії квестів">
-        <button
-          aria-pressed={!category}
-          className={!category ? "selected" : ""}
-          onClick={() => set("category", "")}
-        >
-          Усі квести
-        </button>
-        {categories.map((c) => (
-          <button
-            key={c.id}
-            aria-pressed={category === c.id}
-            className={category === c.id ? "selected" : ""}
-            onClick={() => set("category", c.id)}
-          >
-            <CategoryIcon category={c} size={16} />
-            {c.name}
-          </button>
-        ))}
-      </div>
-      {filtersOpen && (
-        <div className="filter-panel" id="quest-filters">
-          <label>
-            Район
+      <div className="discovery-controls">
+        <div className="catalog-toolbar">
+          <div className="search-field">
+            <Search size={20} />
+            <Input
+              placeholder="Що хочеш зробити для міста?"
+              id="discovery-search"
+              aria-label="Пошук за назвою та описом"
+              value={search}
+              onChange={(e) => set("search", e.target.value)}
+            />
+            {search && (
+              <button
+                aria-label="Очистити пошук"
+                onClick={() => set("search", "")}
+              >
+                <X size={18} />
+              </button>
+            )}
+          </div>
+          <label className="discovery-district">
+            <span>Де допомагаємо?</span>
             <select
+              aria-label="Район пошуку"
               value={district}
               onChange={(e) => set("district", e.target.value)}
             >
-              <option value="">Усі райони</option>
+              <option value="">Увесь Дніпро</option>
               {districts.map((d) => (
                 <option key={d}>{d}</option>
               ))}
             </select>
           </label>
-          <label>
-            Коли
-            <select value={date} onChange={(e) => set("date", e.target.value)}>
-              <option value="">Будь-коли</option>
-              <option value="week">Найближчі 7 днів</option>
-              <option value="month">До кінця жовтня</option>
-            </select>
-          </label>
-          <label>
-            Складність
-            <select
-              value={difficulty}
-              onChange={(e) => set("difficulty", e.target.value)}
+          <Button
+            variant="outline"
+            onClick={() => setFiltersOpen(!filtersOpen)}
+            aria-expanded={filtersOpen}
+            aria-controls="quest-filters"
+          >
+            <SlidersHorizontal size={18} />
+            Фільтри{" "}
+            {active > 0 && <span className="count-badge">{active}</span>}
+          </Button>
+        </div>
+        <div className="category-tabs" aria-label="Категорії квестів">
+          <button
+            aria-pressed={!category}
+            className={!category ? "selected" : ""}
+            onClick={() => set("category", "")}
+          >
+            Усі квести
+          </button>
+          {categories.map((c) => (
+            <button
+              key={c.id}
+              aria-pressed={category === c.id}
+              className={category === c.id ? "selected" : ""}
+              onClick={() => set("category", c.id)}
             >
-              <option value="">Будь-яка</option>
-              {["Легкий", "Середній", "Складний"].map((d) => (
-                <option key={d}>{d}</option>
-              ))}
-            </select>
-          </label>
-          <label>
-            Нагорода XP
-            <select
-              value={xp}
-              onChange={(e) =>
-                set("xp", e.target.value === "0" ? "" : e.target.value)
-              }
-            >
-              <option value="0">Будь-яка</option>
-              <option value="150">Від 150 XP</option>
-              <option value="200">Від 200 XP</option>
-              <option value="300">Від 300 XP</option>
-            </select>
-          </label>
-          <label className="team-allow-toggle">
-            <input
-              type="checkbox"
-              checked={team}
-              onChange={(e) => set("team", e.target.checked ? "1" : "")}
-            />
-            Можна долучитися командою
-          </label>
+              <CategoryIcon category={c} size={16} />
+              {c.name}
+            </button>
+          ))}
+        </div>
+        {filtersOpen && (
+          <div className="filter-panel" id="quest-filters">
+            <label>
+              Район
+              <select
+                value={district}
+                onChange={(e) => set("district", e.target.value)}
+              >
+                <option value="">Усі райони</option>
+                {districts.map((d) => (
+                  <option key={d}>{d}</option>
+                ))}
+              </select>
+            </label>
+            <label>
+              Коли
+              <select
+                value={date}
+                onChange={(e) => set("date", e.target.value)}
+              >
+                <option value="">Будь-коли</option>
+                <option value="week">Найближчі 7 днів</option>
+                <option value="month">До кінця жовтня</option>
+              </select>
+            </label>
+            <label>
+              Складність
+              <select
+                aria-label="Складність"
+                value={difficulty}
+                onChange={(e) => set("difficulty", e.target.value)}
+              >
+                <option value="">Будь-яка</option>
+                {["Легкий", "Середній", "Складний"].map((d) => (
+                  <option key={d}>{d}</option>
+                ))}
+              </select>
+            </label>
+            <label>
+              Нагорода XP
+              <select
+                value={xp}
+                onChange={(e) =>
+                  set("xp", e.target.value === "0" ? "" : e.target.value)
+                }
+              >
+                <option value="0">Будь-яка</option>
+                <option value="150">Від 150 XP</option>
+                <option value="200">Від 200 XP</option>
+                <option value="300">Від 300 XP</option>
+              </select>
+            </label>
+            <label className="team-allow-toggle">
+              <input
+                type="checkbox"
+                checked={team}
+                onChange={(e) => set("team", e.target.checked ? "1" : "")}
+              />
+              Можна долучитися командою
+            </label>
+            <Button variant="ghost" onClick={() => setParams({})}>
+              Скинути все <X size={16} />
+            </Button>
+          </div>
+        )}
+      </div>
+      {(search || category || active > 0) && (
+        <div className="discovery-active" aria-label="Обрані фільтри">
+          {[
+            ["search", search && `Пошук: ${search}`],
+            ["category", categories.find((c) => c.id === category)?.name],
+            ["district", district],
+            ["difficulty", difficulty],
+            [
+              "date",
+              date === "week"
+                ? "Найближчі 7 днів"
+                : date
+                  ? "До кінця жовтня"
+                  : "",
+            ],
+            ["xp", xp ? `Від ${xp} XP` : ""],
+            ["team", team ? "Командна участь" : ""],
+          ]
+            .filter(([, label]) => label)
+            .map(([key, label]) => (
+              <button
+                key={key}
+                onClick={() => set(key!, "")}
+                aria-label={`Прибрати фільтр: ${label}`}
+              >
+                {label}
+                <X size={14} />
+              </button>
+            ))}
           <Button variant="ghost" onClick={() => setParams({})}>
-            Скинути все <X size={16} />
+            Скинути все
           </Button>
         </div>
       )}

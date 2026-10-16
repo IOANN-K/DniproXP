@@ -456,60 +456,6 @@ function administrator() {
 function approvedOrganization(id: string, s = state) {
   return s.organizations.find((o) => o.id === id)?.moderation === "approved";
 }
-function occupied(q: Quest, s = state) {
-  return (
-    q.participants +
-    s.participations.filter(
-      (p) =>
-        p.questId === q.id &&
-        p.status !== "cancelled" &&
-        p.applicationStatus !== "rejected",
-    ).length
-function award(
-  s: VolunteerState,
-  questId: string,
-  userId: string,
-  now: string,
-) {
-  const p = entry(s, questId, userId);
-  const id = `completion:${userId}:${questId}`;
-  if (p.status === "completed" && s.transactions.some((t) => t.id === id))
-    return;
-  const q = s.questRecords.find((q) => q.id === questId)!;
-  if (
-    p.status !== "pending" ||
-    !p.report ||
-    p.applicationStatus !== "approved" ||
-    q.lifecycle === "cancelled"
-  )
-    throw new Error("Потрібен звіт схваленого учасника доступного квесту.");
-  if (s.transactions.some((t) => t.id === id))
-    throw new Error("Винагороду вже нараховано.");
-  p.status = "completed";
-  p.confirmedAt = now;
-  p.updatedAt = now;
-  p.awardedXp = q.xp;
-  p.awardedPoints = pointsForQuest(q);
-  s.transactions.push({
-    id,
-    userId,
-    questId,
-    xp: q.xp,
-    points: pointsForQuest(q),
-    date: now,
-    description: `Організатор підтвердив: ${q.title}`,
-    kind: "QUEST_COMPLETION",
-    sourceId: p.id,
-  });
-  event(
-    s,
-    userId,
-    questId,
-    `Участь підтверджено: +${q.xp} XP та +${pointsForQuest(q)} бонусних балів`,
-    "confirm",
-    now,
-  );
-}
 export function pointsForQuest(q: Quest) {
   return q.rewardPoints ?? rewardPointsFor(q.xp);
 }
@@ -1156,6 +1102,8 @@ export const repository = {
     const next = seed();
     next.impactRecords = importLegacyImpact(next);
     normalizeActivity(next);
+    initializeExploration(next);
+    initializeIdentity(next);
     next.revision = state.revision + 1;
     // A destructive reset MUST NOT silently lose the previous snapshot if storage fails.
     try {

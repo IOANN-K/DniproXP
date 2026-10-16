@@ -7,7 +7,10 @@ export type ActivityKind =
   | "cancel"
   | "reward"
   | "profile"
-  | "impact";
+  | "impact"
+  | "mission"
+  | "challenge"
+  | "team";
 export type ActivityEvent = {
   id: string;
   sourceEventId: string;

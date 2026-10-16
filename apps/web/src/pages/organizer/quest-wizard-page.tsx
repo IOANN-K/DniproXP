@@ -137,7 +137,7 @@ function QuestWizard({ userId }: { userId: string }) {
     }
   };
   return (
-    <div className="quest-wizard">
+    <div className="quest-wizard focused-wizard" data-step={step}>
       <Link className="back-link" to="/organizer/quests">
         <ArrowLeft size={16} /> До моїх квестів
       </Link>
@@ -152,6 +152,16 @@ function QuestWizard({ userId }: { userId: string }) {
         <Badge>
           <Sparkles size={16} /> Локальний шаблон · без зовнішнього AI
         </Badge>
+      </div>
+      <div className="wizard-progress-label">
+        <span>Крок {step} із 3</span>
+        <span>
+          {step === 1
+            ? "Почни з ідеї"
+            : step === 2
+              ? "Перевір деталі"
+              : "Майже готово"}
+        </span>
       </div>
       <ol className="wizard-steps" aria-label="Етапи майстра">
         {["Ідея", "Редагування", "Перегляд"].map((label, index) => (
@@ -198,10 +208,12 @@ function QuestWizard({ userId }: { userId: string }) {
           className="wizard-grid"
         >
           <Card className="wizard-fields">
+            <p className="wizard-section-number">01 / ТВОЯ ІДЕЯ</p>
             <h3>Яку добру справу організуємо?</h3>
             <label htmlFor="wizard-goal">Опиши свою ідею</label>
             <textarea
               id="wizard-goal"
+              aria-describedby="wizard-goal-hint"
               value={input.goal}
               maxLength={1000}
               rows={5}
@@ -211,7 +223,42 @@ function QuestWizard({ userId }: { userId: string }) {
               minLength={20}
               disabled={busy}
             />
-            <span className="field-hint">
+            <div className="wizard-prompt-chips" aria-label="Приклади ідей">
+              <span>Потрібне натхнення?</span>
+              {[
+                [
+                  "Прибрати парк",
+                  "Зібрати команду для сортування звичайних відходів у погодженому парку",
+                  "eco",
+                ],
+                [
+                  "Допомогти притулку",
+                  "Організувати допомогу притулку: погодити з координатором безпечні завдання для волонтерів",
+                  "animals",
+                ],
+                [
+                  "Поділитися знаннями",
+                  "Організувати зустріч для обміну книжками та читання у погодженому громадському просторі",
+                  "education",
+                ],
+              ].map(([label, goal, categoryId]) => (
+                <button
+                  key={label}
+                  type="button"
+                  disabled={busy}
+                  onClick={() =>
+                    setInput({
+                      ...input,
+                      goal,
+                      categoryId: categoryId as GenerationInput["categoryId"],
+                    })
+                  }
+                >
+                  {label}
+                </button>
+              ))}
+            </div>
+            <span className="field-hint" id="wizard-goal-hint">
               20–1000 символів. Конкретні адреса й час додаються після
               перевірки.
             </span>
@@ -219,6 +266,7 @@ function QuestWizard({ userId }: { userId: string }) {
               <label>
                 Напрям
                 <select
+                  aria-label="Напрям"
                   value={input.categoryId}
                   disabled={busy}
                   onChange={(e) =>
@@ -327,6 +375,7 @@ function QuestWizard({ userId }: { userId: string }) {
       )}
       {step === 2 && values && (
         <Card className="wizard-fields">
+          <p className="wizard-section-number">02 / РЕДАГУВАННЯ</p>
           <h3>Зроби чернетку своєю</h3>
           <p>
             Усі пропозиції можна змінити. Дату, точне місце та умови доступу

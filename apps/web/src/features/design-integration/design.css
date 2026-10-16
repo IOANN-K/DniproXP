@@ -1,0 +1,1038 @@
+/* DniproXP discovery + workspace + guided creation. Loaded after legacy styles.
+   Fixed light brand palette is intentional: no external site CSS/assets are used. */
+:root {
+  --design-ink: #20362f;
+  --design-muted: #56685e;
+  --design-line: #dce3db;
+  --design-soft: #eef3ec;
+}
+/* Search-first discovery. */
+.discovery-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 32px;
+  margin-bottom: 32px;
+}
+.discovery-heading .page-intro {
+  margin: 0;
+}
+.discovery-heading h1 {
+  font-size: clamp(32px, 4vw, 48px);
+}
+.discovery-heading .page-intro > p:not(.eyebrow) {
+  font-size: 16px;
+  color: var(--design-muted);
+  margin-top: 12px;
+}
+.discovery-heading .demo-caption {
+  display: block;
+  text-align: left;
+  font-size: 16px;
+  margin-top: 12px;
+}
+.discovery-map-link {
+  border: 1px solid var(--design-line);
+  padding: 12px 20px;
+  border-radius: 12px;
+  white-space: nowrap;
+}
+.discovery-controls {
+  border-block: 1px solid var(--design-line);
+  padding: 24px 0 0;
+}
+.discovery-page .catalog-toolbar {
+  gap: 0;
+  border: 1px solid #7a8b80;
+  border-radius: 12px;
+  background: #fff;
+  padding: 6px;
+  margin-bottom: 20px;
+  box-shadow: 0 4px 12px #20362f06;
+}
+.discovery-page .catalog-toolbar .search-field {
+  border: 0;
+  background: transparent;
+  min-width: 0;
+  flex: 1;
+}
+.discovery-page .search-field .input {
+  font-size: 16px;
+  height: 52px;
+  background: transparent;
+}
+.discovery-page .search-field:focus-within {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
+  border-radius: 8px;
+}
+.discovery-page .search-field input:focus {
+  box-shadow: none;
+  outline: none;
+}
+.discovery-page .search-field > button {
+  min-width: 44px;
+  min-height: 44px;
+  display: grid;
+  place-items: center;
+  background: transparent;
+}
+.discovery-district {
+  display: grid;
+  min-width: 210px;
+  border-left: 1px solid var(--design-line);
+  padding: 0 20px;
+  gap: 2px;
+}
+.discovery-district > span {
+  font-size: 16px;
+  font-weight: 750;
+}
+.discovery-district select {
+  border: 0;
+  background: transparent;
+  padding: 2px 24px 2px 0;
+  min-height: 32px;
+  color: var(--design-muted);
+  width: 100%;
+  font-size: 16px;
+}
+.discovery-page .catalog-toolbar > .button {
+  min-height: 48px;
+  font-size: 16px;
+  background: var(--design-soft);
+  border-color: transparent;
+}
+.discovery-page .category-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 16px;
+  margin: 0;
+  padding-bottom: 0;
+}
+.discovery-page .category-tabs button {
+  border: 0;
+  border-radius: 0;
+  border-bottom: 3px solid transparent;
+  padding: 14px 4px 18px;
+  font-size: 16px;
+  color: var(--design-muted);
+  background: transparent;
+  min-height: 48px;
+}
+.discovery-page .category-tabs button.selected {
+  border-color: var(--primary-hover);
+  color: var(--primary-hover);
+  background: transparent;
+}
+.discovery-page .category-tabs button:hover {
+  color: var(--design-ink);
+  border-bottom-color: #7a8b80;
+}
+.discovery-page .filter-panel {
+  margin: 20px 0;
+  border-radius: 12px;
+  box-shadow: none;
+  padding: 24px;
+  background: var(--design-soft);
+}
+.discovery-page .filter-panel label,
+.discovery-page .filter-panel select {
+  font-size: 16px;
+}
+.discovery-active {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin-top: 20px;
+}
+.discovery-active > button:not(.button) {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  max-width: 100%;
+  overflow-wrap: anywhere;
+  min-height: 44px;
+  padding: 8px 14px;
+  border: 1px solid var(--design-line);
+  border-radius: 24px;
+  background: #fff;
+  color: var(--design-ink);
+  font-size: 16px;
+}
+.discovery-active > .button {
+  font-size: 16px;
+}
+.discovery-page .results-toolbar {
+  margin: 24px 0;
+}
+.discovery-page .results-toolbar > p,
+.discovery-page .results-toolbar select {
+  font-size: 16px;
+  color: var(--design-muted);
+}
+.discovery-page .results-toolbar select {
+  min-height: 44px;
+}
+/* Shared photo-first cards, including the home-page selection. */
+.quest-grid {
+  gap: 32px 24px;
+}
+.quest-card.card {
+  border: 0;
+  border-radius: 12px;
+  background: transparent;
+  box-shadow: none;
+}
+.quest-card.card:hover {
+  transform: none;
+  box-shadow: none;
+}
+.quest-card-link {
+  border-radius: 12px;
+}
+.quest-card .quest-image {
+  height: auto;
+  aspect-ratio: 1.45;
+  border-radius: 12px;
+}
+.quest-card .quest-image img {
+  height: 100%;
+  width: 100%;
+}
+.quest-card:hover .quest-image img {
+  transform: scale(1.025);
+}
+.quest-card .badge {
+  font-size: 16px;
+  line-height: 1.4;
+}
+.quest-card .category-badge {
+  background: #fff;
+  color: var(--design-ink);
+  box-shadow: 0 1px 5px #20362f14;
+  top: 12px;
+  left: 12px;
+}
+.quest-card .xp-badge {
+  top: auto;
+  bottom: 12px;
+  right: 12px;
+}
+.quest-card .quest-body {
+  padding: 16px 0 0;
+}
+.quest-card .quest-org {
+  font-size: 16px;
+  margin-bottom: 8px;
+  color: var(--design-muted);
+  flex-wrap: wrap;
+}
+.quest-card .difficulty {
+  font-size: 16px;
+  color: var(--design-muted);
+  padding-left: 0;
+}
+.quest-card .quest-body h3 {
+  font-size: 18px;
+  line-height: 1.45;
+  min-height: 2.9em;
+  letter-spacing: -0.025em;
+}
+.quest-card .quest-description {
+  font-size: 16px;
+  line-height: 1.6;
+  min-height: 3.2em;
+  color: var(--design-muted);
+  margin-top: 8px;
+}
+.quest-card .quest-meta {
+  flex-direction: row;
+  flex-wrap: wrap;
+  gap: 8px 16px;
+  margin-top: 14px;
+}
+.quest-card .quest-meta span {
+  font-size: 16px;
+  color: var(--design-muted);
+}
+.quest-card .quest-meta > span:last-child {
+  flex-basis: 100%;
+}
+.quest-capacity {
+  height: 3px;
+  background: #dce3db;
+  border-radius: 2px;
+  margin-top: 16px;
+  overflow: hidden;
+}
+.quest-capacity > span {
+  display: block;
+  height: 100%;
+  background: var(--primary);
+}
+.quest-card .quest-bottom {
+  padding-top: 8px;
+  margin: 0;
+  border: 0;
+}
+.quest-card .quest-bottom > span:first-child {
+  font-size: 16px;
+  color: var(--design-muted);
+}
+.quest-card .round-arrow {
+  width: 44px;
+  height: 44px;
+  background: transparent;
+  border: 1px solid var(--design-line);
+}
+.quest-card:hover .round-arrow {
+  background: var(--design-soft);
+}
+/* A calmer landing page: one real image and a useful search entry. */
+.discovery-hero {
+  padding-block: 52px 48px;
+}
+.discovery-hero .hero-grid {
+  gap: 48px;
+  align-items: center;
+}
+.discovery-hero .hero-label {
+  font-size: 16px;
+  background: transparent;
+  padding: 0;
+}
+.discovery-hero .hero-copy h1 {
+  font-size: clamp(38px, 4.4vw, 62px);
+}
+.discovery-hero .hero-description {
+  font-size: 16px;
+  max-width: 46ch;
+  margin-block: 24px;
+  color: var(--design-muted);
+}
+.hero-discovery-search {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 6px 6px 6px 16px;
+  background: #fff;
+  border: 1px solid #7a8b80;
+  border-radius: 12px;
+}
+.hero-discovery-search input {
+  border: 0;
+  min-width: 0;
+  flex: 1;
+  height: 44px;
+  font-size: 16px;
+  background: transparent;
+  color: var(--design-ink);
+}
+.hero-discovery-search input::placeholder {
+  color: var(--design-muted);
+}
+.hero-discovery-search .button {
+  min-width: 48px;
+  padding: 10px;
+  border-radius: 8px;
+}
+.hero-quick-links {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 4px 12px;
+  margin-top: 12px;
+  font-size: 16px;
+  color: var(--design-muted);
+}
+.hero-quick-links > span {
+  flex-basis: 100%;
+}
+.hero-quick-links a {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 44px;
+  color: var(--primary-hover);
+  font-weight: 650;
+}
+.discovery-hero .hero-buttons {
+  margin-top: 24px;
+}
+.discovery-hero .hero-buttons > .button {
+  min-height: 44px;
+}
+.discovery-hero .hero-social {
+  margin-top: 24px;
+}
+.discovery-hero .hero-social p {
+  font-size: 16px;
+}
+.discovery-hero .hero-visual {
+  height: auto;
+  min-height: 0;
+}
+.discovery-hero .hero-photo {
+  height: 490px;
+  position: relative;
+  transform: none;
+  border-radius: 12px;
+  inset: auto;
+  width: 100%;
+}
+.discovery-hero .hero-photo img {
+  height: 100%;
+  transform: none;
+}
+.discovery-hero .photo-caption {
+  font-size: 16px;
+  bottom: 24px;
+  left: 24px;
+}
+.discovery-hero .floating-xp,
+.discovery-hero .hero-spark,
+.discovery-hero .hero-round,
+.discovery-hero .floating-achievement {
+  display: none;
+}
+/* Organizer workspace: compact sidebar, quiet borders, readable rows. */
+.organizer-shell {
+  display: grid;
+  grid-template-columns: 224px minmax(0, 1fr);
+  gap: 40px;
+  align-items: start;
+  padding-top: 24px;
+}
+.organizer-sidebar {
+  position: sticky;
+  top: 108px;
+  border-right: 1px solid var(--design-line);
+  padding-right: 24px;
+  padding-bottom: 32px;
+  min-width: 0;
+}
+.organizer-sidebar .organizer-space-header {
+  gap: 10px;
+  align-items: flex-start;
+  margin-bottom: 24px;
+}
+.organizer-sidebar .organization-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 8px;
+}
+.organizer-sidebar .organization-avatar svg {
+  width: 22px;
+}
+.organizer-sidebar .organizer-space-header h1 {
+  font-size: 18px;
+  line-height: 1.4;
+}
+.organizer-sidebar .organizer-space-header .eyebrow {
+  font-size: 16px;
+  letter-spacing: 0.06em;
+}
+.organizer-sidebar > .button {
+  width: 100%;
+  padding: 12px;
+  min-height: 44px;
+  font-size: 16px;
+  border-radius: 8px;
+}
+.sidebar-label {
+  font-size: 16px;
+  font-weight: 750;
+  color: var(--design-muted);
+  letter-spacing: 0.08em;
+  margin: 32px 0 12px;
+}
+.organizer-sidebar .workspace-nav {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  border: 0;
+  padding: 0;
+}
+.organizer-sidebar .workspace-nav > a {
+  justify-content: flex-start;
+  padding: 12px;
+  border-radius: 8px;
+  font-size: 16px;
+  font-weight: 650;
+  color: var(--design-muted);
+}
+.organizer-sidebar .workspace-nav > a.active {
+  background: #e7eee4;
+  color: #17583f;
+}
+.organizer-sidebar .workspace-nav > a:last-child {
+  margin: 16px 0 0;
+  border-top: 1px solid var(--design-line);
+  border-radius: 0;
+  padding-top: 20px;
+}
+.sidebar-guide {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  padding: 16px 12px;
+  background: var(--design-soft);
+  border: 1px solid var(--design-line);
+  border-radius: 8px;
+  margin-top: 40px;
+}
+.sidebar-guide strong {
+  display: block;
+  font-size: 16px;
+  line-height: 1.5;
+}
+.sidebar-guide small {
+  display: block;
+  font-size: 16px;
+  margin-top: 8px;
+  color: var(--design-muted);
+}
+.organizer-main {
+  min-width: 0;
+}
+.organizer-main .workspace-notice {
+  align-items: flex-start;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin: 0 0 24px;
+  padding-bottom: 20px;
+  border-bottom: 1px solid var(--design-line);
+}
+.organizer-main .workspace-notice > .badge {
+  font-size: 16px;
+}
+.organizer-main .workspace-notice p {
+  font-size: 16px;
+  color: var(--design-muted);
+}
+.organizer-main .workspace-page-heading {
+  margin: 24px 0;
+}
+.organizer-main .workspace-page-heading h2 {
+  font-size: 30px;
+}
+.organizer-main .workspace-page-heading p:not(.eyebrow) {
+  font-size: 16px;
+  margin-top: 8px;
+}
+.organizer-main .workspace-page-heading .eyebrow {
+  font-size: 16px;
+}
+.organizer-main .workspace-decoration {
+  display: none;
+}
+.organizer-main .card {
+  border-radius: 12px;
+  box-shadow: none;
+}
+.organizer-main .organizer-stats {
+  gap: 12px;
+}
+.organizer-main .organizer-stats .personal-stat {
+  padding: 20px;
+}
+.organizer-main .organizer-stats .personal-stat strong {
+  font-size: 30px;
+}
+.organizer-main .organizer-stats .personal-stat h3 {
+  font-size: 16px;
+}
+.organizer-main .organizer-dashboard-grid {
+  gap: 24px;
+  margin-top: 32px;
+}
+.organizer-main .organizer-dashboard-grid .section-heading h2 {
+  font-size: 20px;
+}
+.organizer-main .organizer-dashboard-grid .section-heading p {
+  font-size: 16px;
+}
+.organizer-main .workspace-list {
+  padding-inline: 16px;
+}
+.organizer-main .workspace-list strong {
+  font-size: 16px;
+}
+.organizer-main .workspace-list p,
+.organizer-main .workspace-list time,
+.organizer-main .inline-empty p {
+  font-size: 16px;
+  color: var(--design-muted);
+}
+.organizer-main .activity-chart small,
+.organizer-main .activity-chart strong {
+  font-size: 16px;
+  color: var(--design-muted);
+}
+.organizer-main .workspace-filters {
+  padding: 12px;
+  gap: 12px;
+  border: 1px solid var(--design-line);
+  border-radius: 12px;
+  background: #fff;
+}
+.organizer-main .workspace-filters .search-field {
+  border: 0;
+}
+.organizer-main .workspace-filters input,
+.organizer-main .workspace-filters select {
+  font-size: 16px;
+  min-height: 44px;
+}
+.organizer-main .managed-quest-list {
+  gap: 12px;
+}
+.organizer-main .managed-quest-card {
+  grid-template-columns: 96px minmax(0, 1fr);
+  align-items: start;
+  padding: 20px;
+  gap: 20px;
+}
+.organizer-main .managed-quest-card > img {
+  min-height: 0;
+  height: 96px;
+  border-radius: 8px;
+}
+.organizer-main .managed-quest-card > div {
+  padding: 0;
+}
+.organizer-main .managed-quest-card h3 {
+  font-size: 18px;
+}
+.organizer-main .managed-quest-card p,
+.organizer-main .managed-quest-card .field-hint,
+.organizer-main .managed-quest-card .text-link {
+  font-size: 16px;
+}
+.organizer-main .managed-quest-labels > .badge {
+  font-size: 16px;
+}
+.organizer-main .quest-management-actions > .button {
+  font-size: 16px;
+  min-height: 44px;
+}
+/* Guided creation, without changing generation, moderation or save semantics. */
+.focused-wizard {
+  padding-top: 0;
+  max-width: 960px;
+  margin-inline: auto;
+}
+.focused-wizard .back-link {
+  font-size: 16px;
+}
+.focused-wizard .wizard-heading {
+  margin: 24px 0;
+  flex-wrap: wrap;
+  gap: 16px;
+}
+.focused-wizard .wizard-heading h2 {
+  font-size: 36px;
+}
+.focused-wizard .wizard-heading p:not(.eyebrow) {
+  font-size: 16px;
+  color: var(--design-muted);
+}
+.focused-wizard .wizard-heading .eyebrow {
+  font-size: 16px;
+}
+.focused-wizard .wizard-heading > .badge {
+  font-size: 16px;
+  white-space: normal;
+}
+.wizard-progress-label {
+  display: flex;
+  justify-content: space-between;
+  font-size: 16px;
+  color: var(--design-muted);
+  margin-top: 24px;
+}
+.focused-wizard .wizard-steps {
+  margin: 12px 0 24px;
+  gap: 8px;
+}
+.focused-wizard .wizard-steps li {
+  padding: 12px 8px;
+  font-size: 16px;
+  border-bottom-width: 2px;
+}
+.focused-wizard .wizard-steps li[aria-current] {
+  background: transparent;
+}
+.focused-wizard .wizard-steps li > span {
+  min-width: 24px;
+  height: 24px;
+}
+.focused-wizard .wizard-disclaimer {
+  font-size: 16px;
+  line-height: 1.6;
+  padding: 16px;
+  margin: 20px 0 24px;
+  gap: 12px;
+}
+.focused-wizard .wizard-grid {
+  grid-template-columns: minmax(0, 1fr);
+  gap: 24px;
+}
+.focused-wizard .wizard-fields {
+  padding: 32px;
+  gap: 16px;
+  background: #fff;
+  border-radius: 12px;
+}
+.focused-wizard .wizard-fields h3 {
+  font-size: 28px;
+  line-height: 1.3;
+  max-width: 24ch;
+  margin-bottom: 8px;
+}
+.focused-wizard .wizard-fields label {
+  font-size: 16px;
+}
+.focused-wizard .wizard-fields input,
+.focused-wizard .wizard-fields textarea,
+.focused-wizard .wizard-fields select {
+  font-size: 16px;
+  border-color: #7a8b80;
+  border-radius: 8px;
+  min-height: 48px;
+}
+.focused-wizard .wizard-fields textarea {
+  line-height: 1.65;
+  padding: 16px;
+}
+.focused-wizard .wizard-fields textarea:focus,
+.focused-wizard .wizard-fields input:focus,
+.focused-wizard .wizard-fields select:focus {
+  border-color: var(--primary-hover);
+}
+.focused-wizard .wizard-fields .field-hint {
+  font-size: 16px;
+  color: var(--design-muted);
+}
+.wizard-section-number {
+  font-size: 16px;
+  font-weight: 750;
+  color: var(--primary-hover);
+  letter-spacing: 0.1em;
+}
+.wizard-prompt-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+}
+.wizard-prompt-chips > span {
+  font-size: 16px;
+  color: var(--design-muted);
+  flex-basis: 100%;
+}
+.wizard-prompt-chips button {
+  font-size: 16px;
+  min-height: 44px;
+  padding: 8px 12px;
+  border: 1px solid var(--design-line);
+  border-radius: 24px;
+  background: #fff;
+  color: var(--primary-hover);
+}
+.wizard-prompt-chips button:hover {
+  background: var(--design-soft);
+}
+.focused-wizard .wizard-aside {
+  padding: 24px;
+  background: var(--design-soft);
+  font-size: 16px;
+  line-height: 1.65;
+}
+.focused-wizard .wizard-aside > img {
+  display: none;
+}
+.focused-wizard .wizard-aside h3 {
+  font-size: 20px;
+  margin-bottom: 12px;
+}
+.focused-wizard .wizard-aside li {
+  margin: 8px 0;
+}
+.focused-wizard .wizard-bottom .field-hint {
+  font-size: 16px;
+  color: var(--design-muted);
+}
+.focused-wizard .wizard-actions .button {
+  font-size: 16px;
+  border-radius: 8px;
+}
+.focused-wizard .wizard-actions {
+  justify-content: flex-end;
+  padding-top: 20px;
+  border-top: 1px solid var(--design-line);
+  margin-top: 8px;
+}
+.focused-wizard .wizard-aside .wizard-actions {
+  justify-content: flex-start;
+  margin-top: 20px;
+}
+.focused-wizard .wizard-field-pair {
+  margin: 8px 0;
+}
+.focused-wizard .wizard-preview {
+  padding: 24px;
+}
+.focused-wizard .wizard-preview > img {
+  height: 240px;
+}
+.focused-wizard .wizard-preview h3 {
+  font-size: 30px;
+}
+@media (min-width: 1400px) {
+  .focused-wizard[data-step="1"] .wizard-grid {
+    grid-template-columns: minmax(0, 1fr) 260px;
+  }
+}
+@media (max-width: 1100px) {
+  .organizer-shell {
+    display: block;
+  }
+  .organizer-sidebar {
+    position: static;
+    border: 0;
+    padding: 0 0 24px;
+    margin-bottom: 24px;
+    border-bottom: 1px solid var(--design-line);
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 16px;
+  }
+  .organizer-sidebar .organizer-space-header {
+    margin: 0;
+  }
+  .organizer-sidebar > .button {
+    width: auto;
+    align-self: start;
+  }
+  .organizer-sidebar .workspace-nav {
+    grid-column: 1 / -1;
+    flex-direction: row;
+    flex-wrap: wrap;
+  }
+  .organizer-sidebar .workspace-nav > a:last-child {
+    margin: 0 0 0 auto;
+    border: 0;
+    padding: 12px;
+  }
+  .sidebar-label,
+  .sidebar-guide {
+    display: none;
+  }
+  .discovery-district {
+    min-width: 180px;
+  }
+}
+@media (max-width: 800px) {
+  .discovery-heading {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 20px;
+    margin-bottom: 24px;
+  }
+  .discovery-page .catalog-toolbar {
+    flex-wrap: wrap;
+    padding: 8px;
+    gap: 8px;
+  }
+  .discovery-page .catalog-toolbar .search-field {
+    flex-basis: 100%;
+    border-bottom: 1px solid var(--design-line);
+    border-radius: 0;
+  }
+  .discovery-page .catalog-toolbar > .button {
+    flex: 0 0 auto;
+    width: auto;
+  }
+  .discovery-district {
+    flex: 1;
+    min-width: 0;
+    border: 0;
+    padding: 0 8px;
+  }
+  .discovery-page .category-tabs {
+    gap: 0 16px;
+  }
+  .discovery-page .category-tabs button {
+    padding-block: 12px;
+  }
+  .discovery-page .filter-panel {
+    padding: 16px;
+  }
+  .discovery-page .quest-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .discovery-hero .hero-grid {
+    gap: 32px;
+  }
+  .discovery-hero .hero-photo {
+    height: 340px;
+  }
+  .discovery-hero .hero-social {
+    display: none;
+  }
+  .organizer-main .organizer-dashboard-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+@media (max-width: 580px) {
+  .discovery-page .quest-grid {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 32px;
+  }
+  .discovery-page .results-toolbar {
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  .discovery-page .results-toolbar label {
+    margin-left: auto;
+  }
+  .discovery-page .results-toolbar select {
+    max-width: 230px;
+  }
+  .quest-card .quest-image {
+    aspect-ratio: 1.45;
+  }
+  .discovery-hero {
+    padding-top: 32px;
+  }
+  .discovery-hero .hero-description {
+    margin-block: 20px;
+  }
+  .discovery-hero .hero-photo {
+    height: 300px;
+  }
+  .discovery-hero .hero-buttons {
+    gap: 12px;
+  }
+  .hero-discovery-search {
+    gap: 8px;
+    padding-left: 12px;
+  }
+  .hero-discovery-search input {
+    font-size: 16px;
+  }
+  .hero-quick-links {
+    gap: 0 12px;
+  }
+  .organizer-sidebar {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 16px;
+  }
+  .organizer-sidebar > .button {
+    width: 100%;
+  }
+  .organizer-sidebar .workspace-nav {
+    gap: 4px;
+  }
+  .organizer-sidebar .workspace-nav > a {
+    font-size: 16px;
+    padding: 10px;
+  }
+  .organizer-sidebar .workspace-nav > a:last-child {
+    margin-left: 0;
+  }
+  .organizer-main .workspace-notice {
+    margin-bottom: 24px;
+  }
+  .organizer-main .organizer-stats {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .organizer-main .organizer-stats .personal-stat {
+    padding: 16px;
+  }
+  .organizer-main .workspace-page-heading h2 {
+    font-size: 28px;
+  }
+  .organizer-main .workspace-filters {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .organizer-main .workspace-filters > label {
+    min-width: 0;
+  }
+  .organizer-main .managed-quest-card {
+    grid-template-columns: minmax(0, 1fr);
+    padding: 20px;
+    gap: 16px;
+  }
+  .organizer-main .managed-quest-card > img {
+    width: 80px;
+    height: 64px;
+  }
+  .focused-wizard .wizard-fields {
+    padding: 20px;
+    gap: 16px;
+  }
+  .focused-wizard .wizard-heading h2 {
+    font-size: 30px;
+  }
+  .focused-wizard .wizard-fields h3 {
+    font-size: 26px;
+  }
+  .focused-wizard .wizard-aside {
+    padding: 20px;
+  }
+  .focused-wizard .wizard-field-pair {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 20px;
+  }
+  .focused-wizard .wizard-preview {
+    padding: 20px;
+  }
+  .focused-wizard .wizard-preview > img {
+    height: 180px;
+  }
+  .focused-wizard .wizard-preview h3 {
+    font-size: 26px;
+  }
+  .focused-wizard .wizard-preview dl > div {
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  .focused-wizard .wizard-preview dd {
+    text-align: left;
+  }
+  .focused-wizard .wizard-steps li {
+    gap: 8px;
+    padding: 10px 4px;
+    font-size: 16px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+  .quest-card *,
+  .hero-discovery-search *,
+  .discovery-page *,
+  .organizer-shell * {
+    transition: none !important;
+    animation: none !important;
+  }
+}
+
+.focused-wizard .wizard-consent {
+  min-height: 44px;
+  padding-block: 8px;
+}
+.focused-wizard .wizard-fields textarea::placeholder {
+  color: var(--design-muted);
+  opacity: 1;
+}
+.focused-wizard .error-message {
+  font-size: 16px;
+  color: #8d2424;
+}
