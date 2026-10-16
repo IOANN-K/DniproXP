@@ -64,7 +64,7 @@ function DemoDemoSwitcher() {
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button className="demo-switch-trigger" size="sm" variant="outline">
+        <Button className="demo-switch-trigger" size="sm" variant="outline" aria-label="Демо">
           <Repeat2 size={16} />
           <span>Демо</span>
         </Button>

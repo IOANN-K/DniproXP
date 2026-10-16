@@ -10,9 +10,9 @@ export type ActivityKind =
   | "reward"
   | "profile"
   | "impact"
-  | "team"
   | "mission"
-  | "challenge";
+  | "challenge"
+  | "team";
 export type ActivityEvent = {
   id: string;
   sourceEventId: string;

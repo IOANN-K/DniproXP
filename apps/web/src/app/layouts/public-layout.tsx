@@ -1,3 +1,4 @@
+import { BrandIcon } from "../../features/brand/brand-icon";
 import { CommunityMenu } from "../../features/teams/community-menu";
 import { ExploreMenu } from "../../features/exploration/explore-menu";
 import { useEffect, useState } from "react";
@@ -59,11 +60,10 @@ export function Logo() {
   return (
     <Link to="/" className="logo" aria-label="DniproXP — головна">
       <span className="logo-mark">
-        <Waves size={26} strokeWidth={2.5} />
+        <BrandIcon name="logo" size={48} />
       </span>
       <span>
         Dnipro<span className="logo-xp">XP</span>
-        <small>МІСТО ПОЧИНАЄТЬСЯ З ТЕБЕ</small>
       </span>
     </Link>
   );
@@ -200,6 +200,7 @@ export function PublicLayout() {
                 </Button>
               </>
             )}
+            <MobileNavigation key={location.pathname + location.search} />
             <Sheet open={open} onOpenChange={setOpen}>
               <SheetTrigger asChild>
                 <Button
@@ -516,11 +517,6 @@ function MobileNavigation() {
           <SheetClose asChild>
             <Link to="/organizations">
               Організації <ArrowUpRight size={18} />
-            </Link>
-          </SheetClose>
-          <SheetClose asChild>
-            <Link to="/demo">
-              Демосценарій <ArrowUpRight size={18} />
             </Link>
           </SheetClose>
           {user && (

@@ -5,7 +5,14 @@ import {
 import { getQuestSnapshot } from "../../mocks/repository";
 import { participationLabels } from "./participation-status";
 import { Link } from "react-router-dom";
-import { ArrowUpRight, CalendarDays, MapPin, Users, Zap } from "lucide-react";
+import {
+  ArrowUpRight,
+  CalendarDays,
+  Clock3,
+  MapPin,
+  Users,
+  Zap,
+} from "lucide-react";
 import type { Quest } from "../types";
 import { categories } from "../../mocks/data";
 import { Badge, Card, Photo, Skeleton } from "../../shared/ui/primitives";
@@ -48,9 +55,20 @@ export function QuestCard({ quest: suppliedQuest }: { quest: Quest }) {
               {formatDate(quest.date)}
             </span>
             <span>
+              <Clock3 size={15} />
+              {quest.duration}
+            </span>
+            <span>
               <MapPin size={15} />
               {quest.district} район
             </span>
+          </div>
+          <div className="quest-capacity" aria-hidden="true">
+            <span
+              style={{
+                width: `${Math.min(100, Math.max(0, (quest.participants / Math.max(1, quest.capacity)) * 100))}%`,
+              }}
+            />
           </div>
           <div className="quest-bottom">
             <span>

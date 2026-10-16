@@ -2,6 +2,7 @@ import { integrationRoutes } from "./api-routes";
 import { QuestWizardPage } from "../pages/organizer/quest-wizard-page";
 import { ImpactPage } from "../pages/impact-page";
 import { ImpactReceiptsPage } from "../pages/impact-receipts-page";
+
 import { IdentityDemoPage } from "../pages/identity-demo-page";
 import { PassportPage, PassportCredentialPage } from "../pages/passport";
 import { SkillsPage } from "../pages/skills";

@@ -1,21 +1,19 @@
+import { BrandIcon } from "../features/brand/brand-icon";
+import type { BrandIconName } from "../features/brand/brand-icon";
 import { ImpactSummary } from "../features/impact/impact-summary";
 import { ExplorationEntryCards } from "../features/exploration/sections";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
+import { useState } from "react";
+import { Search } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import {
   ArrowRight,
   ArrowUpRight,
   BadgeCheck,
   Check,
-  Compass,
   Heart,
-  Leaf,
   MapPin,
-  Medal,
   Sparkles,
-  Sprout,
-  Trophy,
-  Users,
   Zap,
 } from "lucide-react";
 import { Button } from "../shared/ui/button";
@@ -26,36 +24,38 @@ import { questApi } from "../mocks/api";
 import { QuestCard, QuestSkeleton } from "../entities/quest/quest-card";
 import { CategoryIcon } from "../entities/quest/category-icon";
 import { DemoDialog } from "../features/session/demo-dialog";
-const steps = [
+const steps: { icon: BrandIconName; title: string; text: string }[] = [
   {
-    icon: Compass,
+    icon: "compass",
     title: "Знайди свою справу",
     text: "Обирай квест за інтересами, часом і настроєм. Поруч точно є щось твоє.",
   },
   {
-    icon: Users,
+    icon: "community",
     title: "Долучайся до команди",
     text: "Записуйся на квест та знайомся з людьми, яким теж не байдуже.",
   },
   {
-    icon: Heart,
+    icon: "care",
     title: "Зроби місто кращим",
     text: "Приходь, допомагай і відчуй, як маленька дія змінює щось велике.",
   },
   {
-    icon: Trophy,
+    icon: "achievement",
     title: "Зростай разом із містом",
     text: "Отримуй XP, відкривай досягнення й обмінюй бонусні бали на приємності.",
   },
 ];
 export function HomePage() {
+  const navigate = useNavigate();
+  const [search, setSearch] = useState("");
   const { data, isPending, isError, refetch } = useQuery({
     queryKey: ["quests"],
     queryFn: () => questApi.list(),
   });
   return (
     <>
-      <section className="hero-section">
+      <section className="hero-section discovery-hero">
         <div className="container hero-grid">
           <div className="hero-copy">
             <Badge className="hero-label">
@@ -71,6 +71,38 @@ export function HomePage() {
               Твої добрі справи мають силу. Знаходь міські квести, допомагай
               там, де ти потрібен, і перетворюй свою енергію на зміни.
             </p>
+            <form
+              className="hero-discovery-search"
+              onSubmit={(e) => {
+                e.preventDefault();
+                navigate(
+                  `/quests${search.trim() ? `?search=${encodeURIComponent(search.trim())}` : ""}`,
+                );
+              }}
+            >
+              <Search size={20} />
+              <label className="sr-only" htmlFor="hero-quest-search">
+                Знайти добру справу
+              </label>
+              <input
+                id="hero-quest-search"
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                placeholder="Яка добра справа тобі близька?"
+              />
+              <Button type="submit" aria-label="Шукати квести">
+                <ArrowRight size={20} />
+              </Button>
+            </form>
+            <div className="hero-quick-links">
+              <span>Почни з того, що любиш</span>
+              {categories.slice(0, 3).map((c) => (
+                <Link key={c.id} to={`/quests?category=${c.id}`}>
+                  <CategoryIcon category={c} size={15} />
+                  {c.name}
+                </Link>
+              ))}
+            </div>
             <div className="hero-buttons">
               <Button asChild>
                 <Link to="/quests">
@@ -122,7 +154,7 @@ export function HomePage() {
             </div>
             <div className="floating-achievement">
               <span className="medal-icon">
-                <Medal size={31} />
+                <BrandIcon name="achievement" size={48} />
               </span>
               <div>
                 <small>НОВЕ ДОСЯГНЕННЯ</small>
@@ -137,9 +169,8 @@ export function HomePage() {
             <span className="hero-spark spark-two">
               <Sparkles size={24} />
             </span>
-            <div className="hero-round">
-              <Leaf size={24} />
-              <span>БІЛЬШЕ ДОБРИХ СПРАВ</span>
+            <div className="hero-round" aria-hidden="true">
+              <BrandIcon name="eco" size={64} />
             </div>
           </div>
         </div>
@@ -223,7 +254,7 @@ export function HomePage() {
               <div className="step" key={step.title}>
                 <div className="step-top">
                   <span className="step-icon">
-                    <step.icon size={26} />
+                    <BrandIcon name={step.icon} size={44} />
                   </span>
                   <span className="step-number">0{i + 1}</span>
                 </div>
@@ -239,7 +270,7 @@ export function HomePage() {
           <div className="level-card">
             <span className="eyebrow">ТВІЙ ВПЛИВ ЗРОСТАЄ</span>
             <span className="large-medal">
-              <Sprout size={58} />
+              <BrandIcon name="growth" size={72} />
             </span>
             <h3>Творець змін</h3>
             <Badge>Рівень 3</Badge>
@@ -318,11 +349,11 @@ export function HomePage() {
             <Card className={`achievement-card achievement-${i}`} key={a.id}>
               <span className="achievement-medallion">
                 {i === 0 ? (
-                  <Sprout size={35} />
+                  <BrandIcon name="growth" size={52} />
                 ) : i === 1 ? (
-                  <Zap size={35} />
+                  <BrandIcon name="quest" size={52} />
                 ) : (
-                  <Trophy size={35} />
+                  <BrandIcon name="achievement" size={52} />
                 )}
               </span>
               <div>
@@ -339,7 +370,7 @@ export function HomePage() {
       <section className="container section">
         <div className="organizer-banner">
           <div className="organizer-icon">
-            <Users size={44} />
+            <BrandIcon name="community" size={64} />
             <Sparkles size={22} />
           </div>
           <div>
@@ -401,7 +432,7 @@ export function HomePage() {
 function WavesIcon() {
   return (
     <>
-      <Leaf size={150} strokeWidth={0.7} />
+      <BrandIcon name="eco" size={150} />
       <Heart size={100} strokeWidth={0.7} />
     </>
   );

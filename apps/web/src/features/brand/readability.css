@@ -1,0 +1,78 @@
+/* DniproXP readability contract: body 18px; no visible text below 16px.
+   Enlarge/reflow the layout instead of shrinking labels to make them fit. */
+html { font-size: 16px; }
+body { font-size: 18px; line-height: 1.6; }
+small, .text-xs, .text-sm { font-size: 16px; }
+.brand-icon { display: inline-block; flex-shrink: 0; object-fit: contain; vertical-align: middle; }
+.logo { gap: 8px; font-size: 28px; letter-spacing: -0.055em; white-space: nowrap; flex-shrink: 0; }
+.logo .logo-mark, .footer .logo-mark {
+  width: 48px; height: 48px; border-radius: 0; background: transparent; transform: none;
+}
+.logo .logo-mark .brand-icon { width: 48px; height: 48px; }
+.footer .logo { font-size: 28px; }
+.header-inner { gap: 20px; }
+.desktop-nav { gap: 20px; }
+.desktop-nav a, .explore-menu summary { font-size: 16px; }
+.eyebrow, .sidebar-label, .hero-label { font-size: 16px; letter-spacing: 0.045em; line-height: 1.5; }
+.hero-label { white-space: normal; text-align: left; }
+.hero-description, .page-intro > p:not(.eyebrow), .section-heading > div > p:not(.eyebrow) {
+  font-size: 18px; line-height: 1.7;
+}
+.hero-photo .photo-caption { right: 20px; left: 20px; font-size: 16px; line-height: 1.5; }
+.hero-round { width: 88px; height: 88px; background: #f0f2e7; }
+.floating-achievement { max-width: calc(100% - 12px); }
+.floating-achievement small { letter-spacing: 0.025em; line-height: 1.4; }
+.category-icon .brand-icon { width: 44px; height: 44px; }
+.category-card h3, .step h3, .quest-card h3 { font-size: 20px; line-height: 1.4; }
+.step-icon { width: 64px; height: 64px; }
+.achievement-medallion { flex-shrink: 0; }
+.organizer-icon { flex-shrink: 0; }
+.footer-main > div > a:not(.logo) { font-size: 16px; line-height: 1.6; min-height: 44px; padding-block: 8px; }
+.footer-main > div > p, .footer-main h3, .footer-location, .footer-bottom { font-size: 16px; line-height: 1.6; }
+.footer-bottom { flex-wrap: wrap; gap: 12px 24px; }
+.workspace-notice { flex-wrap: wrap; }
+.workspace-notice p { flex: 1 1 320px; }
+.organizer-sidebar .workspace-nav > a { min-width: 0; white-space: normal; gap: 8px; }
+.organizer-sidebar .eyebrow { font-size: 16px; letter-spacing: 0.025em; }
+.organization-avatar { flex-shrink: 0; }
+.badge { max-width: 100%; white-space: normal; }
+input, select, textarea { font-size: 16px; }
+.button { min-height: 48px; }
+.button-icon { min-width: 44px; min-height: 44px; }
+.sheet-content { overflow-y: auto; }
+.mobile-nav a { min-height: 48px; }
+@media (max-width: 1200px) {
+  .desktop-nav { display: none; }
+  .mobile-menu-trigger { display: inline-flex; }
+}
+@media (max-width: 640px) {
+  .header-inner { flex-wrap: wrap; gap: 8px; padding-block: 10px; }
+  .logo, .footer .logo { font-size: 24px; }
+  .logo .logo-mark, .footer .logo-mark, .logo .logo-mark .brand-icon { width: 40px; height: 40px; }
+  .header-actions { margin-left: auto; }
+  .header-actions .demo-switch-trigger { min-width: 44px; min-height: 44px; }
+  .header-actions > .button-icon { min-width: 44px; min-height: 44px; }
+  .hero-quick-links { gap: 8px 16px; }
+  .hero-description { font-size: 18px; }
+  .hero-visual { padding-bottom: 0; display: flex; flex-direction: column; gap: 12px; }
+  .hero-photo { width: 100%; }
+  .floating-xp, .floating-achievement {
+    position: relative; inset: auto; width: 100%; max-width: none; transform: none;
+    animation: none; box-shadow: none; border: 1px solid var(--border); margin: 0; padding: 16px;
+  }
+  .hero-round, .hero-spark { display: none; }
+  .hero-photo .photo-caption { bottom: 16px; }
+  .floating-achievement small { font-size: 16px; }
+  .footer-main { gap: 32px 20px; }
+  .footer-main .footer-note { grid-column: 1 / -1; }
+  .organizer-sidebar .organizer-space-header { align-items: flex-start; }
+  .organizer-sidebar .workspace-nav { display: flex; flex-direction: column; }
+  .organizer-sidebar .workspace-nav > a { width: 100%; font-size: 16px; padding: 12px; }
+  .organizer-sidebar .workspace-nav > a:last-child { margin: 0; }
+  .wizard-steps li { gap: 8px; }
+  .wizard-steps li > span { font-size: 16px; }
+}
+/* Notices must not inherit a horizontal flex-basis as height on mobile. */
+.workspace-notice { display: block; }
+.workspace-notice p { margin-top: 12px; }
+.discovery-page .catalog-toolbar > .button { gap: 8px; }

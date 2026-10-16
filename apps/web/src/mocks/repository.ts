@@ -1107,10 +1107,12 @@ export const repository = {
       );
     if (confirmation !== "СКИНУТИ")
       throw new Error("Введи СКИНУТИ для підтвердження.");
-    const fresh = seed();
-    fresh.impactRecords = importLegacyImpact(fresh);
-    fresh.revision = state.revision + 1;
-    const next = initializeSnapshot(fresh);
+    const next = seed();
+    next.impactRecords = importLegacyImpact(next);
+    normalizeActivity(next);
+    initializeExploration(next);
+    initializeIdentity(next);
+    next.revision = state.revision + 1;
     // A destructive reset MUST NOT silently lose the previous snapshot if storage fails.
     try {
       localStorage.setItem(
