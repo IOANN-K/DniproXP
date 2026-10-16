@@ -1,3 +1,4 @@
+import type { IdentityState } from "./identity-types";
 import type { ExplorationState } from "./exploration-types";
 export type QuestCategory = {
   id: string;
@@ -28,6 +29,8 @@ export type User = {
   avatar?: string;
 };
 export type Quest = {
+  allowTeamParticipation?: boolean;
+  teamParticipantLimit?: number;
   id: string;
   title: string;
   description: string;
@@ -59,6 +62,7 @@ export type Quest = {
   locationLabel?: string;
 };
 export type Participation = {
+  teamParticipationId?: string;
   id: string;
   questId: string;
   userId: string;
@@ -137,7 +141,8 @@ export type ActivityEvent = {
     | "reward"
     | "profile"
     | "mission"
-    | "challenge";
+    | "challenge"
+    | "team";
 };
 export type ProfileData = { name: string; bio: string; avatar: string | null };
 export type VolunteerStats = User & {
@@ -151,6 +156,8 @@ export type VolunteerStats = User & {
 };
 export type VolunteerState = {
   version: 4;
+  identity?: IdentityState;
+  identityRejectedSnapshot?: unknown;
   exploration?: ExplorationState;
   explorationRejectedSnapshot?: unknown;
   accounts: DemoAccount[];
@@ -189,6 +196,8 @@ export type RegistrationInput = {
   organizationName?: string;
 };
 export type QuestFormValues = {
+  allowTeamParticipation?: boolean;
+  teamParticipantLimit?: number;
   title: string;
   description: string;
   fullDescription: string;

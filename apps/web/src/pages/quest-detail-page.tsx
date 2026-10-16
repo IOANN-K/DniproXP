@@ -1,3 +1,4 @@
+import { TeamQuestDialog } from "../features/team-participation/components";
 import { QuestExplorationLinks } from "../features/exploration/sections";
 import { Link, useParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
@@ -214,6 +215,7 @@ export function QuestDetailPage() {
         </article>
         <aside>
           <ParticipationPanel quest={quest} />
+          <TeamQuestDialog quest={quest} />
         </aside>
       </div>
       <section className="section">

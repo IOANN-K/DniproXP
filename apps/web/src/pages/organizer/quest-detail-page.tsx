@@ -1,3 +1,4 @@
+import { OrganizerTeamApplications } from "../../features/team-participation/components";
 import { Link, useParams, useSearchParams } from "react-router-dom";
 import {
   ArrowLeft,
@@ -134,6 +135,7 @@ export function OrganizerQuestDetailPage() {
           </div>
         </div>
       </Card>
+      <OrganizerTeamApplications questId={q.id} />
       <section className="personal-section">
         <div className="section-heading">
           <div>

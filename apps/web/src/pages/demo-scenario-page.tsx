@@ -97,6 +97,13 @@ export function DemoScenarioPage() {
           межах локальної демоверсії; серверна частина не використовується.
         </p>
       </div>
+      <div className="exploration-hero-links">
+        <Button asChild variant="outline">
+          <Link to="/demo/identity">
+            Паспорт, навички та командна історія <ArrowRight size={16} />
+          </Link>
+        </Button>
+      </div>
       <div className="demo-steps">
         {steps.map((s, i) => (
           <Card className={`demo-step ${s.done ? "done" : ""}`} key={s.title}>

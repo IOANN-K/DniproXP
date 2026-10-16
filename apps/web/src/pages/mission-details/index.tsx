@@ -1,3 +1,4 @@
+import { MissionTeamContext } from "../../features/teams/integration";
 import { Link, useParams } from "react-router-dom";
 import {
   ArrowLeft,
@@ -142,6 +143,7 @@ export function MissionDetailsPage() {
           </section>
         </article>
         <aside>
+          <MissionTeamContext questIds={mission.steps.map((s) => s.questId)} />
           <MissionProgressOverview
             mission={mission}
             progress={volunteer ? progress : null}

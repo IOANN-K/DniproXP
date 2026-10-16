@@ -84,3 +84,34 @@ XP накопичується й визначає рівень; Reward Points в
 Підтвердження участі та базова нагорода залишаються атомарними. Похідний перерахунок місій/викликів має бути ідемпотентним; claim нагороди потребує серверної транзакції/unique constraint. Після підтвердження або claim повертаються актуальні баланси, прогрес, відзнаки та revision; клієнт інвалідує dashboard/profile/leaderboard/quests/missions/challenges. Рекомендовані помилки: 409 — вже отримано/неправильний lifecycle; 422 — циклічні передумови, несумісна одиниця, від’ємний вимір, некоректний зв’язок; 403 — чужий профіль або недостатня роль. Повторний ідентичний claim краще повертати як успішний попередній результат.
 
 Деталі політики та ручне проходження: [EPIC 02](epic-02-missions-challenges.md).
+
+## EPIC 03 — паспорт, навички та команди
+
+Поточні контракти: `PassportApi`, `TeamsApi`, `skillsApi` у `mocks/identity-api.ts`. Авторизація береться з чинної сесії; userId мутацій не вважається довіреним аргументом клієнта.
+
+- `GET /users/me/passport`, `GET /users/:userId/passport`: окремі owner/public read models. Публічна відповідь не містить прихованих полів, а приватний паспорт повертає restricted/404. Не можна покладатися на CSS або frontend перевірки.
+- `PATCH /users/me/passport/visibility`: publicProfile, showVerifiedHours, showAchievements, showSkillProgress, showActivityHistory, showOrganizations — усі boolean.
+- `GET /passport/credentials/:id`: підтвердження з credentialId, sourceActivityId, issuedAt, issuedBy, verificationStatus, evidenceReferences. Сервер застосовує ті самі налаштування приватності й не повертає приватні звіти/фото публічному клієнту.
+- `GET /skills`, `GET /users/me/skills`, `GET /skills/:id/recommendations`: каталог визначень та похідний прогрес/evidence з confirmed activities. Не приймати довільний skill XP клієнта.
+- `GET /teams?search&category&mine&sort`, `GET /teams/:slug`: публічні команди плюс приватні, до яких поточний користувач має доступ.
+- `POST /teams`, `PATCH /teams/:id`: TeamFormValues. Роль OWNER/MANAGER; створення додає OWNER атомарно.
+- `GET /teams/:id/members`, `GET /users/me/teams`, `POST /teams/:id/join`, `POST /teams/:id/leave`.
+- `GET /users/me/team-invitations`, `GET /teams/:id/invitations`, `POST /teams/:id/invitations`, `POST /team-invitations/:id/accept`, `/decline`, `/revoke`.
+- `DELETE /teams/:id/members/:userId`, `PATCH /teams/:id/members/:userId/role`, `POST /teams/:id/transfer-ownership`, `POST /teams/:id/archive`.
+- `POST /teams/:id/quest-participations`: questId, participantIds[]. Один atomic transaction перевіряє роль, активне членство, allowTeamParticipation, teamParticipantLimit та залишок місць і створює звичайні індивідуальні Participation з teamParticipationId.
+- `GET /teams/:id/quest-participations`, `GET /organizer/quests/:id/team-participations`: об’єднана read model; approval/report/confirm залишаються на наявних індивідуальних endpoints. Командне підтвердження не нараховує XP окремим другим шляхом.
+- `GET /teams/:id/statistics`, `/achievements`, `/activity`, `/challenge-contributions`, `GET /teams/leaderboard?period=all|month&category`: тільки підтверджені участі, явно прив’язані до командних заявок. Monthly — поточний календарний місяць Europe/Kyiv.
+
+`VolunteerPassport`: stable passportId, userId, displayName, avatar, joinDate, volunteerLevel, totalXp, verifiedHours?, completedQuests, achievements?, skillProgress?, organizationExperience?, activityHistory?, visibilitySettings? (owner only). Passport ID видається сервером один раз; frontend не має самостійно підтверджувати достовірність. Mock verificationStatus `DEMO_CONFIRMED` не є криптографічним підписом.
+
+`SkillDefinition`: id, name, description, category, icon, levelThresholds, prerequisiteSkillIds, prerequisites `{skillId,minLevel}[]`, eligibleQuestCategories, experienceRules `{baseXp,xpPerHour,requiresTeam}`. `SkillProgress`: skillId, userId, earnedXp, level, unlocked, percentage, nextLevelXp, evidence[], lockReasons[]. Evidence унікальне на `(skillId, verifiedActivityId)`; загальний XP не витрачається. Передумови та пороги валідовані, цикли відхиляються.
+
+`Team`: id, slug, name, description, avatar, coverImage, category, city, createdAt, ownerId, visibility `PUBLIC|PRIVATE`, maxMembers, status `ACTIVE|ARCHIVED`. `TeamMembership`: id, teamId, userId, role `OWNER|MANAGER|MEMBER`, status `ACTIVE|LEFT|REMOVED`, joinedAt, endedAt?. `TeamInvitation`: id, teamId, invitedUserId, invitedBy, status `PENDING|ACCEPTED|DECLINED|EXPIRED|REVOKED`, createdAt, expiresAt. `TeamQuestParticipation`: id, teamId, questId, participantIds[], status `PENDING|APPROVED|IN_PROGRESS|PARTIAL|COMPLETED|REJECTED|CANCELLED`, createdAt, approvedAt?, completedAt?. Індивідуальна Participation додатково містить teamParticipationId?.
+
+Серверні інваріанти: один активний membership на `(teamId,userId)`, один OWNER, ownerId узгоджений із членством, місткість команди/квесту перевірена під блокуванням/транзакцією. Власник не може вийти без передачі або завершення команди. Власника не видаляє менеджер; менеджер не підвищує себе до OWNER. Запрошення приймає тільки адресат до expiresAt. Надсилання/прийняття/командна заявка потребують idempotency keys. UNIQUE completion `(userId,questId)` залишається незмінним.
+
+Командний склад фіксується під час заявки; пізніший вихід не переносить підтверджений внесок до іншої команди. Персональні години додаються, колективний impact запис враховується один раз на quest/metric. Метрики команд одного спільного квесту можуть перетинатися; глобальні результати City Challenges повинні використовувати первинні дедупліковані джерела, а не суму командних карток.
+
+Помилки: 401 — немає сесії; 403 — не та роль/приватна команда/чужий invitation; 404 — недоступний паспорт, credential або команда; 409 — прострочене/опрацьоване запрошення, зайняті місця, повторна участь, неврегульовані квести; 422 — поля форми, цикли, пороги, некоректні зв’язки. У mock ці перевірки локальні й не становлять серверного захисту.
+
+[Реалізація, файли та наскрізний сценарій EPIC 03](epic-03-identity-teams.md).

@@ -1,6 +1,13 @@
 import { z } from "zod";
 import { categories } from "../../mocks/data";
 export const questDraftSchema = z.object({
+  allowTeamParticipation: z.boolean().optional(),
+  teamParticipantLimit: z
+    .number()
+    .int("Ціле число")
+    .min(1, "Від 1 учасника")
+    .max(50, "Не більше 50")
+    .optional(),
   title: z
     .string()
     .trim()
@@ -58,6 +65,14 @@ export const questDraftSchema = z.object({
 export const questPublishSchema = questDraftSchema.superRefine((v, ctx) => {
   const add = (path: keyof typeof v, message: string) =>
     ctx.addIssue({ code: "custom", path: [path], message });
+  if (
+    v.allowTeamParticipation &&
+    (!v.teamParticipantLimit || v.teamParticipantLimit > v.capacity)
+  )
+    add(
+      "teamParticipantLimit",
+      "Ліміт команди не може перевищувати місткість квесту",
+    );
   if (v.title.length < 8)
     add("title", "Для публікації потрібно щонайменше 8 символів");
   if (v.description.length < 20)

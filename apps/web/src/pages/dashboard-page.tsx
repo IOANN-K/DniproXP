@@ -1,3 +1,4 @@
+import { IdentitySummary } from "../features/teams/integration";
 import { PersonalExploration } from "../features/exploration/sections";
 import { Link } from "react-router-dom";
 import {
@@ -142,6 +143,7 @@ function Dashboard() {
           </Card>
         ))}
       </div>
+      <IdentitySummary userId={user.id} own />
       <PersonalExploration userId={user.id} />
       <div className="dashboard-middle">
         <section>

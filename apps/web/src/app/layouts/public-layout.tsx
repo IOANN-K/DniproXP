@@ -1,3 +1,4 @@
+import { CommunityMenu } from "../../features/teams/community-menu";
 import { ExploreMenu } from "../../features/exploration/explore-menu";
 import { useEffect, useState } from "react";
 import { NavLink, Link, Outlet, useLocation } from "react-router-dom";
@@ -31,6 +32,9 @@ const links = [
   ["/map", "Мапа"],
   ["/leaderboard", "Рейтинг"],
   ["/rewards", "Нагороди"],
+  ["/teams", "Команди"],
+  ["/passport", "Мій паспорт"],
+  ["/skills", "Мої навички"],
 ];
 export function Logo() {
   return (
@@ -76,6 +80,7 @@ export function PublicLayout() {
               </NavLink>
             ))}
             <ExploreMenu />
+            <CommunityMenu />
           </nav>
           <div className="header-actions">
             <DemoSwitcher />
@@ -139,7 +144,10 @@ export function PublicLayout() {
               <Link to="/missions">Сюжетні місії</Link>
               <Link to="/challenges">Міські виклики</Link>
               <Link to="/map">Квести на мапі</Link>
-              <Link to="/leaderboard">Рейтинг містян</Link>
+              <Link to="/leaderboard">Рейтинг містян і команд</Link>
+              <Link to="/teams">Команди міста</Link>
+              <Link to="/passport">Волонтерський паспорт</Link>
+              <Link to="/skills">Дерево навичок</Link>
             </div>
             <div>
               <h3>Долучайся</h3>

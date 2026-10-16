@@ -1,3 +1,7 @@
+import { IdentityDemoPage } from "../pages/identity-demo-page";
+import { PassportPage, PassportCredentialPage } from "../pages/passport";
+import { SkillsPage } from "../pages/skills";
+import { TeamsPage, CreateTeamPage, TeamPage } from "../pages/teams";
 import { MissionsPage } from "../pages/missions";
 import { MissionDetailsPage } from "../pages/mission-details";
 import { ChallengesPage } from "../pages/challenges";
@@ -32,6 +36,13 @@ export const router = createBrowserRouter([
     children: [
       { index: true, element: <HomePage /> },
       { path: "quests", element: <QuestsPage /> },
+      { path: "passport/credentials/:id", element: <PassportCredentialPage /> },
+      { path: "passport/:userId", element: <PassportPage /> },
+      { path: "teams", element: <TeamsPage /> },
+      { path: "teams/:slug", element: <TeamPage /> },
+      { path: "teams/:slug/members", element: <TeamPage view="members" /> },
+      { path: "teams/:slug/quests", element: <TeamPage view="quests" /> },
+      { path: "teams/:slug/settings", element: <TeamPage view="settings" /> },
       { path: "missions", element: <MissionsPage /> },
       { path: "missions/:slug", element: <MissionDetailsPage /> },
       { path: "challenges", element: <ChallengesPage /> },
@@ -49,10 +60,14 @@ export const router = createBrowserRouter([
       { path: "login", element: <AuthPage /> },
       { path: "register", element: <AuthPage register /> },
       { path: "demo", element: <DemoScenarioPage /> },
+      { path: "demo/identity", element: <IdentityDemoPage /> },
       {
         element: <ProtectedRoute roles={["VOLUNTEER"]} />,
         children: [
           { path: "dashboard", element: <DashboardPage /> },
+          { path: "passport", element: <PassportPage /> },
+          { path: "skills", element: <SkillsPage /> },
+          { path: "teams/create", element: <CreateTeamPage /> },
           { path: "my-quests", element: <MyQuestsPage /> },
           { path: "profile", element: <ProfilePage /> },
         ],

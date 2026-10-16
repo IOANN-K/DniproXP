@@ -1,3 +1,7 @@
+import { initializeIdentity, reconcileIdentity } from "./identity-integration";
+import { applyIdentityCommand } from "./identity-commands";
+import type { IdentityCommand } from "../entities/identity-types";
+import { applyParticipation } from "../entities/quest/apply-participation";
 import {
   initializeExploration,
   reconcileExploration,
@@ -345,6 +349,7 @@ function hydrate(): VolunteerState {
 }
 let state: VolunteerState = hydrate();
 initializeExploration(state);
+initializeIdentity(state);
 writeStorage(KEY, state);
 function commit(change: (draft: VolunteerState, now: string) => void) {
   const next = structuredClone(state);
@@ -352,6 +357,7 @@ function commit(change: (draft: VolunteerState, now: string) => void) {
   const now = new Date(next.clock).toISOString();
   change(next, now);
   reconcileExploration(next);
+  reconcileIdentity(next);
   next.revision += 1;
   state = next;
   writeStorage(KEY, state);
@@ -381,17 +387,6 @@ function administrator() {
 }
 function approvedOrganization(id: string, s = state) {
   return s.organizations.find((o) => o.id === id)?.moderation === "approved";
-}
-function occupied(q: Quest, s = state) {
-  return (
-    q.participants +
-    s.participations.filter(
-      (p) =>
-        p.questId === q.id &&
-        p.status !== "cancelled" &&
-        p.applicationStatus !== "rejected",
-    ).length
-  );
 }
 function award(
   s: VolunteerState,
@@ -500,6 +495,8 @@ function questFromForm(
       .map((s) => s.trim())
       .filter(Boolean),
     instructions: v.instructions,
+    allowTeamParticipation: !!v.allowTeamParticipation,
+    teamParticipantLimit: v.teamParticipantLimit || 8,
     participants: 0,
     status: "available",
     lifecycle,
@@ -537,6 +534,28 @@ function event(
 }
 export const repository = {
   getSnapshot: () => state,
+  mutateIdentity(command: IdentityCommand) {
+    const signed = account();
+    actor(signed.id);
+    let result: string | void = undefined;
+    commit((s, now) => {
+      const previous = s.identity?.events[0]?.id;
+      result = applyIdentityCommand(s, signed.id, command, now);
+      const latest = s.identity?.events[0];
+      if (latest && latest.id !== previous)
+        event(s, signed.id, undefined, latest.title, "team", now);
+      if (command.type === "PASSPORT_PRIVACY")
+        event(
+          s,
+          signed.id,
+          undefined,
+          "Видимість паспорта оновлено",
+          "profile",
+          now,
+        );
+    });
+    return result;
+  },
   joinMission(chainId: string, userId: string) {
     actor(userId);
     commit((s, now) => {
@@ -700,43 +719,15 @@ export const repository = {
   join(questId: string, userId: string) {
     actor(userId);
     commit((s, now) => {
-      const q = s.questRecords.find((q) => q.id === questId);
-      if (
-        !q ||
-        !["published", "active"].includes(q.lifecycle || "") ||
-        q.moderation !== "approved" ||
-        !approvedOrganization(q.organizationId, s)
-      )
-        throw new Error("Запис на цей квест недоступний.");
       const old = s.participations.find(
         (p) => p.questId === questId && p.userId === userId,
       );
-      if (
+      const alreadyJoined =
         old &&
         old.status !== "cancelled" &&
-        old.applicationStatus !== "rejected"
-      )
-        return;
-      if (old?.applicationStatus === "rejected")
-        throw new Error(
-          "Організатор відхилив заявку. Повторне подання на цей квест недоступне.",
-        );
-      if (occupied(q, s) >= q.capacity) throw new Error("Усі місця зайняті.");
-      if (old) {
-        old.status = "planned";
-        old.applicationStatus = "pending";
-        old.report = undefined;
-        old.updatedAt = now;
-      } else
-        s.participations.push({
-          id: `p-${userId}-${questId}`,
-          questId,
-          userId,
-          status: "planned",
-          applicationStatus: "pending",
-          createdAt: now,
-          updatedAt: now,
-        });
+        old.applicationStatus !== "rejected";
+      applyParticipation(s, questId, userId, now);
+      if (alreadyJoined) return;
       event(
         s,
         userId,
@@ -1227,6 +1218,8 @@ export const questStatusLabels: Record<QuestLifecycle, string> = {
 };
 export function questToForm(q: Quest): QuestFormValues {
   return {
+    allowTeamParticipation: !!q.allowTeamParticipation,
+    teamParticipantLimit: q.teamParticipantLimit || 8,
     title: q.title,
     description: q.description,
     fullDescription: q.fullDescription || q.description,

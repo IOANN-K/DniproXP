@@ -9520,3 +9520,1834 @@ input[type="radio"] {
     transform: none;
   }
 }
+
+/* EPIC 03 · Volunteer identity and communities */
+.identity-page-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 28px;
+  margin: 16px 0 32px;
+}
+.identity-page-heading h1 {
+  font-size: clamp(30px, 4vw, 48px);
+  line-height: 1.15;
+  letter-spacing: -1.5px;
+  margin: 18px 0;
+}
+.identity-page-heading h2 {
+  font-size: 29px;
+  letter-spacing: -0.8px;
+  margin: 12px 0;
+}
+.identity-page-heading p {
+  color: var(--muted-foreground);
+  font-size: 14px;
+  line-height: 1.8;
+  max-width: 620px;
+}
+.identity-page-heading > div:last-child:not(:first-child) {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  align-items: center;
+}
+.identity-page-heading label {
+  display: grid;
+  gap: 7px;
+  font-size: 11px;
+  font-weight: 700;
+}
+.identity-page-heading select,
+.team-filters select,
+.team-form select,
+.team-dialog-select select,
+.team-invite-form select {
+  min-height: 45px;
+  border: 1px solid var(--border);
+  background: var(--background);
+  border-radius: 12px;
+  padding: 10px 12px;
+  color: var(--foreground);
+  width: 100%;
+  max-width: 100%;
+}
+.identity-small-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 22px;
+  margin-top: 20px;
+}
+.identity-small-grid > .card {
+  min-width: 0;
+}
+.identity-preview {
+  padding: 28px;
+  background: #edf3e9;
+  border-color: #d9e4d2;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 14px;
+}
+.identity-preview:nth-child(2) {
+  background: #fff4e4;
+  border-color: #efdfc6;
+}
+.identity-preview > svg {
+  color: var(--primary-hover);
+}
+.identity-preview h2 {
+  font-size: 26px;
+  line-height: 1.3;
+  letter-spacing: -0.7px;
+  margin: 0;
+}
+.identity-preview p {
+  font-size: 12px;
+  line-height: 1.8;
+  margin: 0;
+  color: #586852;
+}
+.identity-preview strong {
+  font-size: 14px;
+}
+.identity-skill-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
+}
+.identity-team-preview {
+  display: flex;
+  gap: 15px;
+  align-items: center;
+  padding: 24px;
+}
+.identity-team-preview > div {
+  flex: 1;
+  min-width: 0;
+}
+.identity-team-preview h3 {
+  font-size: 17px;
+  margin: 0 0 7px;
+}
+.identity-team-preview p {
+  font-size: 11px;
+  line-height: 1.7;
+  color: var(--muted-foreground);
+  margin: 0;
+}
+.identity-summary h2 {
+  letter-spacing: -0.6px;
+}
+.passport-hero {
+  display: grid;
+  grid-template-columns: 1fr 300px;
+  gap: 24px;
+  align-items: stretch;
+  margin-bottom: 28px;
+}
+.passport-hero > .card:last-child {
+  padding: 24px;
+  display: grid;
+  align-content: center;
+}
+.volunteer-passport-card {
+  padding: 34px;
+  background: linear-gradient(125deg, #203e31, #1d6b53 65%, #3d8e65);
+  color: #fff;
+  border-color: #326a50;
+  position: relative;
+  overflow: hidden;
+  box-shadow: 0 14px 40px #20362f12;
+  isolation: isolate;
+}
+.volunteer-passport-card:before,
+.volunteer-passport-card:after {
+  content: "";
+  position: absolute;
+  width: 330px;
+  height: 330px;
+  border: 1px solid #ffffff1a;
+  border-radius: 50%;
+  right: -90px;
+  top: -160px;
+  z-index: -1;
+}
+.volunteer-passport-card:after {
+  width: 420px;
+  height: 420px;
+  right: -135px;
+  top: -205px;
+}
+.passport-brand {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 20px;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 1px;
+}
+.passport-brand > span > span {
+  color: var(--highlight);
+}
+.passport-brand > svg {
+  color: var(--highlight);
+  flex-shrink: 0;
+}
+.passport-identity {
+  display: flex;
+  gap: 24px;
+  align-items: center;
+  margin: 44px 0 35px;
+}
+.passport-avatar {
+  flex-shrink: 0;
+  display: grid;
+  place-items: center;
+  width: 92px;
+  height: 105px;
+  border-radius: 20px;
+  background: #ffffff1f;
+  border: 1px solid #ffffff40;
+  font-size: 31px;
+  font-weight: 800;
+}
+.passport-identity h2 {
+  font-size: 34px;
+  letter-spacing: -0.9px;
+  line-height: 1.2;
+  margin: 12px 0 15px;
+  overflow-wrap: anywhere;
+}
+.passport-identity small {
+  font-size: 9px;
+  letter-spacing: 1.3px;
+  color: #c8dfc8;
+}
+.passport-identity .badge {
+  background: #ffffff1a;
+  color: #fff7d8;
+  border-color: #ffffff30;
+}
+.passport-card-footer {
+  display: flex;
+  justify-content: space-between;
+  gap: 24px;
+  border-top: 1px solid #ffffff2b;
+  padding-top: 24px;
+}
+.passport-card-footer > div {
+  display: grid;
+  gap: 8px;
+  min-width: 0;
+}
+.passport-card-footer small {
+  font-size: 8px;
+  letter-spacing: 1px;
+  color: #c8dfc8;
+}
+.passport-card-footer strong {
+  font-size: 12px;
+  overflow-wrap: anywhere;
+}
+.passport-demo-label {
+  display: block;
+  margin-top: 24px;
+  font-size: 10px;
+  color: #d9e8ce;
+}
+.passport-qr {
+  display: grid;
+  justify-items: center;
+  gap: 10px;
+  text-align: center;
+  min-width: 0;
+}
+.passport-qr svg {
+  max-width: 100%;
+  height: auto;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: white;
+}
+.passport-qr p {
+  font-size: 12px;
+  font-weight: 800;
+  margin: 0;
+}
+.passport-qr a {
+  font-size: 9px;
+  color: var(--muted-foreground);
+  overflow-wrap: anywhere;
+  max-width: 100%;
+}
+.passport-statistics {
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+}
+.passport-achievement,
+.passport-organization {
+  padding: 26px;
+}
+.passport-achievement > svg {
+  color: #8c6b1c;
+  background: #fff5d6;
+  padding: 10px;
+  box-sizing: content-box;
+  border-radius: 15px;
+}
+.passport-achievement h3,
+.passport-organization h3 {
+  font-size: 19px;
+  line-height: 1.45;
+  margin: 15px 0 10px;
+}
+.passport-achievement p,
+.passport-organization p {
+  font-size: 13px;
+  line-height: 1.8;
+  color: var(--muted-foreground);
+}
+.passport-skills {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 15px;
+  margin-top: 22px;
+}
+.passport-skills > .card {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  padding: 20px;
+}
+.passport-skills strong {
+  font-size: 12px;
+  line-height: 1.6;
+}
+.passport-skills small {
+  display: block;
+  font-size: 10px;
+  color: var(--muted-foreground);
+  margin-top: 7px;
+}
+.skill-dot {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: var(--primary);
+  flex-shrink: 0;
+}
+.passport-timeline {
+  display: grid;
+  gap: 15px;
+  margin-top: 24px;
+}
+.passport-timeline > .card {
+  display: flex;
+  align-items: flex-start;
+  gap: 18px;
+  padding: 24px;
+}
+.passport-timeline > .card > svg {
+  flex-shrink: 0;
+  color: var(--primary);
+  margin-top: 3px;
+}
+.passport-timeline h3 {
+  font-size: 17px;
+  line-height: 1.5;
+  margin: 0;
+}
+.passport-timeline p {
+  font-size: 12px;
+  color: var(--muted-foreground);
+  margin: 9px 0 14px;
+}
+.passport-credential {
+  max-width: 760px;
+  margin: 0 auto;
+  padding: 40px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 20px;
+}
+.passport-credential > svg {
+  color: var(--primary);
+}
+.passport-credential h1 {
+  font-size: 32px;
+  letter-spacing: -1px;
+  line-height: 1.3;
+  margin: 0;
+}
+.passport-credential dl {
+  display: grid;
+  grid-template-columns: 145px 1fr;
+  gap: 18px;
+  font-size: 13px;
+  line-height: 1.8;
+  width: 100%;
+}
+.passport-credential dt {
+  color: var(--muted-foreground);
+}
+.passport-credential dd {
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+.passport-privacy {
+  margin-top: 40px;
+  padding: 30px;
+}
+.passport-privacy p {
+  font-size: 13px;
+  line-height: 1.8;
+  color: var(--muted-foreground);
+}
+.passport-privacy label {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  padding: 12px 0;
+  min-height: 48px;
+  font-size: 13px;
+  cursor: pointer;
+}
+.passport-privacy input,
+.team-member-selector input,
+.team-mine-filter input,
+.team-allow-toggle input {
+  width: 19px;
+  height: 19px;
+  accent-color: var(--primary);
+  flex-shrink: 0;
+}
+.skills-summary {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  margin: 28px 0;
+  padding: 20px 24px;
+  background: #edf3e9;
+  border: 1px solid #d9e4d2;
+  border-radius: 18px;
+}
+.skills-summary strong {
+  font-size: 26px;
+  color: var(--primary-hover);
+  white-space: nowrap;
+}
+.skills-summary span {
+  font-size: 12px;
+  line-height: 1.7;
+  color: #53694f;
+}
+.skill-workspace {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 330px;
+  gap: 28px;
+  align-items: start;
+  margin-top: 28px;
+}
+.skill-tree {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 28px;
+  align-items: start;
+  padding: 28px;
+  background: radial-gradient(#cbd8c3 1px, transparent 1px);
+  background-size: 18px 18px;
+  border: 1px solid var(--border);
+  border-radius: 24px;
+  min-width: 0;
+}
+.skill-branch h2 {
+  font-size: 13px;
+  letter-spacing: 0.2px;
+  color: #5a7154;
+  text-align: center;
+  margin: 0 0 16px;
+}
+.skill-node {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  width: 100%;
+  padding: 18px 14px;
+  background: white;
+  border: 1px solid #d3dfcd;
+  border-radius: 18px;
+  box-shadow: 0 5px 14px #20362f06;
+  text-align: left;
+  min-height: 100px;
+  color: var(--foreground);
+}
+.skill-node > span:nth-child(2) {
+  flex: 1;
+  min-width: 0;
+}
+.skill-node strong {
+  display: block;
+  font-size: 12px;
+  line-height: 1.6;
+}
+.skill-node small {
+  display: block;
+  font-size: 10px;
+  color: var(--muted-foreground);
+  margin-top: 8px;
+  line-height: 1.6;
+}
+.skill-node > svg {
+  flex-shrink: 0;
+  color: var(--primary);
+}
+.skill-node:hover {
+  border-color: #80a78b;
+  transform: translateY(-2px);
+}
+.skill-node.selected {
+  border: 2px solid var(--primary);
+  box-shadow: 0 0 0 4px #2685680f;
+  padding: 17px 13px;
+}
+.skill-node.locked {
+  background: #f1f2ed;
+  border-style: dashed;
+}
+.skill-node-icon {
+  width: 42px;
+  height: 42px;
+  border-radius: 14px;
+  background: #e9f2e5;
+  display: grid;
+  place-items: center;
+  color: var(--primary-hover);
+  flex-shrink: 0;
+}
+.locked .skill-node-icon {
+  background: #e2e6dd;
+  color: #6d7967;
+}
+.skill-connection {
+  display: block;
+  height: 36px;
+  width: 100%;
+  overflow: visible;
+}
+.skill-connection path {
+  stroke: #c8d3c0;
+  stroke-width: 2;
+  stroke-dasharray: 4;
+  fill: none;
+}
+.skill-connection circle {
+  fill: #b9c9b1;
+}
+.skill-connection.unlocked path {
+  stroke: #75a57f;
+  stroke-dasharray: none;
+}
+.skill-connection.unlocked circle {
+  fill: var(--primary);
+}
+.skill-details-panel {
+  padding: 26px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 17px;
+}
+.skill-details-panel h2 {
+  font-size: 25px;
+  line-height: 1.3;
+  letter-spacing: -0.7px;
+  margin: 0;
+}
+.skill-details-panel > p {
+  font-size: 12px;
+  line-height: 1.8;
+  color: var(--muted-foreground);
+  margin: 0;
+}
+.skill-progress-bar {
+  width: 100%;
+  display: grid;
+  gap: 10px;
+}
+.skill-progress-bar > div:first-child {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  font-size: 10px;
+}
+.skill-progress-bar .progress-track {
+  height: 8px;
+  background: #e5eadf;
+}
+.skill-progress-bar .progress-track span {
+  height: 100%;
+  display: block;
+  background: var(--primary);
+  border-radius: 20px;
+  transition: width 0.5s;
+}
+.skill-details-panel .skill-lock-reason {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 13px;
+  background: #fff5da;
+  color: #6d5b24;
+  border-radius: 12px;
+  font-size: 11px;
+  width: 100%;
+}
+.skill-lock-reason svg {
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+.skill-evidence,
+.skill-recommended {
+  width: 100%;
+  border-top: 1px solid var(--border);
+  padding-top: 18px;
+}
+.skill-evidence h3,
+.skill-recommended h3 {
+  font-size: 14px;
+  margin: 0 0 15px;
+}
+.skill-evidence > div {
+  display: flex;
+  gap: 10px;
+  margin-top: 13px;
+  font-size: 11px;
+  line-height: 1.7;
+}
+.skill-evidence svg {
+  flex-shrink: 0;
+  color: var(--primary);
+  margin-top: 3px;
+}
+.skill-evidence small {
+  display: block;
+  color: var(--muted-foreground);
+  font-size: 9px;
+  margin-top: 5px;
+}
+.skill-evidence > p,
+.skill-recommended > p {
+  font-size: 11px;
+  line-height: 1.8;
+}
+.skill-recommended > div {
+  display: grid;
+  gap: 10px;
+}
+.skill-recommended .button {
+  white-space: normal;
+  font-size: 11px;
+  text-align: left;
+  line-height: 1.6;
+  justify-content: space-between;
+}
+.skill-mobile-details .skill-details-panel {
+  border: 0;
+  box-shadow: none;
+  padding: 0;
+}
+.team-avatar {
+  display: grid;
+  place-items: center;
+  width: 54px;
+  height: 54px;
+  border-radius: 17px;
+  background: #e6f1e2;
+  color: var(--primary-hover);
+  flex-shrink: 0;
+}
+.team-avatar-heart {
+  background: #fff0e6;
+  color: #a05235;
+}
+.team-avatar-sun {
+  background: #fff6cf;
+  color: #80631a;
+}
+.team-avatar-flag {
+  background: #e7edf8;
+  color: #496795;
+}
+.team-card {
+  padding: 0;
+  overflow: hidden;
+  min-width: 0;
+  transition:
+    transform 0.25s,
+    box-shadow 0.25s;
+}
+.team-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 12px 30px #20362f10;
+}
+.team-card > a {
+  display: block;
+  height: 100%;
+}
+.team-card-photo {
+  position: relative;
+  height: 160px;
+}
+.team-card-photo > img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.team-card-photo > .badge {
+  position: absolute;
+  top: 14px;
+  left: 14px;
+}
+.team-card-body {
+  padding: 22px;
+  position: relative;
+}
+.team-card-body > .team-avatar {
+  margin-top: -50px;
+  position: relative;
+  border: 4px solid white;
+  box-sizing: content-box;
+}
+.team-card-body > small {
+  display: block;
+  font-size: 10px;
+  color: var(--primary-hover);
+  font-weight: 700;
+  margin: 14px 0 10px;
+}
+.team-card h3 {
+  font-size: 21px;
+  line-height: 1.4;
+  letter-spacing: -0.5px;
+  margin: 0 0 12px;
+}
+.team-card-body > p {
+  font-size: 12px;
+  color: var(--muted-foreground);
+  line-height: 1.8;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  margin: 0 0 18px;
+}
+.team-card-score,
+.team-card-bottom {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-top: 18px;
+}
+.team-card-score {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--primary-hover);
+}
+.team-card-score > span {
+  display: flex;
+  gap: 5px;
+  align-items: center;
+}
+.team-card-bottom {
+  border-top: 1px solid var(--border);
+  padding-top: 16px;
+}
+.team-avatar-stack {
+  display: flex;
+  align-items: center;
+  padding-left: 5px;
+}
+.team-avatar-stack > span {
+  display: grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  background: #e8ede2;
+  border: 2px solid white;
+  border-radius: 50%;
+  font-size: 8px;
+  font-weight: 800;
+  margin-left: -5px;
+}
+.team-filters {
+  display: grid;
+  grid-template-columns: 1.6fr 1fr auto;
+  gap: 20px;
+  align-items: end;
+  margin-top: 24px;
+}
+.team-filters label {
+  display: grid;
+  gap: 8px;
+  font-size: 12px;
+  font-weight: 700;
+  min-width: 0;
+}
+.team-filters .team-mine-filter {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 46px;
+}
+.team-form-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 340px;
+  gap: 30px;
+  align-items: start;
+  margin-top: 26px;
+}
+.team-form {
+  padding: 30px;
+  display: grid;
+  gap: 20px;
+}
+.team-form h2 {
+  font-size: 27px;
+  line-height: 1.3;
+  margin: 0 0 8px;
+  letter-spacing: -0.6px;
+}
+.team-form label {
+  display: grid;
+  gap: 9px;
+  font-size: 13px;
+  font-weight: 700;
+}
+.team-form textarea {
+  padding: 14px;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  resize: vertical;
+  background: var(--background);
+  color: var(--foreground);
+  width: 100%;
+}
+.team-form .button {
+  justify-self: start;
+}
+.team-profile-hero {
+  overflow: hidden;
+  border-radius: 26px;
+  border: 1px solid var(--border);
+  background: white;
+  margin-top: 24px;
+}
+.team-profile-hero > img {
+  width: 100%;
+  height: 230px;
+  object-fit: cover;
+}
+.team-profile-hero > div {
+  display: flex;
+  align-items: flex-start;
+  gap: 24px;
+  padding: 30px;
+}
+.team-profile-hero > div > .team-avatar {
+  width: 78px;
+  height: 78px;
+  border: 5px solid white;
+  margin-top: -68px;
+  box-sizing: content-box;
+  position: relative;
+}
+.team-profile-hero h1 {
+  font-size: 38px;
+  line-height: 1.2;
+  letter-spacing: -1px;
+  margin: 18px 0;
+}
+.team-profile-hero p {
+  font-size: 14px;
+  line-height: 1.8;
+  color: var(--muted-foreground);
+  max-width: 780px;
+  margin: 0;
+}
+.team-hero-facts {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 20px;
+  font-size: 11px;
+  color: var(--primary-hover);
+  margin-top: 22px;
+}
+.team-hero-facts > span {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+}
+.team-nav {
+  margin: 24px 0;
+}
+.team-page-actions {
+  display: flex;
+  gap: 16px;
+  align-items: center;
+  flex-wrap: wrap;
+  margin: 24px 0;
+}
+.team-statistics {
+  margin-top: 32px;
+}
+.team-achievements {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 16px;
+  margin-top: 24px;
+}
+.team-achievements > .card {
+  padding: 22px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  align-items: flex-start;
+  background: #f2f3ed;
+}
+.team-achievements > .earned {
+  background: #fff8e2;
+  border-color: #eadba8;
+}
+.team-achievements svg {
+  color: #65745d;
+}
+.team-achievements > .earned svg {
+  color: #8d6e20;
+}
+.team-achievements h3 {
+  font-size: 17px;
+  line-height: 1.4;
+  margin: 0;
+}
+.team-achievements p {
+  font-size: 11px;
+  color: var(--muted-foreground);
+  line-height: 1.8;
+  margin: 0;
+}
+.team-achievements small {
+  font-size: 11px;
+  color: var(--primary-hover);
+  margin-top: auto;
+}
+.team-invitations,
+.team-quest-list,
+.team-members-list {
+  display: grid;
+  gap: 16px;
+  margin-top: 24px;
+}
+.team-invitations > .card {
+  padding: 22px;
+  display: flex;
+  gap: 18px;
+  align-items: center;
+}
+.team-invitations > .card > svg {
+  color: var(--primary);
+  flex-shrink: 0;
+}
+.team-invitations > .card > div:nth-child(2) {
+  flex: 1;
+}
+.team-invitations h3 {
+  font-size: 18px;
+  margin: 0 0 10px;
+}
+.team-invitations p {
+  font-size: 11px;
+  color: var(--muted-foreground);
+  margin: 10px 0 0;
+}
+.team-invitations > .card > div:last-child {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: center;
+}
+.team-invite-form {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 16px;
+  padding: 24px;
+  margin: 24px 0;
+}
+.team-invite-form h3 {
+  flex-basis: 100%;
+  font-size: 20px;
+  margin: 0;
+}
+.team-invite-form label {
+  display: grid;
+  gap: 9px;
+  font-size: 12px;
+  flex: 1;
+  min-width: 180px;
+}
+.team-member-row {
+  display: flex;
+  gap: 16px;
+  padding: 24px;
+  align-items: center;
+}
+.team-member-row > .avatar {
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: #eaf1e4;
+  font-size: 12px;
+  font-weight: 800;
+  flex-shrink: 0;
+}
+.team-member-row > div:nth-child(2) {
+  flex: 1;
+}
+.team-member-row h3 {
+  font-size: 15px;
+  margin: 0 0 8px;
+}
+.team-member-row small {
+  display: block;
+  font-size: 10px;
+  color: var(--muted-foreground);
+  margin-top: 8px;
+}
+.team-member-actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  max-width: 55%;
+}
+.team-member-actions .button {
+  font-size: 10px;
+}
+.team-invitation-history {
+  padding: 26px;
+  margin-top: 28px;
+}
+.team-invitation-history > div {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  flex-wrap: wrap;
+  border-top: 1px solid var(--border);
+  padding: 15px 0;
+  font-size: 12px;
+}
+.team-invitation-history > div > span:first-child {
+  flex: 1;
+}
+.team-archive {
+  padding: 28px;
+  margin-top: 28px;
+  background: #fff5ec;
+  border-color: #f0dfd2;
+}
+.team-archive p {
+  font-size: 13px;
+  line-height: 1.8;
+  color: #71604d;
+  max-width: 700px;
+}
+.team-quest-entry {
+  padding: 24px;
+  margin-top: 20px;
+  background: #edf4e8;
+  border-color: #d9e5d2;
+  display: grid;
+  gap: 14px;
+}
+.team-quest-entry > svg {
+  color: var(--primary-hover);
+}
+.team-quest-entry h3 {
+  font-size: 21px;
+  line-height: 1.3;
+  margin: 0;
+}
+.team-quest-entry p {
+  font-size: 12px;
+  line-height: 1.8;
+  color: #53694e;
+  margin: 0;
+}
+.team-quest-entry .button {
+  white-space: normal;
+  line-height: 1.5;
+}
+.team-member-selector {
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 14px;
+  margin: 20px 0;
+}
+.team-member-selector legend {
+  padding: 0 8px;
+  font-size: 13px;
+  font-weight: 800;
+}
+.team-member-selector label {
+  display: flex;
+  align-items: center;
+  gap: 13px;
+  min-height: 60px;
+  padding: 8px;
+  cursor: pointer;
+}
+.team-member-selector label > span {
+  font-size: 13px;
+}
+.team-member-selector small {
+  display: block;
+  font-size: 10px;
+  color: var(--muted-foreground);
+  margin-top: 5px;
+}
+.team-dialog-select {
+  display: grid;
+  gap: 10px;
+  font-size: 13px;
+  font-weight: 700;
+  margin-top: 20px;
+}
+.team-quest-list > .card {
+  padding: 26px;
+}
+.team-quest-list h3 {
+  font-size: 20px;
+  line-height: 1.5;
+  margin: 0 0 18px;
+}
+.team-contribution-list {
+  margin: 18px 0;
+  display: grid;
+  gap: 12px;
+}
+.team-contribution-list > div {
+  display: flex;
+  justify-content: space-between;
+  gap: 15px;
+  border-top: 1px solid var(--border);
+  padding-top: 12px;
+  font-size: 12px;
+}
+.team-contribution-list > div > span {
+  display: flex;
+  gap: 5px;
+  align-items: center;
+  color: var(--primary-hover);
+  font-size: 11px;
+}
+.team-ranking-list {
+  display: grid;
+  gap: 12px;
+}
+.team-ranking-row {
+  padding: 21px 24px;
+  display: flex;
+  gap: 18px;
+  align-items: center;
+}
+.team-ranking-row > strong {
+  width: 25px;
+  flex-shrink: 0;
+  color: #64775c;
+  text-align: center;
+}
+.team-ranking-row > .team-avatar {
+  width: 44px;
+  height: 44px;
+}
+.team-ranking-row > div {
+  flex: 1;
+  min-width: 0;
+}
+.team-ranking-row h3 {
+  font-size: 17px;
+  margin: 0 0 7px;
+}
+.team-ranking-row small {
+  font-size: 11px;
+  color: var(--muted-foreground);
+  line-height: 1.6;
+}
+.team-ranking-row.podium-row {
+  background: #fffbed;
+  border-color: #e8dfbf;
+}
+.team-ranking-row.podium-row > strong {
+  color: #8b6c20;
+}
+.team-ranking-row > .badge {
+  white-space: nowrap;
+}
+.team-event-list {
+  padding: 8px 24px;
+}
+.team-event-list > div {
+  display: flex;
+  gap: 14px;
+  padding: 18px 0;
+  align-items: flex-start;
+  border-bottom: 1px solid var(--border);
+}
+.team-event-list > div:last-child {
+  border: 0;
+}
+.team-event-list svg {
+  flex-shrink: 0;
+  color: var(--primary);
+}
+.team-event-list strong {
+  font-size: 12px;
+  line-height: 1.7;
+}
+.team-event-list time,
+.team-event-list small {
+  display: block;
+  font-size: 10px;
+  color: var(--muted-foreground);
+  margin-top: 7px;
+}
+.activity-dot.team {
+  background: var(--primary);
+}
+.team-challenge-result {
+  padding: 26px;
+}
+.team-challenge-result h3 {
+  font-size: 20px;
+  line-height: 1.5;
+  margin: 0 0 15px;
+}
+.team-challenge-result strong {
+  font-size: 16px;
+  color: var(--primary-hover);
+}
+.team-challenge-result p {
+  font-size: 12px;
+  color: var(--muted-foreground);
+  line-height: 1.8;
+}
+.team-challenge-ranking {
+  display: grid;
+  gap: 15px;
+  margin-top: 24px;
+}
+.team-challenge-ranking > .card {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  padding: 24px;
+}
+.team-challenge-ranking h3 {
+  font-size: 18px;
+  line-height: 1.4;
+  margin: 0 0 10px;
+}
+.team-challenge-ranking strong {
+  font-size: 13px;
+  color: var(--primary-hover);
+}
+.team-challenge-ranking small {
+  display: block;
+  font-size: 10px;
+  line-height: 1.8;
+  color: var(--muted-foreground);
+  margin-top: 7px;
+}
+.mission-team-context {
+  padding: 25px;
+  background: #f0f4eb;
+}
+.mission-team-context > svg {
+  color: var(--primary);
+}
+.mission-team-context h3 {
+  font-size: 20px;
+  line-height: 1.4;
+  margin: 16px 0 12px;
+}
+.mission-team-context p {
+  font-size: 12px;
+  line-height: 1.8;
+  color: var(--muted-foreground);
+}
+.mission-team-context > a {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  font-size: 11px;
+  padding: 12px 0;
+  border-top: 1px solid var(--border);
+}
+.mission-team-context > a > span:first-child {
+  flex: 1;
+}
+.explore-menu-content > small {
+  font-size: 9px;
+  letter-spacing: 1px;
+  color: var(--muted-foreground);
+  padding: 10px 12px 5px;
+  font-weight: 800;
+}
+.community-menu .explore-menu-content {
+  left: auto;
+  right: 0;
+}
+@media (min-width: 1450px) {
+  .skill-workspace {
+    grid-template-columns: minmax(0, 1fr) 360px;
+  }
+  .skill-tree {
+    gap: 34px;
+  }
+  .skill-node {
+    padding: 22px;
+  }
+  .skill-node.selected {
+    padding: 21px;
+  }
+  .skill-node strong {
+    font-size: 14px;
+  }
+}
+@media (max-width: 1100px) {
+  .skill-workspace {
+    grid-template-columns: minmax(0, 1fr) 300px;
+    gap: 20px;
+  }
+  .skill-tree {
+    padding: 20px;
+    gap: 20px;
+    grid-template-columns: 1fr;
+  }
+  .skill-details-panel {
+    padding: 22px;
+  }
+  .passport-hero {
+    grid-template-columns: 1fr 260px;
+  }
+  .passport-identity {
+    gap: 16px;
+  }
+  .passport-identity h2 {
+    font-size: 28px;
+  }
+  .passport-avatar {
+    width: 70px;
+    height: 85px;
+  }
+  .volunteer-passport-card {
+    padding: 28px;
+  }
+  .team-member-row {
+    flex-wrap: wrap;
+  }
+  .team-member-actions {
+    max-width: 100%;
+    flex-basis: 100%;
+    justify-content: flex-start;
+    padding-left: 56px;
+  }
+}
+@media (max-width: 900px) {
+  .identity-page-heading {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 18px;
+  }
+  .identity-page-heading h1 {
+    font-size: 36px;
+  }
+  .skill-workspace {
+    grid-template-columns: 1fr;
+  }
+  .skill-tree {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    padding: 24px;
+  }
+  .skill-desktop-panel {
+    display: none;
+  }
+  .passport-hero {
+    grid-template-columns: 1fr;
+  }
+  .passport-hero > .card:last-child {
+    display: grid;
+    grid-template-columns: 160px 1fr;
+    gap: 20px;
+    align-items: center;
+  }
+  .passport-skills {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .team-form-layout {
+    grid-template-columns: minmax(0, 1fr) 280px;
+    gap: 22px;
+  }
+  .team-form {
+    padding: 24px;
+  }
+  .team-profile-hero h1 {
+    font-size: 32px;
+  }
+  .team-profile-hero > div {
+    padding: 25px;
+    gap: 18px;
+  }
+  .team-profile-hero > div > .team-avatar {
+    width: 60px;
+    height: 60px;
+  }
+  .team-invitations > .card {
+    flex-wrap: wrap;
+  }
+  .team-invitations > .card > div:last-child {
+    flex-basis: 100%;
+    padding-left: 42px;
+  }
+  .team-filters {
+    grid-template-columns: 1fr 1fr;
+  }
+  .team-filters > label:first-child {
+    grid-column: 1/-1;
+  }
+  .team-filters .team-mine-filter {
+    grid-column: 1/-1;
+  }
+  .team-ranking-row {
+    gap: 13px;
+    padding: 18px 20px;
+  }
+  .team-ranking-row h3 {
+    font-size: 15px;
+  }
+}
+@media (max-width: 640px) {
+  .identity-page-heading h1 {
+    font-size: 31px;
+    letter-spacing: -1px;
+  }
+  .identity-page-heading h2 {
+    font-size: 25px;
+  }
+  .identity-small-grid {
+    grid-template-columns: 1fr;
+    gap: 17px;
+  }
+  .identity-preview {
+    padding: 24px;
+  }
+  .identity-preview h2 {
+    font-size: 24px;
+  }
+  .volunteer-passport-card {
+    padding: 24px;
+    border-radius: 22px;
+  }
+  .passport-brand {
+    font-size: 8px;
+    letter-spacing: 0.5px;
+  }
+  .passport-identity {
+    align-items: flex-start;
+    gap: 15px;
+    margin: 32px 0 28px;
+  }
+  .passport-avatar {
+    width: 52px;
+    height: 65px;
+    font-size: 20px;
+    border-radius: 14px;
+  }
+  .passport-identity h2 {
+    font-size: 25px;
+    line-height: 1.25;
+    margin: 10px 0 14px;
+  }
+  .passport-identity small {
+    font-size: 7px;
+    letter-spacing: 0.7px;
+  }
+  .passport-card-footer {
+    gap: 16px;
+    flex-direction: column;
+  }
+  .passport-card-footer strong {
+    font-size: 11px;
+  }
+  .passport-card-footer small {
+    font-size: 7px;
+  }
+  .passport-statistics {
+    grid-template-columns: 1fr 1fr;
+  }
+  .passport-skills {
+    grid-template-columns: 1fr;
+  }
+  .passport-timeline > .card {
+    padding: 20px;
+    gap: 13px;
+  }
+  .passport-timeline h3 {
+    font-size: 15px;
+  }
+  .passport-credential {
+    padding: 24px;
+  }
+  .passport-credential h1 {
+    font-size: 27px;
+  }
+  .passport-credential dl {
+    grid-template-columns: 1fr;
+    gap: 7px;
+  }
+  .passport-credential dd {
+    margin-bottom: 15px;
+  }
+  .passport-privacy {
+    padding: 24px;
+  }
+  .passport-privacy label {
+    font-size: 12px;
+  }
+  .skills-summary {
+    padding: 18px;
+    gap: 15px;
+  }
+  .skills-summary strong {
+    font-size: 24px;
+  }
+  .skills-summary span {
+    font-size: 11px;
+  }
+  .skill-tree {
+    grid-template-columns: 1fr;
+    padding: 20px;
+    gap: 30px;
+  }
+  .skill-node {
+    min-height: 90px;
+  }
+  .skill-node strong {
+    font-size: 13px;
+  }
+  .skill-branch h2 {
+    font-size: 14px;
+  }
+  .skill-category-tabs {
+    margin-bottom: 20px;
+  }
+  .team-filters {
+    padding: 16px;
+    gap: 15px;
+  }
+  .team-form-layout {
+    grid-template-columns: 1fr;
+  }
+  .team-form-layout > aside {
+    order: -1;
+  }
+  .team-form {
+    padding: 22px;
+  }
+  .team-form h2 {
+    font-size: 23px;
+  }
+  .team-profile-hero > img {
+    height: 180px;
+  }
+  .team-profile-hero > div {
+    flex-direction: column;
+    padding: 23px;
+  }
+  .team-profile-hero > div > .team-avatar {
+    margin-top: -64px;
+    width: 56px;
+    height: 56px;
+  }
+  .team-profile-hero h1 {
+    font-size: 30px;
+  }
+  .team-profile-hero p {
+    font-size: 12px;
+  }
+  .team-hero-facts {
+    gap: 13px;
+    font-size: 10px;
+  }
+  .team-member-row {
+    padding: 20px;
+    gap: 12px;
+  }
+  .team-member-actions {
+    padding-left: 0;
+  }
+  .team-member-row h3 {
+    font-size: 14px;
+  }
+  .team-quest-list > .card {
+    padding: 21px;
+  }
+  .team-quest-list h3 {
+    font-size: 18px;
+  }
+  .team-contribution-list > div {
+    flex-direction: column;
+    gap: 8px;
+  }
+  .team-ranking-row {
+    gap: 10px;
+    padding: 17px 14px;
+    flex-wrap: wrap;
+  }
+  .team-ranking-row > .team-avatar {
+    width: 36px;
+    height: 36px;
+    border-radius: 12px;
+  }
+  .team-ranking-row > .team-avatar svg {
+    width: 20px;
+  }
+  .team-ranking-row > strong {
+    width: 18px;
+  }
+  .team-ranking-row h3 {
+    font-size: 14px;
+  }
+  .team-ranking-row small {
+    font-size: 9px;
+  }
+  .team-ranking-row > .badge {
+    margin-left: auto;
+    font-size: 10px;
+  }
+  .team-ranking-row > svg {
+    display: none;
+  }
+  .team-invite-form {
+    padding: 21px;
+  }
+  .team-invitations > .card {
+    padding: 20px;
+    gap: 12px;
+  }
+  .team-invitations > .card > div:last-child {
+    padding-left: 0;
+  }
+  .team-invitation-history {
+    padding: 22px;
+  }
+  .team-invitation-history > div {
+    gap: 10px;
+  }
+  .team-challenge-ranking > .card {
+    gap: 12px;
+    padding: 20px;
+  }
+  .team-challenge-ranking .team-avatar {
+    width: 38px;
+    height: 38px;
+    border-radius: 12px;
+  }
+  .team-challenge-ranking h3 {
+    font-size: 15px;
+  }
+  .team-challenge-ranking strong {
+    font-size: 11px;
+  }
+  .team-challenge-result {
+    padding: 23px;
+  }
+  .team-achievements {
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+  }
+  .team-achievements > .card {
+    padding: 17px;
+  }
+  .team-achievements h3 {
+    font-size: 15px;
+  }
+  .team-achievements p {
+    font-size: 10px;
+    line-height: 1.8;
+  }
+  .team-achievements .badge {
+    font-size: 9px;
+  }
+  .team-event-list {
+    padding: 8px 20px;
+  }
+  .team-quest-entry {
+    padding: 22px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .skill-node,
+  .team-card,
+  .skill-progress-bar .progress-track span {
+    transition: none;
+  }
+  .skill-node:hover,
+  .team-card:hover {
+    transform: none;
+  }
+}
+@media print {
+  @page {
+    margin: 15mm;
+    size: A4;
+  }
+  body {
+    background: white !important;
+    color: #20362f !important;
+  }
+  body:has(.passport-page) .app-header,
+  body:has(.passport-page) .footer,
+  body:has(.passport-page) .skip-link,
+  body:has(.passport-page) .no-print,
+  body:has(.passport-page) .xp-award-toast,
+  body:has(.passport-page) .platform-toast {
+    display: none !important;
+  }
+  .passport-page {
+    width: 100% !important;
+    max-width: none !important;
+    padding: 0 !important;
+  }
+  .passport-hero {
+    grid-template-columns: 1fr 210px !important;
+    gap: 18px;
+  }
+  .passport-hero > .card:last-child {
+    display: block !important;
+    padding: 12px;
+  }
+  .passport-qr svg {
+    width: 120px;
+    height: 120px;
+  }
+  .volunteer-passport-card {
+    print-color-adjust: exact;
+    -webkit-print-color-adjust: exact;
+    padding: 22px;
+    box-shadow: none;
+  }
+  .passport-identity {
+    margin: 24px 0;
+  }
+  .passport-identity h2 {
+    font-size: 24px;
+  }
+  .passport-card-footer {
+    flex-direction: row;
+  }
+  .passport-hero .field-hint {
+    font-size: 8px;
+  }
+  .passport-page .card {
+    box-shadow: none;
+    break-inside: avoid;
+  }
+  .passport-page .personal-section {
+    margin-top: 24px;
+  }
+  .passport-page h2 {
+    font-size: 20px;
+  }
+  .passport-page .personal-stats {
+    grid-template-columns: repeat(4, 1fr);
+    gap: 12px;
+  }
+  .passport-page .personal-stat {
+    padding: 14px;
+  }
+  .passport-page .personal-stat strong {
+    font-size: 24px;
+  }
+  .passport-page .personal-stat h3 {
+    font-size: 10px;
+  }
+  .passport-page .identity-small-grid,
+  .passport-skills {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  .passport-timeline > .card {
+    padding: 15px;
+  }
+  .passport-page a[href]:after {
+    content: none;
+  }
+}
+
+@media (max-width: 640px) {
+  .passport-hero > .card:last-child {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+  .passport-qr svg {
+    width: 144px;
+  }
+  .team-allow-toggle {
+    display: flex !important;
+    align-items: center;
+    gap: 12px;
+  }
+}
+.identity-workflow-note {
+  display: flex;
+  align-items: flex-start;
+  gap: 20px;
+  padding: 28px;
+  margin: 25px 0;
+  background: #edf3e9;
+  border-color: #d9e4d2;
+}
+.identity-workflow-note > svg {
+  flex-shrink: 0;
+  color: var(--primary);
+}
+.identity-workflow-note h2 {
+  font-size: 23px;
+  line-height: 1.4;
+  margin: 0 0 12px;
+}
+.identity-workflow-note p {
+  font-size: 13px;
+  color: #53694e;
+  line-height: 1.8;
+  margin: 0;
+}
+@media (max-width: 640px) {
+  .identity-workflow-note {
+    padding: 22px;
+    gap: 15px;
+  }
+  .identity-workflow-note h2 {
+    font-size: 19px;
+  }
+  .identity-workflow-note p {
+    font-size: 12px;
+  }
+}

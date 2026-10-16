@@ -1,3 +1,4 @@
+import { ChallengeTeamContext } from "../../features/teams/integration";
 import { quantity } from "../../entities/challenge/presentation";
 import { useState } from "react";
 import { Link, useParams } from "react-router-dom";
@@ -216,6 +217,7 @@ export function ChallengeDetailsPage() {
           <h3>долучилися або вже зробили внесок</h3>
         </Card>
       </div>
+      <ChallengeTeamContext challengeId={challenge.id} />
       <div className="challenge-detail-columns">
         <div>
           <section>

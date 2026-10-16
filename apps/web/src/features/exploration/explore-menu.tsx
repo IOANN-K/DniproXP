@@ -1,11 +1,10 @@
 import { useEffect, useRef } from "react";
 import { NavLink, useLocation } from "react-router-dom";
-import { BookOpen, ChevronDown, Flag, Gift, Map, Trophy } from "lucide-react";
+import { BookOpen, ChevronDown, Flag, Gift, Map } from "lucide-react";
 const items = [
   { to: "/missions", label: "Сюжетні місії", icon: BookOpen },
   { to: "/challenges", label: "Міські виклики", icon: Flag },
   { to: "/map", label: "Мапа квестів", icon: Map },
-  { to: "/leaderboard", label: "Рейтинг волонтерів", icon: Trophy },
   { to: "/rewards", label: "Винагороди", icon: Gift },
 ];
 export function ExploreMenu() {
